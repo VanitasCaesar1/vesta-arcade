@@ -1,6 +1,6 @@
 import type { CommentRow, Game, Sort, VersionRow } from "./db.ts";
 import { compactNumber, timeAgo } from "../lib/util.ts";
-import { icon, Layout, REPO_URL } from "./layout.tsx";
+import { Icon, Layout, Mascot, REPO_URL } from "./layout.tsx";
 
 const SORTS: { id: Sort; label: string }[] = [
   { id: "trending", label: "Trending" },
@@ -8,25 +8,47 @@ const SORTS: { id: Sort; label: string }[] = [
   { id: "top", label: "Most played" },
 ];
 
-function GameCard({ g }: { g: Game }) {
-  const hot = (g.recentPlays ?? 0) >= 25;
+const cover = (g: Game) => `/cover/${g.slug}?v=${g.updatedAt}`;
+
+function Cmd({ text }: { text: string }) {
   return (
-    <a class="card" href={`/g/${g.slug}`}>
+    <div class="cmd">
+      <code>{text}</code>
+      <button type="button" data-copy={text} data-msg="Copied" aria-label={`Copy ${text}`}>
+        <Icon name="copy" />
+      </button>
+    </div>
+  );
+}
+
+function GameCard({ g, i }: { g: Game; i: number }) {
+  return (
+    <a class="card rise" style={`--i:${i}`} href={`/g/${g.slug}`}>
       <div class="art">
-        <img src={`/cover/${g.slug}?v=${g.updatedAt}`} alt="" loading="lazy" width={640} height={360} />
-        <div class="play">
-          <span>{icon.play}</span>
-        </div>
-        <span class="badge">▶ {compactNumber(g.plays)}</span>
-        {hot ? <span class="badge hot">🔥 {compactNumber(g.recentPlays ?? 0)} in 48h</span> : null}
+        <img src={cover(g)} alt="" loading="lazy" width={640} height={360} />
       </div>
       <h3>{g.title}</h3>
       <div class="meta">
-        {g.author ? <b>{g.author}</b> : null}
-        {g.madeWith.length ? <span>{g.madeWith.join(" + ")}</span> : null}
-        <span>v{g.version}</span>
+        <span>
+          <b>{compactNumber(g.plays)}</b> {g.plays === 1 ? "play" : "plays"}
+        </span>
+        {g.madeWith[0] ? <span>{g.madeWith.join(" + ")}</span> : null}
+        {g.author ? <span>{g.author}</span> : null}
       </div>
     </a>
+  );
+}
+
+function Slot({ i }: { i: number }) {
+  return (
+    <div class="slot rise" style={`--i:${i}`}>
+      <Mascot eyes="wide" mouth="o" />
+      <div>
+        <b>Your game here</b>
+        <p>Run this in your game's folder, or ask your coding agent to publish it.</p>
+      </div>
+      <Cmd text="npx vesta-cli publish" />
+    </div>
   );
 }
 
@@ -36,54 +58,95 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
     if (sort !== "trending") q.set("sort", sort);
     if (tool) q.set("made_with", tool);
     const s = q.toString();
-    return s ? `/?${s}` : "/";
+    return s ? `/?${s}#games` : "/#games";
   };
+  const featured = p.games[0];
+  const lede = "Every game here was shipped by a coding agent. Play one, then tell its AI what broke.";
   return (
-    <Layout
-      meta={{
-        title: p.arcade,
-        description: "Browser games made with AI coding agents. Play one, then tell the creator what broke.",
-        url: p.siteUrl,
-        arcade: p.arcade,
-      }}
-    >
-      <main class="wrap">
-        <section class="hero">
-          <h1>
-            Games made with <em>AI</em>, fixed by players.
-          </h1>
-          <p>Every game here was published straight from a coding agent. Play one, then tell the creator what broke. It goes right back to their AI.</p>
-        </section>
-        <div class="bar">
-          {SORTS.map((s) => (
-            <a class={`tab${p.sort === s.id ? " on" : ""}`} href={qs(s.id, p.tool)}>
-              {s.label}
-            </a>
-          ))}
-          {p.tools.length ? <span class="gap" /> : null}
-          {p.tools.map((t) => (
-            <a class={`chip${p.tool?.toLowerCase() === t.tool.toLowerCase() ? " on" : ""}`} href={p.tool?.toLowerCase() === t.tool.toLowerCase() ? qs(p.sort) : qs(p.sort, t.tool)}>
-              {t.tool} <small>{t.n}</small>
-            </a>
-          ))}
+    <Layout meta={{ title: `${p.arcade}: games made by AI, judged by you`, description: lede, url: p.siteUrl, arcade: p.arcade }}>
+      <section class="cab">
+        <div class="wrap hero">
+          <div class="rise">
+            <h1 class="display">
+              <span class="l">Games made</span>
+              <span class="l">by AI.</span>
+              <span class="l">
+                <span class="mark">Judged</span> by you.
+              </span>
+            </h1>
+            <p class="lede">{lede}</p>
+            <div class="cta">
+              <a class="btn pop lg" data-react href={p.games.length > 1 ? "/random" : featured ? `/g/${featured.slug}?play=1` : "#publish"}>
+                <Icon name="play" /> {featured ? "Play something" : "Publish the first game"}
+              </a>
+              <a class="text" href="#publish">
+                Or make one
+              </a>
+            </div>
+          </div>
+          <div class="host rise" style="--i:2">
+            <Mascot live label="Vesta, the arcade's host" />
+          </div>
         </div>
-        {p.games.length ? (
+      </section>
+
+      <div class="wrap">
+        <section class="floor" id="games">
+          <div class="head">
+            <h2 class="display">{p.tool ? `Made with ${p.tool}` : "On the floor"}</h2>
+            <nav class="tabs" aria-label="Sort and filter">
+              {SORTS.map((s) => (
+                <a class={p.sort === s.id ? "on" : ""} href={qs(s.id, p.tool)}>
+                  {s.label}
+                </a>
+              ))}
+              {p.tools.map((t) => {
+                const on = p.tool?.toLowerCase() === t.tool.toLowerCase();
+                return (
+                  <a class={on ? "on" : ""} href={on ? qs(p.sort) : qs(p.sort, t.tool)}>
+                    {t.tool}
+                    <small>{t.n}</small>
+                  </a>
+                );
+              })}
+            </nav>
+          </div>
           <div class="grid">
-            {p.games.map((g) => (
-              <GameCard g={g} />
+            {p.games.map((g, i) => (
+              <GameCard g={g} i={i} />
             ))}
+            <Slot i={p.games.length} />
           </div>
-        ) : (
-          <div class="empty">
-            <h2>{p.tool ? `Nothing made with ${p.tool} yet` : "The arcade is empty"}</h2>
-            <p>Publish your first game from any folder with an index.html:</p>
-            <pre class="cmd">npx vesta-cli publish</pre>
-            <p>
-              Or let your agent do it: <code>claude mcp add vesta -- npx -y vesta-cli mcp</code>
-            </p>
+        </section>
+
+        <section class="make" id="publish">
+          <div>
+            <h2 class="display">
+              Your agent makes it.
+              <br />
+              Vesta ships it.
+            </h2>
+            <p>Vesta is open source and runs on your own Cloudflare account for free. Publish from the terminal, or let Claude Code, Cursor or Codex do it, and read back every crash players hit.</p>
+            <a class="btn" href={REPO_URL}>
+              <Icon name="github" /> Get Vesta
+            </a>
           </div>
-        )}
-      </main>
+          <div class="steps">
+            <div>
+              <span>Deploy your own arcade</span>
+              <Cmd text="npx vesta-cli setup" />
+            </div>
+            <div>
+              <span>Publish a game</span>
+              <Cmd text="npx vesta-cli publish" />
+            </div>
+            <div>
+              <span>Or hand it to Claude Code</span>
+              <Cmd text="claude mcp add vesta -- npx -y vesta-cli mcp" />
+            </div>
+          </div>
+        </section>
+      </div>
     </Layout>
   );
 }
@@ -105,93 +168,79 @@ export function GamePage(p: {
   return (
     <Layout
       meta={{
-        title: `${g.title}${g.author ? ` by ${g.author}` : ""} · ${p.arcade}`,
+        title: `${g.title}${g.author ? ` by ${g.author}` : ""} | ${p.arcade}`,
         description: description.slice(0, 200),
         url,
-        image: g.hasCover ? `${p.siteUrl}/cover/${g.slug}?v=${g.updatedAt}` : undefined,
+        image: g.hasCover ? `${p.siteUrl}${cover(g)}` : undefined,
         arcade: p.arcade,
         noindex: g.hidden,
       }}
     >
-      <main class="wrap">
+      <div class="wrap">
         <div class="stage" style={`aspect-ratio:${g.aspect}`} data-src={p.playSrc} data-title={g.title} data-share-url={url}>
-          <img class="cover" src={`/cover/${g.slug}?v=${g.updatedAt}`} alt="" />
+          <img class="cover" src={cover(g)} alt="" />
           <button class="start" data-start type="button" aria-label={`Play ${g.title}`}>
-            <span class="btn-play">{icon.playBig}</span>
-            <span class="hint">{g.keyboardRequired ? "Click to play · keyboard needed" : "Click to play"}</span>
+            <span class="btn-play">
+              <Icon name="play" />
+            </span>
+            <span class="title">{g.title}</span>
+            <span class="hint">
+              {g.keyboardRequired ? (
+                <>
+                  <Icon name="keyboard" /> Keyboard needed
+                </>
+              ) : (
+                "Press to play"
+              )}
+            </span>
           </button>
         </div>
 
-        <div class="gamehead">
+        <div class="game">
           <div>
-            <h1>{g.title}</h1>
+            <h1 class="display">{g.title}</h1>
             <div class="byline">
-              {g.author ? <span>by {g.author}</span> : null}
-              {g.author ? <span class="dot">·</span> : null}
+              {g.author ? (
+                <span>
+                  By <b>{g.author}</b>
+                </span>
+              ) : null}
               <span>
-                {compactNumber(g.plays)} plays
+                <b>{compactNumber(g.plays)}</b> {g.plays === 1 ? "play" : "plays"}
               </span>
-              <span class="dot">·</span>
               <span>
                 v{g.version}, updated {timeAgo(g.updatedAt)}
               </span>
-              {g.madeWith.map((t) => (
-                <a class="tool" href={`/?made_with=${encodeURIComponent(t)}`}>
-                  Made with {t}
-                </a>
-              ))}
-              {g.keyboardRequired ? <span class="kbd">{icon.keyboard} Keyboard</span> : null}
             </div>
-          </div>
-          <div class="actions">
-            <button class="btn primary" data-start data-fullscreen type="button">
-              {icon.expand} Fullscreen
-            </button>
-            <button class="btn" data-like={g.slug} type="button">
-              {icon.heart} <span data-likes>{g.likes}</span>
-            </button>
-            <button class="btn" data-share={url} type="button">
-              {icon.share} Share
-            </button>
-            <button class="btn" data-toggle="#embed" type="button">
-              {icon.code} Embed
-            </button>
-          </div>
-        </div>
-
-        <div class="panel" id="embed" hidden style="margin-top:16px">
-          <h3>Embed this game</h3>
-          <textarea class="code" id="embed-code" rows={3} readonly>
-            {embed}
-          </textarea>
-          <p style="margin:10px 0 6px">
-            <button class="btn small" data-copy="#embed-code" data-msg="Embed code copied" type="button">
-              Copy embed
-            </button>{" "}
-            <button class="btn small" data-copy="#badge-code" data-msg="Badge copied" type="button">
-              Copy README badge
-            </button>
-          </p>
-          <textarea class="code" id="badge-code" rows={2} readonly>
-            {badge}
-          </textarea>
-        </div>
-
-        <div class="cols">
-          <div>
+            {g.madeWith.length ? (
+              <div class="tools">
+                {g.madeWith.map((t) => (
+                  <a class="tool" href={`/?made_with=${encodeURIComponent(t)}#games`}>
+                    Made with {t}
+                  </a>
+                ))}
+              </div>
+            ) : null}
             {g.description ? <p class="desc">{g.description}</p> : null}
-            <section id="feedback">
-              <h2 class="sec">Tell the creator</h2>
-              <p class="sub">What broke? What was fun? It goes straight to the creator, and to the AI that wrote the game.</p>
+
+            <section class="feedback" id="feedback">
+              <h2 class="display">Tell the creator</h2>
+              <p class="sub">What broke, and what was fun? It goes to the creator and to the AI that wrote the game.</p>
               {p.feedback === "sent" ? <div class="notice">Thanks. The creator will see it.</div> : p.feedback ? <div class="notice err">{p.feedback}</div> : null}
               <form class="fb" method="post" action={`/api/games/${g.slug}/comments`}>
-                <textarea name="body" maxlength={1000} required placeholder="The jump feels floaty after level 2, and I got stuck behind the blue door…" />
+                <label class="field">
+                  Your feedback
+                  <textarea name="body" maxlength={1000} required placeholder="The jump feels floaty after level 2, and I got stuck behind the blue door." />
+                </label>
                 <div class="hp" aria-hidden="true">
                   <input name="website" tabindex={-1} autocomplete="off" />
                 </div>
                 <div class="row">
-                  <input name="name" maxlength={40} placeholder="Your name (optional)" autocomplete="nickname" />
-                  <button class="btn primary" type="submit">
+                  <label class="field">
+                    Name (optional)
+                    <input name="name" maxlength={40} autocomplete="nickname" />
+                  </label>
+                  <button class="btn" type="submit" style="height:47px">
                     Send
                   </button>
                 </div>
@@ -201,32 +250,54 @@ export function GamePage(p: {
                   <li>
                     <p>{c.body}</p>
                     <small>
-                      {c.name || "Anonymous"} · v{c.version} · {timeAgo(c.created_at)}
+                      {c.name || "Anonymous"}, v{c.version}, {timeAgo(c.created_at)}
                     </small>
                   </li>
                 ))}
               </ul>
-              {p.comments.length ? null : <p class="sub no-comments">No feedback yet. Be the first.</p>}
+              {p.comments.length ? null : <p class="sub no-comments">No feedback yet.</p>}
             </section>
           </div>
+
           <aside class="side">
-            <div class="panel">
-              <div class="stats">
-                <div>
-                  <b>{compactNumber(g.plays)}</b>
-                  <small>plays</small>
-                </div>
-                <div>
-                  <b>{compactNumber(g.likes)}</b>
-                  <small>likes</small>
-                </div>
-                <div>
-                  <b>{p.versions.length}</b>
-                  <small>versions</small>
-                </div>
+            <div>
+              <div class="actions">
+                <button class="btn pop lg" data-start data-fullscreen type="button">
+                  <Icon name="expand" /> Play fullscreen
+                </button>
+                <button class="btn" data-like={g.slug} type="button" aria-label="Like">
+                  <span class="off">
+                    <Icon name="heart" />
+                  </span>
+                  <span class="on">
+                    <Icon name="heartFill" />
+                  </span>
+                  <span data-likes>{g.likes}</span>
+                </button>
+                <button class="btn" data-share={url} type="button">
+                  <Icon name="share" /> Share
+                </button>
+              </div>
+              <button class="linkbtn" data-toggle="#embed" type="button">
+                <Icon name="code" /> Embed or README badge
+              </button>
+              <div class="embed" id="embed" hidden>
+                <textarea class="code" id="embed-code" rows={4} readonly aria-label="Embed code">
+                  {embed}
+                </textarea>
+                <button class="btn sm" data-copy="#embed-code" data-msg="Embed code copied" type="button">
+                  Copy embed code
+                </button>
+                <textarea class="code" id="badge-code" rows={2} readonly aria-label="README badge">
+                  {badge}
+                </textarea>
+                <button class="btn sm" data-copy="#badge-code" data-msg="Badge copied" type="button">
+                  Copy README badge
+                </button>
               </div>
             </div>
-            <div class="panel">
+
+            <div>
               <h3>Changelog</h3>
               <ul class="log">
                 {p.versions.map((v) => (
@@ -240,26 +311,15 @@ export function GamePage(p: {
                 ))}
               </ul>
             </div>
+
             {g.sourceUrl ? (
-              <div class="panel">
-                <h3>Source</h3>
-                <a href={g.sourceUrl} rel="noopener nofollow">
-                  {g.sourceUrl.replace(/^https:\/\//, "")}
-                </a>
-              </div>
-            ) : null}
-            <div class="panel">
-              <h3>Make your own</h3>
-              <p class="muted" style="margin:0 0 10px;font-size:14px">
-                Built with an AI coding agent? Publish it in one command, on your own free arcade.
-              </p>
-              <a class="btn small" href={REPO_URL}>
-                Get Vesta →
+              <a class="source" href={g.sourceUrl} rel="noopener nofollow">
+                <Icon name="github" /> View source
               </a>
-            </div>
+            ) : null}
           </aside>
         </div>
-      </main>
+      </div>
     </Layout>
   );
 }
@@ -267,14 +327,15 @@ export function GamePage(p: {
 export function EmbedPage(p: { arcade: string; siteUrl: string; game: Game; playSrc: string }) {
   const g = p.game;
   return (
-    <Layout meta={{ title: `${g.title} · ${p.arcade}`, description: g.description, url: `${p.siteUrl}/g/${g.slug}`, arcade: p.arcade, noindex: true }} bare>
+    <Layout meta={{ title: `${g.title} | ${p.arcade}`, description: g.description, url: `${p.siteUrl}/g/${g.slug}`, arcade: p.arcade, noindex: true }} bare>
       <div class="stage" style="position:fixed;inset:0;max-height:none;border:0;border-radius:0;margin:0" data-src={p.playSrc} data-title={g.title} data-share-url={`${p.siteUrl}/g/${g.slug}`}>
-        <img class="cover" src={`/cover/${g.slug}?v=${g.updatedAt}`} alt="" />
+        <img class="cover" src={cover(g)} alt="" />
         <button class="start" data-start type="button" aria-label={`Play ${g.title}`}>
-          <span class="btn-play">{icon.playBig}</span>
-          <span class="hint">
-            {g.title} · on {p.arcade}
+          <span class="btn-play">
+            <Icon name="play" />
           </span>
+          <span class="title">{g.title}</span>
+          <span class="hint">on {p.arcade}</span>
         </button>
       </div>
     </Layout>
@@ -283,17 +344,18 @@ export function EmbedPage(p: { arcade: string; siteUrl: string; game: Game; play
 
 export function NotFoundPage(p: { arcade: string; siteUrl: string }) {
   return (
-    <Layout meta={{ title: `Not found · ${p.arcade}`, description: "", url: p.siteUrl, arcade: p.arcade, noindex: true }}>
-      <main class="wrap">
-        <section class="hero">
-          <h1>
-            Game <em>over</em>.
-          </h1>
-          <p>
-            That page doesn't exist, or the game was taken down. <a href="/">Back to the arcade</a>
-          </p>
+    <Layout meta={{ title: `Not found | ${p.arcade}`, description: "", url: p.siteUrl, arcade: p.arcade, noindex: true }}>
+      <div class="wrap">
+        <section class="lost">
+          <Mascot eyes="x" mouth="flat" />
+          <div>
+            <h1 class="display">Game over.</h1>
+            <p>
+              That page doesn't exist, or the game was taken down. <a href="/">Back to the arcade</a>
+            </p>
+          </div>
         </section>
-      </main>
+      </div>
     </Layout>
   );
 }

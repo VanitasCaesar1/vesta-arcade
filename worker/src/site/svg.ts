@@ -71,7 +71,7 @@ export function coverSvg(slug: string, title: string): string {
 <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue} 70% 14%)"/><stop offset="1" stop-color="hsl(${hue2} 75% 30%)"/></linearGradient>
 <radialGradient id="v" cx=".25" cy=".9" r=".9"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
 <rect width="1200" height="675" fill="url(#g)"/>${shapes}<rect width="1200" height="675" fill="url(#v)"/>
-<g font-family="Iowan Old Style, Palatino, Georgia, serif" font-weight="500" fill="#fff5ea" letter-spacing="-3">${text}</g>
+<g font-family="Geist, ui-sans-serif, system-ui, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-weight="700" fill="#f5f5f3" letter-spacing="-4">${text}</g>
 </svg>`;
 }
 
@@ -81,7 +81,7 @@ export function badgeSvg(label: string, plays: number): string {
   const lw = 52;
   const rw = Math.round(right.length * 6.6 + 18);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${lw + rw}" height="22" role="img" aria-label="${escapeXml(`${left}: ${right}`)}">
-<rect rx="5" width="${lw + rw}" height="22" fill="#1b1714"/><rect rx="5" x="${lw}" width="${rw}" height="22" fill="#ff5b1f"/><rect x="${lw}" width="6" height="22" fill="#ff5b1f"/>
+<rect rx="5" width="${lw + rw}" height="22" fill="#141416"/><rect rx="5" x="${lw}" width="${rw}" height="22" fill="#ff5a1f"/><rect x="${lw}" width="6" height="22" fill="#ff5a1f"/>
 <g font-family="Verdana, DejaVu Sans, sans-serif" font-size="11" font-weight="600">
-<text x="10" y="15" fill="#f5ede2">${escapeXml(left)}</text><text x="${lw + 9}" y="15" fill="#1a0800">${escapeXml(right)}</text></g></svg>`;
+<text x="10" y="15" fill="#ededeb">${escapeXml(left)}</text><text x="${lw + 9}" y="15" fill="#1a0800">${escapeXml(right)}</text></g></svg>`;
 }

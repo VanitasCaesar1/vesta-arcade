@@ -1,11 +1,13 @@
-<h1 align="center">▲ Vesta</h1>
+<p align="center"><img src="docs/img/mascot.svg" width="120" alt="Vesta, the mascot"></p>
+
+<h1 align="center">Vesta</h1>
 
 <p align="center"><b>Your own arcade for AI-made games.</b><br>
 Tell your coding agent “publish this to Vesta”. Get a link anyone can play.<br>
 Then get back the crashes, the drop-off and what players said, in a form your agent can fix.<br>
 Runs on your own Cloudflare account, on the free plan.</p>
 
-<p align="center"><b><a href="https://vesta.vanitascaesar.workers.dev/g/hug-of-death">▶ Play the demo: Hug of Death</a></b> · <a href="https://vesta.vanitascaesar.workers.dev">Live arcade</a></p>
+<p align="center"><b><a href="https://vestapowered.in/g/hug-of-death">▶ Play the demo: Hug of Death</a></b> · <a href="https://vestapowered.in">Live arcade</a></p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
@@ -15,7 +17,7 @@ Runs on your own Cloudflare account, on the free plan.</p>
   <a href="games/hug-of-death">Demo game</a>
 </p>
 
-<p align="center"><img src="docs/img/game-page.png" alt="A game page on a Vesta arcade" width="860"></p>
+<p align="center"><img src="docs/img/home.png" alt="The Vesta arcade at vestapowered.in" width="860"></p>
 
 ## Why
 
@@ -48,6 +50,8 @@ npx vesta-cli publish    # run in any folder with an index.html, or a built dist
   https://vesta.you.workers.dev/g/hug-of-death
   1 files · 31.6 KB · cover: screenshot
 ```
+
+Want it on your own domain? `npx vesta-cli setup --domain games.example.com` (the domain must be on the same Cloudflare account). If the domain already serves a site, Vesta takes over the pages it knows and passes everything else through to the old site.
 
 That's it. `publish` finds your build folder (`dist/`, `build/`, `out/` or the folder itself), uploads it, screenshots the game for a cover image if you have Chrome or Playwright's Chromium, prints a QR code for your phone and saves the game's slug in `vesta.json`, so the next publish becomes v2.
 
@@ -109,11 +113,11 @@ Live version: v3 · https://vesta.you.workers.dev/g/hug-of-death · last 14 days
 
 <table>
 <tr>
-<td width="50%"><img src="docs/img/home.png" alt="Arcade home page"><br><b>An arcade.</b> Trending, new and most played; filter by the AI tool that made each game. RSS feed included.</td>
+<td width="50%"><img src="docs/img/gameplay.png" alt="Hug of Death gameplay"><br><b>An arcade.</b> Trending, new and most played; filter by the AI tool that made each game. RSS feed included.</td>
 <td width="50%"><img src="docs/img/dashboard.png" alt="Creator dashboard"><br><b>A dashboard.</b> Plays per day, session length, milestone funnel, errors with stacks, comments, and a button that copies the report for your AI.</td>
 </tr>
 <tr>
-<td><img src="docs/img/gameplay.png" alt="Hug of Death gameplay"><br><b>Click-to-play pages</b> with fullscreen, likes, comments, a changelog, an embed code and a README badge. Share links get a real preview image.</td>
+<td><img src="docs/img/game-page.png" alt="A game page"><br><b>Click-to-play pages</b> with fullscreen, likes, comments, a changelog, an embed code and a README badge. Share links get a real preview image.</td>
 <td><img src="docs/img/mobile.png" alt="Hug of Death on a phone" width="48%"> <br><b>Works on phones</b>, where most traffic from X and Discord lands.</td>
 </tr>
 </table>
@@ -158,7 +162,7 @@ When you outgrow it, the Workers paid plan is $5/month. Nothing else changes.
 ## CLI
 
 ```
-vesta setup                 Deploy (or upgrade) your arcade on Cloudflare (--name, --subdomain)
+vesta setup                 Deploy (or upgrade) your arcade on Cloudflare (--name, --domain, --subdomain)
 vesta publish [dir]         Publish; -n "notes", -b to build first, --open, --no-screenshot
 vesta feedback [slug]       The Markdown report (--json for raw data, --days 30)
 vesta list                  Your games
@@ -195,7 +199,7 @@ Created on first publish, next to your source. Commit it.
 
 ## The demo game
 
-[**Hug of Death**](https://vesta.vanitascaesar.workers.dev/g/hug-of-death) ([source](games/hug-of-death)) is the game in the screenshots. It's an original arcade game written with Claude Code and published with Vesta: your side project just hit #1, and you're the load balancer. Route traffic before servers melt, block scraper bots, and spend what you earn on servers, a CDN, a rate limiter or an SRE. It's one HTML file with no dependencies, and it reports milestones through `window.vesta`. Add `?demo` to its URL to watch it play itself.
+[**Hug of Death**](https://vestapowered.in/g/hug-of-death) ([source](games/hug-of-death)) is the game in the screenshots. It's an original arcade game written with Claude Code and published with Vesta: your side project just hit #1, and you're the load balancer. Route traffic before servers melt, block scraper bots, and spend what you earn on servers, a CDN, a rate limiter or an SRE. It's one HTML file with no dependencies, and it reports milestones through `window.vesta`. Add `?demo` to its URL to watch it play itself.
 
 ## Development
 

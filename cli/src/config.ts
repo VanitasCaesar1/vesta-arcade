@@ -9,7 +9,7 @@ export interface ArcadeConfig {
   token: string;
   playUrl?: string;
   /** Names used by `vesta setup`, so re-running it upgrades the same Workers. */
-  deploy?: { prefix: string; name: string; databaseId?: string; bucket: string };
+  deploy?: { prefix: string; name: string; databaseId?: string; bucket: string; domain?: string };
 }
 
 export function configDir(): string {

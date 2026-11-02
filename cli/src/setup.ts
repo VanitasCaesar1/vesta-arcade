@@ -3,6 +3,7 @@
 // database. Running it again upgrades the same arcade in place.
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { lookup } from "node:dns/promises";
 import { existsSync } from "node:fs";
 import { cp, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -44,7 +45,19 @@ function wrangler(args: string[], opts: { cwd: string; input?: string; quiet?: b
   });
 }
 
-function workerConfig(o: { name: string; role: "site" | "play"; arcade: string; playUrl: string; bucket: string; databaseId: string; main: string }) {
+type Route = { pattern: string; zone_name?: string; custom_domain?: boolean };
+
+function workerConfig(o: {
+  name: string;
+  role: "site" | "play";
+  arcade: string;
+  playUrl: string;
+  bucket: string;
+  databaseId: string;
+  main: string;
+  routes?: Route[];
+  originFallback?: boolean;
+}) {
   return JSON.stringify(
     {
       name: o.name,
@@ -52,7 +65,8 @@ function workerConfig(o: { name: string; role: "site" | "play"; arcade: string; 
       compatibility_date: COMPAT_DATE,
       workers_dev: true,
       observability: { enabled: true },
-      vars: { ROLE: o.role, ARCADE_NAME: o.arcade, PLAY_URL: o.playUrl },
+      ...(o.routes?.length ? { routes: o.routes } : {}),
+      vars: { ROLE: o.role, ARCADE_NAME: o.arcade, PLAY_URL: o.playUrl, ...(o.originFallback ? { ORIGIN_FALLBACK: "1" } : {}) },
       r2_buckets: [{ binding: "FILES", bucket_name: o.bucket }],
       d1_databases: [{ binding: "DB", database_name: o.bucket, database_id: o.databaseId, migrations_dir: "migrations" }],
     },
@@ -78,7 +92,7 @@ function parseJSON<T>(text: string): T | null {
  * a workers.dev subdomain. Wrangler only asks for one interactively, so setup
  * registers it through the API with wrangler's own credentials.
  */
-async function ensureWorkersDevSubdomain(work: string, candidates: string[], out: Out): Promise<{ accountId: string; subdomain: string; created: boolean }> {
+async function ensureWorkersDevSubdomain(work: string, candidates: string[], out: Out): Promise<{ accountId: string; token: string; subdomain: string; created: boolean }> {
   const who = parseJSON<{ accounts?: { id: string; name: string }[] }>((await wrangler(["whoami", "--json"], { cwd: work, quiet: true })).output);
   const accounts = who?.accounts ?? [];
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? accounts[0]?.id;
@@ -92,7 +106,7 @@ async function ensureWorkersDevSubdomain(work: string, candidates: string[], out
   const api = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/subdomain`;
   const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
   const current = (await fetch(api, { headers }).then((r) => r.json()).catch(() => null)) as { success?: boolean; result?: { subdomain?: string } } | null;
-  if (current?.success && current.result?.subdomain) return { accountId, subdomain: current.result.subdomain, created: false };
+  if (current?.success && current.result?.subdomain) return { accountId, token, subdomain: current.result.subdomain, created: false };
 
   const tried: string[] = [];
   for (const raw of candidates) {
@@ -104,12 +118,43 @@ async function ensureWorkersDevSubdomain(work: string, candidates: string[], out
       result?: { subdomain?: string };
       errors?: { message: string }[];
     } | null;
-    if (res?.success) return { accountId, subdomain: res.result?.subdomain ?? name, created: true };
+    if (res?.success) return { accountId, token, subdomain: res.result?.subdomain ?? name, created: true };
   }
   throw new Error(`Couldn't register a workers.dev subdomain (tried ${tried.join(", ")}). Pick one with --subdomain <name>, or register one at https://dash.cloudflare.com/${accountId}/workers/onboarding`);
 }
 
+/**
+ * Routes that put the arcade on a domain in this Cloudflare account. A host that
+ * already serves a site gets a Worker route (DNS untouched, and pages the arcade
+ * doesn't have pass through to the old site); a new host gets a custom domain.
+ */
+async function domainRoutes(host: string, accountId: string, token: string): Promise<{ routes: Route[]; originFallback: boolean; zone: string }> {
+  const labels = host.split(".");
+  let zone: string | undefined;
+  for (let i = 0; i < labels.length - 1 && !zone; i++) {
+    const name = labels.slice(i).join(".");
+    const res = (await fetch(`https://api.cloudflare.com/client/v4/zones?name=${name}&account.id=${accountId}`, { headers: { authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .catch(() => null)) as { result?: { name: string; status: string }[] } | null;
+    if (res?.result?.[0]) zone = res.result[0].name;
+  }
+  if (!zone) throw new Error(`${host} isn't a domain in this Cloudflare account. Add it at https://dash.cloudflare.com first, or leave out --domain.`);
+  const resolves = async (h: string) => (await lookup(h).catch(() => null)) !== null;
+  const routes: Route[] = [];
+  let originFallback = false;
+  if (await resolves(host)) {
+    routes.push({ pattern: `${host}/*`, zone_name: zone });
+    originFallback = true;
+  } else {
+    routes.push({ pattern: host, custom_domain: true });
+  }
+  if (host === zone && (await resolves(`www.${host}`))) routes.push({ pattern: `www.${host}/*`, zone_name: zone });
+  return { routes, originFallback, zone };
+}
+
 export interface SetupOptions {
+  /** Serve the arcade on this domain (it must be a zone in the same Cloudflare account). */
+  domain?: string;
   name?: string;
   /** workers.dev subdomain to register if the account has none yet. */
   subdomain?: string;
@@ -209,25 +254,31 @@ export async function setup(opts: SetupOptions): Promise<ArcadeConfig> {
   if (playDeploy.code !== 0 || !playUrl) throw new Error("Deploying the game server failed (see above). If wrangler asked you to register a workers.dev subdomain, do that in the dashboard and run setup again.");
   out.log(`${c.green("✓")} Game server ${c.bold(playUrl)}`);
 
-  await writeFile(join(work, "site.jsonc"), workerConfig({ name: siteName, role: "site", arcade, playUrl, bucket, databaseId, main }));
+  const domain = (opts.domain ?? previous?.deploy?.domain)?.toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  const site = domain ? await domainRoutes(domain, sub.accountId, sub.token) : null;
+  if (site) out.log(`${c.green("✓")} ${domain} ${c.dim(site.originFallback ? "(route over the existing site; pages the arcade doesn't serve still reach it)" : "(custom domain)")}`);
+  await writeFile(
+    join(work, "site.jsonc"),
+    workerConfig({ name: siteName, role: "site", arcade, playUrl, bucket, databaseId, main, routes: site?.routes, originFallback: site?.originFallback }),
+  );
   const migrate = await wrangler(["d1", "migrations", "apply", bucket, "--remote", "-c", "site.jsonc"], { cwd: work, quiet: true, input: "y\n" });
   if (migrate.code !== 0) throw new Error(`Database migration failed:\n${migrate.output.slice(-1500)}`);
   out.log(`${c.green("✓")} Database is up to date`);
 
   out.log(c.dim("\nDeploying the arcade…"));
   const siteDeploy = await wrangler(["deploy", "-c", "site.jsonc"], { cwd: work });
-  const siteUrl = workersDevUrl(siteDeploy.output, siteName) ?? previous?.url;
+  const siteUrl = domain ? `https://${domain}` : (workersDevUrl(siteDeploy.output, siteName) ?? previous?.url);
   if (siteDeploy.code !== 0 || !siteUrl) throw new Error("Deploying the arcade failed (see above).");
 
   // 6. Token
-  const token = !opts.rotateToken && previous?.token && previous.url === siteUrl ? previous.token : randomBytes(32).toString("base64url");
-  if (token !== previous?.token || previous?.url !== siteUrl) {
+  const token = !opts.rotateToken && previous?.token && previous.deploy?.prefix === prefix ? previous.token : randomBytes(32).toString("base64url");
+  if (token !== previous?.token) {
     const secret = await wrangler(["secret", "put", "ADMIN_TOKEN", "-c", "site.jsonc"], { cwd: work, quiet: true, input: token });
     if (secret.code !== 0) throw new Error(`Couldn't set the arcade token:\n${secret.output.slice(-1500)}`);
   }
   out.log(`${c.green("✓")} Arcade ${c.bold(siteUrl)}`);
 
-  const cfg: ArcadeConfig = { url: siteUrl, token, playUrl, deploy: { prefix, name: arcade, databaseId, bucket } };
+  const cfg: ArcadeConfig = { url: siteUrl, token, playUrl, deploy: { prefix, name: arcade, databaseId, bucket, domain } };
   await saveConfig(cfg);
 
   out.log(`

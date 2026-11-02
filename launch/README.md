@@ -6,11 +6,11 @@ Why this order: playful projects with a sharp premise are among the most upvoted
 
 ## Before anything goes public
 
-- [x] Arcade deployed: https://vesta.vanitascaesar.workers.dev (2026-11-03)
-- [ ] Optional: put the **arcade** on a custom domain (e.g. `arcade.vestapowered.in`, set in the Cloudflare dashboard under the `vesta` Worker → Domains). Keep the **play** Worker on `workers.dev`. Don't put it on another subdomain of the same domain, or the two become the same *site* and the cookie isolation gets weaker.
-- [x] Hug of Death published: https://vesta.vanitascaesar.workers.dev/g/hug-of-death. Still to do: play it on a phone.
+- [x] Arcade deployed: https://vestapowered.in (2026-11-03; games served from vesta-play.vanitascaesar.workers.dev)
+- [x] Arcade on vestapowered.in via a Worker route (`setup --domain`). The old launcher pages (e.g. /download) still pass through. The play Worker stays on workers.dev, which keeps games on a separate site.
+- [x] Hug of Death published: https://vestapowered.in/g/hug-of-death. Still to do: play it on a phone.
 - [ ] Seed at least 5 more games so the arcade isn't empty: make 2–3 yourself with Claude Code (record one session end to end; that's the demo video), and ask Vibe Jam 2026 creators to publish theirs (the entry list is public).
-- [ ] Replace the README's screenshots with ones from the live arcade, and add the live demo link near the top.
+- [x] README screenshots are from the live arcade, with the demo link at the top.
 - [x] Public repo: https://github.com/VanitasCaesar1/vesta-arcade
 - [ ] `cd cli && npm publish` (the `vesta-cli` name was free on 2026-11-02). Test `npx vesta-cli setup` on a second Cloudflare account, or have a friend try it.
 - [ ] Record the 60-second video ([demo-video.md](demo-video.md)) and a 15-second GIF of the publish → play → feedback loop for the README.

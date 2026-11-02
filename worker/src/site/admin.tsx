@@ -5,16 +5,19 @@ import { Layout } from "./layout.tsx";
 export function LoginPage(p: { arcade: string; siteUrl: string; error?: boolean; configured: boolean }) {
   return (
     <Layout meta={{ title: `Dashboard · ${p.arcade}`, description: "", url: `${p.siteUrl}/admin`, arcade: p.arcade, noindex: true }}>
-      <main class="wrap">
+      <div class="wrap">
         <div class="login">
-          <h1>Dashboard</h1>
+          <h1 class="display">Dashboard</h1>
           {p.configured ? (
             <>
               <p>Paste your arcade token. It's in ~/.config/vesta/config.json on the machine that ran setup.</p>
               {p.error ? <div class="notice err">That token didn't match.</div> : null}
-              <form class="login" method="post" action="/api/session">
-                <input name="token" type="password" placeholder="Arcade token" autocomplete="current-password" required autofocus />
-                <button class="btn primary" type="submit">
+              <form class="login" method="post" action="/api/session" style="margin:0">
+                <label class="field">
+                  Arcade token
+                  <input name="token" type="password" autocomplete="current-password" required autofocus />
+                </label>
+                <button class="btn pop" type="submit">
                   Sign in
                 </button>
               </form>
@@ -25,7 +28,7 @@ export function LoginPage(p: { arcade: string; siteUrl: string; error?: boolean;
             </div>
           )}
         </div>
-      </main>
+      </div>
     </Layout>
   );
 }
@@ -43,8 +46,8 @@ function Spark({ values, w = 120, h = 28 }: { values: number[]; w?: number; h?: 
   const pts = values.map((v, i) => `${(i * step).toFixed(1)},${(h - 2 - (v / max) * (h - 4)).toFixed(1)}`).join(" ");
   return (
     <svg class="spark" width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-      <polyline points={`0,${h} ${pts} ${w},${h}`} fill="rgba(255,91,31,.15)" stroke="none" />
-      <polyline points={pts} fill="none" stroke="#ff5b1f" stroke-width="2" stroke-linejoin="round" />
+      <polyline points={`0,${h} ${pts} ${w},${h}`} fill="currentColor" fill-opacity=".14" stroke="none" />
+      <polyline points={pts} fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
     </svg>
   );
 }
@@ -55,14 +58,14 @@ export function DashboardPage(p: { arcade: string; siteUrl: string; games: GameS
   const comments = p.games.reduce((s, g) => s + g.commentCount, 0);
   return (
     <Layout meta={{ title: `Dashboard · ${p.arcade}`, description: "", url: `${p.siteUrl}/admin`, arcade: p.arcade, noindex: true }}>
-      <main class="wrap">
-        <div class="gamehead">
+      <div class="wrap">
+        <div class="dash-head">
           <div>
-            <h1>Dashboard</h1>
+            <h1 class="display">Dashboard</h1>
             <div class="byline">Last 14 days across your arcade</div>
           </div>
           <form method="post" action="/api/session/end">
-            <button class="btn small" type="submit">
+            <button class="btn sm" type="submit">
               Sign out
             </button>
           </form>
@@ -127,11 +130,11 @@ export function DashboardPage(p: { arcade: string; siteUrl: string; games: GameS
           </table>
         ) : (
           <div class="empty">
-            <h2>No games yet</h2>
-            <pre class="cmd">npx vesta-cli publish</pre>
+            <h2 class="display" style="margin:0 0 8px">No games yet</h2>
+            <p class="muted">Run <code class="mono">npx vesta-cli publish</code> in a game's folder.</p>
           </div>
         )}
-      </main>
+      </div>
     </Layout>
   );
 }
@@ -147,13 +150,13 @@ function PlaysChart({ daily }: { daily: FeedbackReport["daily"] }) {
         const bh = Math.max(d.plays ? 3 : 1, (d.plays / max) * h);
         return (
           <g>
-            <rect x={i * bw + 3} y={h - bh} width={bw - 6} height={bh} rx="3" fill={d.plays ? "#ff5b1f" : "#2d2620"}>
+            <rect x={i * bw + 3} y={h - bh} width={bw - 6} height={bh} rx="3" fill="currentColor" fill-opacity={d.plays ? 1 : 0.15} style="color:var(--accent)">
               <title>
                 {d.day}: {d.plays} plays, {d.errors} errors
               </title>
             </rect>
             {i % Math.ceil(daily.length / 7) === 0 ? (
-              <text x={i * bw + bw / 2} y={h + 16} fill="#6f6458" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">
+              <text x={i * bw + bw / 2} y={h + 16} fill="currentColor" style="color:var(--dim)" font-size="11" text-anchor="middle" font-family="Geist Mono, ui-monospace, monospace">
                 {d.day.slice(5)}
               </text>
             ) : null}
@@ -171,9 +174,7 @@ function Bars({ rows }: { rows: { label: string; value: number; display: string 
       {rows.map((r) => (
         <div class="r">
           <span title={r.label}>{r.label}</span>
-          <div class="track">
-            <div class="fill" style={`width:${((r.value / max) * 100).toFixed(1)}%`} />
-          </div>
+          <div class="fill" style={`width:${Math.max(2, (r.value / max) * 100).toFixed(1)}%`} />
           <span>{r.display}</span>
         </div>
       ))}
@@ -187,22 +188,20 @@ export function GameDashboardPage(p: { arcade: string; siteUrl: string; report: 
   const sessions = r.dropoff.reduce((s, b) => s + b.count, 0);
   return (
     <Layout meta={{ title: `${g.title} · Dashboard`, description: "", url: `${p.siteUrl}/admin/g/${g.slug}`, arcade: p.arcade, noindex: true }}>
-      <main class="wrap">
-        <div class="gamehead">
+      <div class="wrap">
+        <div class="dash-head">
           <div>
-            <div class="byline">
-              <a href="/admin">← Dashboard</a>
-            </div>
-            <h1>{g.title}</h1>
+            <a class="muted" href="/admin" style="font-size:14px">Dashboard</a>
+            <h1 class="display">{g.title}</h1>
             <div class="byline">
               <a href={`/g/${g.slug}`}>/g/{g.slug}</a>
               <span class="dot">·</span>
               <span>live v{g.version}</span>
-              {g.hidden ? <span class="tool">hidden from the arcade</span> : null}
+              {g.hidden ? <span class="tool">Hidden from the arcade</span> : null}
             </div>
           </div>
           <div class="actions">
-            <button class="btn primary" data-admin="report" data-slug={g.slug} type="button">
+            <button class="btn pop" data-admin="report" data-slug={g.slug} type="button">
               Copy report for your AI
             </button>
             <button class="btn" data-admin={g.hidden ? "show" : "hide"} data-slug={g.slug} type="button">
@@ -233,7 +232,7 @@ export function GameDashboardPage(p: { arcade: string; siteUrl: string; report: 
           </div>
         </div>
 
-        <div class="panel" style="margin-bottom:26px">
+        <div class="panel" style="margin-bottom:16px">
           <h3>Plays per day</h3>
           <PlaysChart daily={r.daily} />
         </div>
@@ -259,8 +258,8 @@ export function GameDashboardPage(p: { arcade: string; siteUrl: string; report: 
           </div>
         </div>
 
-        <section style="margin:34px 0">
-          <h2 class="sec">Errors on v{g.version}</h2>
+        <section class="dash-section">
+          <h2 class="display">Errors on v{g.version}</h2>
           <p class="sub">Grouped by message and location. Click one to see the stack.</p>
           {r.errors.length ? (
             r.errors.map((e) => (
@@ -277,11 +276,11 @@ export function GameDashboardPage(p: { arcade: string; siteUrl: string; report: 
               </details>
             ))
           ) : (
-            <p class="muted">None. 🎉</p>
+            <p class="muted">None reported.</p>
           )}
           {r.olderErrors.length ? (
             <>
-              <h3 class="sub" style="margin-top:20px">
+              <h3 class="muted" style="font-size:14px;margin:20px 0 10px">
                 From older versions
               </h3>
               {r.olderErrors.map((e) => (
@@ -300,8 +299,8 @@ export function GameDashboardPage(p: { arcade: string; siteUrl: string; report: 
           ) : null}
         </section>
 
-        <section style="margin:34px 0 60px">
-          <h2 class="sec">What players said</h2>
+        <section class="dash-section">
+          <h2 class="display">What players said</h2>
           <ul class="comments">
             {r.comments.map((c) => (
               <li>
@@ -317,7 +316,7 @@ export function GameDashboardPage(p: { arcade: string; siteUrl: string; report: 
           </ul>
           {r.comments.length ? null : <p class="muted">No comments yet.</p>}
         </section>
-      </main>
+      </div>
     </Layout>
   );
 }

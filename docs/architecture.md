@@ -85,7 +85,13 @@ D1 holds totals, not events (`worker/migrations/0001_init.sql`):
 
 Every beacon becomes a single `DB.batch()` of UPSERTs, run after the response is sent with `ctx.waitUntil`.
 
+## Custom domains
+
+`vesta setup --domain example.com` puts the site Worker on a domain in the same Cloudflare account. A host that already serves a site gets a Worker route, so DNS is untouched and `ORIGIN_FALLBACK=1` passes any path the arcade doesn't serve through to the old site (without the arcade's CSP). A host with no records gets a Workers custom domain. `www.` redirects to the bare domain. The play Worker always stays on `workers.dev`, so games remain on a separate site from the arcade.
+
 ## Rendering
+
+The look comes from the original Vesta mascot, redrawn as SVG in `src/site/mascot.ts` with several expressions (deadpan, excited, delighted, game over). On the home page it follows the cursor and reacts when you go for a play button. Fonts (Archivo, Geist, Geist Mono, all OFL) and Phosphor icons (MIT) are vendored by `scripts/vendor-assets.mjs`, so pages load nothing from third parties.
 
 Pages are rendered on the server with Hono's JSX: no client framework, no build step for the site, and link previews (Open Graph and Twitter cards) work because the HTML arrives complete. The only client script is `/static/app.js` (about 150 lines): play button, likes, share, embed, comments and dashboard actions. Covers fall back to a generated SVG tile; the CLI replaces it with a real screenshot the first time it publishes.
 

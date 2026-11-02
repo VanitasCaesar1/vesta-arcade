@@ -4,7 +4,8 @@ import type { AppEnv } from "../lib/env.ts";
 import { daysAgo } from "../lib/util.ts";
 import { validateSlug } from "../lib/manifest.ts";
 import { api, VERSION } from "./api.ts";
-import { APP_JS, FLAME_SVG, STYLE } from "./assets.ts";
+import { APP_JS, FAVICON_SVG, fontFiles, STYLE } from "./assets.ts";
+import { mascotSvg } from "./mascot.ts";
 import { isAdmin, tokenConfigured } from "./auth.ts";
 import { feedbackReport, getGame, listComments, listGames, listVersions, madeWithCounts, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
@@ -27,6 +28,10 @@ const arcade = (c: Context<AppEnv>) => c.env.ARCADE_NAME || "Vesta Arcade";
 // Pages get a strict CSP: scripts only from this origin, frames only from the play origin.
 site.use("*", async (c, next) => {
   await next();
+  if (c.res.headers.has("x-vesta-origin")) {
+    c.res.headers.delete("x-vesta-origin");
+    return;
+  }
   if (!(c.res.headers.get("content-type") ?? "").startsWith("text/html")) return;
   const embed = c.req.path.startsWith("/embed/");
   c.res.headers.set(
@@ -49,9 +54,24 @@ site.use("*", async (c, next) => {
 
 site.route("/api", api);
 
+// Arcades on a custom domain: www.example.com redirects to example.com.
+site.use("*", async (c, next) => {
+  const url = new URL(c.req.url);
+  if (url.hostname.startsWith("www.") && c.env.ROLE !== "auto") {
+    url.hostname = url.hostname.slice(4);
+    return c.redirect(url.toString(), 301);
+  }
+  await next();
+});
+
+const FONT_HEADERS = { "content-type": "font/woff2", "cache-control": "public, max-age=31536000, immutable", "access-control-allow-origin": "*" };
+site.get("/static/archivo.woff2", (c) => c.body(fontFiles().display, 200, FONT_HEADERS));
+site.get("/static/geist.woff2", (c) => c.body(fontFiles().sans, 200, FONT_HEADERS));
+site.get("/static/geist-mono.woff2", (c) => c.body(fontFiles().mono, 200, FONT_HEADERS));
 site.get("/static/style.css", (c) => c.body(STYLE, 200, { "content-type": "text/css; charset=utf-8", "cache-control": "public, max-age=86400" }));
 site.get("/static/app.js", (c) => c.body(APP_JS, 200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=86400" }));
-site.get("/favicon.svg", (c) => c.body(FLAME_SVG.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '), 200, { "content-type": "image/svg+xml", "cache-control": "public, max-age=604800" }));
+site.get("/favicon.svg", (c) => c.body(FAVICON_SVG(mascotSvg()), 200, { "content-type": "image/svg+xml", "cache-control": "public, max-age=604800" }));
+site.get("/mascot.svg", (c) => c.body(mascotSvg({ label: "Vesta" }), 200, { "content-type": "image/svg+xml", "cache-control": "public, max-age=604800" }));
 site.get("/favicon.ico", (c) => c.redirect("/favicon.svg", 301));
 site.get("/robots.txt", (c) => c.text(`User-agent: *\nDisallow: /admin\nDisallow: /api/\nAllow: /\n`));
 
@@ -225,5 +245,26 @@ site.get("/admin/g/:slug", async (c) => {
   return c.html(<GameDashboardPage arcade={arcade(c)} siteUrl={origin(c)} report={report} />);
 });
 
+site.get("/random", async (c) => {
+  const row = await c.env.DB.prepare("SELECT slug FROM games WHERE current_version IS NOT NULL AND hidden = 0 ORDER BY RANDOM() LIMIT 1").first<{ slug: string }>();
+  c.header("cache-control", "no-store");
+  return c.redirect(row ? `/g/${row.slug}?play=1` : "/", 302);
+});
+
 site.get("/__version", (c) => c.json({ vesta: VERSION }));
-site.notFound((c) => notFound(c));
+
+// When the arcade takes over a domain that already had a site (ORIGIN_FALLBACK=1),
+// anything the arcade doesn't serve is passed through to that site, so old
+// links like /download keep working.
+const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/"];
+site.notFound(async (c) => {
+  const path = new URL(c.req.url).pathname;
+  if (c.env.ORIGIN_FALLBACK === "1" && (c.req.method === "GET" || c.req.method === "HEAD") && !OWN_PREFIXES.some((p) => path.startsWith(p))) {
+    const upstream = await fetch(c.req.raw);
+    // Copy, so headers are mutable, and mark it so the arcade's CSP isn't applied to someone else's site.
+    const res = new Response(upstream.body, upstream);
+    res.headers.set("x-vesta-origin", "1");
+    return res;
+  }
+  return notFound(c);
+});
