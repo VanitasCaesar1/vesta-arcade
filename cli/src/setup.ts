@@ -63,8 +63,56 @@ function workerConfig(o: { name: string; role: "site" | "play"; arcade: string; 
 
 const workersDevUrl = (out: string, name: string) => out.match(new RegExp(`https://${name}\\.[a-z0-9-]+\\.workers\\.dev`))?.[0];
 
+function parseJSON<T>(text: string): T | null {
+  const start = text.search(/[[{]/);
+  if (start < 0) return null;
+  try {
+    return JSON.parse(text.slice(start)) as T;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Workers on a fresh Cloudflare account can't be reached until the account has
+ * a workers.dev subdomain. Wrangler only asks for one interactively, so setup
+ * registers it through the API with wrangler's own credentials.
+ */
+async function ensureWorkersDevSubdomain(work: string, candidates: string[], out: Out): Promise<{ accountId: string; subdomain: string; created: boolean }> {
+  const who = parseJSON<{ accounts?: { id: string; name: string }[] }>((await wrangler(["whoami", "--json"], { cwd: work, quiet: true })).output);
+  const accounts = who?.accounts ?? [];
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? accounts[0]?.id;
+  if (!accountId) throw new Error("Couldn't find your Cloudflare account ID. Set CLOUDFLARE_ACCOUNT_ID and run setup again.");
+  if (accounts.length > 1 && !process.env.CLOUDFLARE_ACCOUNT_ID) {
+    out.log(c.gold(`! You have ${accounts.length} Cloudflare accounts; using "${accounts[0]!.name}". Set CLOUDFLARE_ACCOUNT_ID to pick another.`));
+  }
+  const token = parseJSON<{ token?: string }>((await wrangler(["auth", "token", "--json"], { cwd: work, quiet: true })).output)?.token;
+  if (!token) throw new Error("Couldn't read your Cloudflare credentials from wrangler. Run `npx wrangler login` and try again.");
+
+  const api = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/subdomain`;
+  const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
+  const current = (await fetch(api, { headers }).then((r) => r.json()).catch(() => null)) as { success?: boolean; result?: { subdomain?: string } } | null;
+  if (current?.success && current.result?.subdomain) return { accountId, subdomain: current.result.subdomain, created: false };
+
+  const tried: string[] = [];
+  for (const raw of candidates) {
+    const name = raw.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 63);
+    if (!name || tried.includes(name)) continue;
+    tried.push(name);
+    const res = (await fetch(api, { method: "PUT", headers, body: JSON.stringify({ subdomain: name }) }).then((r) => r.json()).catch(() => null)) as {
+      success?: boolean;
+      result?: { subdomain?: string };
+      errors?: { message: string }[];
+    } | null;
+    if (res?.success) return { accountId, subdomain: res.result?.subdomain ?? name, created: true };
+  }
+  throw new Error(`Couldn't register a workers.dev subdomain (tried ${tried.join(", ")}). Pick one with --subdomain <name>, or register one at https://dash.cloudflare.com/${accountId}/workers/onboarding`);
+}
+
 export interface SetupOptions {
   name?: string;
+  /** workers.dev subdomain to register if the account has none yet. */
+  subdomain?: string;
   prefix?: string;
   rotateToken?: boolean;
   out: Out;
@@ -135,7 +183,22 @@ export async function setup(opts: SetupOptions): Promise<ArcadeConfig> {
   }
   out.log(`${c.green("✓")} D1 database ${c.bold(bucket)}`);
 
-  // 4. Play Worker first: the site needs its address.
+  // 4. A workers.dev subdomain, so the Workers get public addresses.
+  let wanted = opts.subdomain;
+  const base = (email?.split("@")[0] ?? "my").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  if (!wanted && process.stdin.isTTY) {
+    const check = await ensureWorkersDevSubdomain(work, [], out).catch(() => null);
+    if (!check) {
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      wanted = (await rl.question(`${c.bold("Pick a workers.dev subdomain")} ${c.dim(`(your arcade will be ${prefix}.<name>.workers.dev; default ${base})`)}: `)).trim() || undefined;
+      rl.close();
+    }
+  }
+  const sub = await ensureWorkersDevSubdomain(work, [wanted ?? base, `${wanted ?? base}-games`, `${base}-${randomBytes(2).toString("hex")}`], out);
+  process.env.CLOUDFLARE_ACCOUNT_ID ??= sub.accountId;
+  out.log(`${c.green("✓")} workers.dev subdomain ${c.bold(`${sub.subdomain}.workers.dev`)}${sub.created ? c.dim(" (registered just now; new addresses can take a few minutes to start answering)") : ""}`);
+
+  // 5. Play Worker first: the site needs its address.
   const playName = `${prefix}-play`;
   const siteName = prefix;
   const main = "./index.js";
@@ -156,7 +219,7 @@ export async function setup(opts: SetupOptions): Promise<ArcadeConfig> {
   const siteUrl = workersDevUrl(siteDeploy.output, siteName) ?? previous?.url;
   if (siteDeploy.code !== 0 || !siteUrl) throw new Error("Deploying the arcade failed (see above).");
 
-  // 5. Token
+  // 6. Token
   const token = !opts.rotateToken && previous?.token && previous.url === siteUrl ? previous.token : randomBytes(32).toString("base64url");
   if (token !== previous?.token || previous?.url !== siteUrl) {
     const secret = await wrangler(["secret", "put", "ADMIN_TOKEN", "-c", "site.jsonc"], { cwd: work, quiet: true, input: token });

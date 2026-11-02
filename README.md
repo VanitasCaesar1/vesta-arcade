@@ -5,6 +5,8 @@ Tell your coding agent “publish this to Vesta”. Get a link anyone can play.<
 Then get back the crashes, the drop-off and what players said, in a form your agent can fix.<br>
 Runs on your own Cloudflare account, on the free plan.</p>
 
+<p align="center"><b><a href="https://vesta.vanitascaesar.workers.dev/g/hug-of-death">▶ Play the demo: Hug of Death</a></b> · <a href="https://vesta.vanitascaesar.workers.dev">Live arcade</a></p>
+
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
   <a href="#for-coding-agents">For agents</a> ·
@@ -156,7 +158,7 @@ When you outgrow it, the Workers paid plan is $5/month. Nothing else changes.
 ## CLI
 
 ```
-vesta setup                 Deploy (or upgrade) your arcade on Cloudflare
+vesta setup                 Deploy (or upgrade) your arcade on Cloudflare (--name, --subdomain)
 vesta publish [dir]         Publish; -n "notes", -b to build first, --open, --no-screenshot
 vesta feedback [slug]       The Markdown report (--json for raw data, --days 30)
 vesta list                  Your games
@@ -193,7 +195,7 @@ Created on first publish, next to your source. Commit it.
 
 ## The demo game
 
-[**Hug of Death**](games/hug-of-death) is the game in the screenshots. It's an original arcade game written with Claude Code and published with Vesta: your side project just hit #1, and you're the load balancer. Route traffic before servers melt, block scraper bots, and spend what you earn on servers, a CDN, a rate limiter or an SRE. It's one HTML file with no dependencies, and it reports milestones through `window.vesta`. Add `?demo` to its URL to watch it play itself.
+[**Hug of Death**](https://vesta.vanitascaesar.workers.dev/g/hug-of-death) ([source](games/hug-of-death)) is the game in the screenshots. It's an original arcade game written with Claude Code and published with Vesta: your side project just hit #1, and you're the load balancer. Route traffic before servers melt, block scraper bots, and spend what you earn on servers, a CDN, a rate limiter or an SRE. It's one HTML file with no dependencies, and it reports milestones through `window.vesta`. Add `?demo` to its URL to watch it play itself.
 
 ## Development
 

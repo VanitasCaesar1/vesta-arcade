@@ -14,6 +14,7 @@ ${c.ember("▲")} ${c.bold("vesta")} ${c.dim(VERSION)}: your own arcade for AI-m
 
 ${c.bold("Usage")}
   vesta setup                 Deploy your arcade to Cloudflare (free plan, ~2 minutes)
+                              --name "My Arcade"  --subdomain <workers.dev name>
   vesta publish [dir]         Publish the game in dir (or ./dist, ./build, ./) and print its link
   vesta feedback [slug]       Errors, session lengths and comments, as Markdown for your agent
   vesta list                  Your games
@@ -50,6 +51,7 @@ async function main() {
       open: { type: "boolean", short: "o" },
       token: { type: "string" },
       name: { type: "string" },
+      subdomain: { type: "string" },
       prefix: { type: "string" },
       "rotate-token": { type: "boolean" },
       days: { type: "string" },
@@ -75,7 +77,7 @@ async function main() {
     case "deploy":
     case "upgrade": {
       const { setup } = await import("./setup.ts");
-      await setup({ name: v.name, prefix: v.prefix, rotateToken: v["rotate-token"], out });
+      await setup({ name: v.name, subdomain: v.subdomain, prefix: v.prefix, rotateToken: v["rotate-token"], out });
       return;
     }
 
