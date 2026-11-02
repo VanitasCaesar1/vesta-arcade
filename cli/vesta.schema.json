@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "vesta.json",
+  "description": "A game's settings for Vesta (https://github.com/VanitasCaesar1/vesta-arcade). Created by `vesta publish`.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$", "description": "URL name of the game. Publishing again with the same slug creates a new version." },
+    "title": { "type": "string", "maxLength": 80 },
+    "description": { "type": "string", "maxLength": 2000, "description": "What the game is and how to play it." },
+    "author": { "type": "string", "maxLength": 60 },
+    "madeWith": { "type": "array", "items": { "type": "string", "maxLength": 32 }, "maxItems": 8, "description": "AI tools used, e.g. [\"Claude Code\"]. Detected automatically if left out." },
+    "tags": { "type": "array", "items": { "type": "string", "maxLength": 24 }, "maxItems": 8 },
+    "dir": { "type": "string", "description": "Build folder, relative to vesta.json. Detected automatically (dist, build, out, …)." },
+    "build": { "type": "string", "description": "Command run by `vesta publish --build`. Defaults to the package.json build script." },
+    "cover": { "type": "string", "description": "Cover image path: PNG, JPEG, WebP or GIF under 2 MB, ideally 1200×675." },
+    "aspect": { "type": "string", "pattern": "^\\d{1,4}/\\d{1,4}$", "description": "Player aspect ratio, e.g. \"16/9\" or \"9/16\"." },
+    "keyboardRequired": { "type": "boolean", "description": "Shows a keyboard notice, useful for phone players." },
+    "sourceUrl": { "type": "string", "pattern": "^https://", "description": "Link to the source code." }
+  },
+  "additionalProperties": false
+}

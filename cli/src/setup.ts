@@ -1,0 +1,183 @@
+// `vesta setup`: deploys an arcade to the user's own Cloudflare account with
+// wrangler. Everything fits the free plan: two Workers, one R2 bucket, one D1
+// database. Running it again upgrades the same arcade in place.
+import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
+import { cp, mkdir, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { createInterface } from "node:readline/promises";
+import { fileURLToPath } from "node:url";
+import { configDir, loadConfig, saveConfig, type ArcadeConfig } from "./config.ts";
+import { c, qr, type Out } from "./ui.ts";
+
+const WRANGLER = ["--yes", "wrangler@4"];
+const COMPAT_DATE = "2026-10-01";
+
+interface RunResult {
+  code: number;
+  output: string;
+}
+
+/** Runs wrangler with the user's terminal attached (it may open a browser or ask a question). */
+function wrangler(args: string[], opts: { cwd: string; input?: string; quiet?: boolean }): Promise<RunResult> {
+  return new Promise((resolve) => {
+    const p = spawn("npx", [...WRANGLER, ...args], {
+      cwd: opts.cwd,
+      shell: process.platform === "win32",
+      stdio: [opts.input !== undefined ? "pipe" : "inherit", "pipe", "pipe"],
+      env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
+    });
+    let output = "";
+    const onData = (stream: NodeJS.WriteStream) => (d: Buffer) => {
+      output += d.toString();
+      if (!opts.quiet) stream.write(c.dim(d.toString()));
+    };
+    p.stdout!.on("data", onData(process.stdout));
+    p.stderr!.on("data", onData(process.stderr));
+    if (opts.input !== undefined) {
+      p.stdin!.write(opts.input);
+      p.stdin!.end();
+    }
+    p.on("exit", (code) => resolve({ code: code ?? 1, output }));
+    p.on("error", (e) => resolve({ code: 1, output: String(e) }));
+  });
+}
+
+function workerConfig(o: { name: string; role: "site" | "play"; arcade: string; playUrl: string; bucket: string; databaseId: string; main: string }) {
+  return JSON.stringify(
+    {
+      name: o.name,
+      main: o.main,
+      compatibility_date: COMPAT_DATE,
+      workers_dev: true,
+      observability: { enabled: true },
+      vars: { ROLE: o.role, ARCADE_NAME: o.arcade, PLAY_URL: o.playUrl },
+      r2_buckets: [{ binding: "FILES", bucket_name: o.bucket }],
+      d1_databases: [{ binding: "DB", database_name: o.bucket, database_id: o.databaseId, migrations_dir: "migrations" }],
+    },
+    null,
+    2,
+  );
+}
+
+const workersDevUrl = (out: string, name: string) => out.match(new RegExp(`https://${name}\\.[a-z0-9-]+\\.workers\\.dev`))?.[0];
+
+export interface SetupOptions {
+  name?: string;
+  prefix?: string;
+  rotateToken?: boolean;
+  out: Out;
+}
+
+export async function setup(opts: SetupOptions): Promise<ArcadeConfig> {
+  const { out } = opts;
+  const previous = await loadConfig();
+  const prefix = opts.prefix ?? previous?.deploy?.prefix ?? "vesta";
+  if (!/^[a-z0-9][a-z0-9-]{0,40}$/.test(prefix)) throw new Error("--prefix must be lowercase letters, numbers and hyphens");
+  const bucket = previous?.deploy?.bucket ?? `${prefix}-games`;
+
+  const here = dirname(fileURLToPath(import.meta.url));
+  const bundled = join(here, "worker");
+  if (!existsSync(join(bundled, "index.js"))) throw new Error(`The arcade bundle is missing from ${bundled}. Reinstall vesta-cli.`);
+  const work = join(configDir(), "deploy");
+  await mkdir(work, { recursive: true });
+  await cp(join(bundled, "index.js"), join(work, "index.js"));
+  await cp(join(bundled, "migrations"), join(work, "migrations"), { recursive: true });
+
+  out.log(`\n${c.ember("▲")} ${c.bold("Setting up your Vesta arcade on Cloudflare")} ${c.dim("(free plan: 2 Workers, 1 R2 bucket, 1 D1 database)")}\n`);
+
+  // 1. Signed in?
+  let who = await wrangler(["whoami"], { cwd: work, quiet: true });
+  if (/not authenticated|You are not logged in/i.test(who.output) || who.code !== 0) {
+    out.log(c.dim("Opening your browser to sign in to Cloudflare…"));
+    const login = await wrangler(["login"], { cwd: work });
+    if (login.code !== 0) throw new Error("Cloudflare sign-in failed. Run `npx wrangler login`, then try again.");
+    who = await wrangler(["whoami"], { cwd: work, quiet: true });
+  }
+  const email = who.output.match(/associated with the email ([^\s.]+@[^\s]+?)\.?\s/)?.[1];
+  out.log(`${c.green("✓")} Signed in to Cloudflare${email ? ` as ${email}` : ""}`);
+
+  // 2. Arcade name
+  let arcade = opts.name ?? previous?.deploy?.name;
+  if (!arcade) {
+    const suggestion = email ? `${email.split("@")[0]!.replace(/[^a-z0-9]+/gi, " ").trim().replace(/\b\w/g, (m) => m.toUpperCase())}'s Arcade` : "Vesta Arcade";
+    if (process.stdin.isTTY) {
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      arcade = (await rl.question(`${c.bold("Name your arcade")} ${c.dim(`(${suggestion})`)}: `)).trim() || suggestion;
+      rl.close();
+    } else arcade = suggestion;
+  }
+  arcade = arcade.slice(0, 60);
+
+  // 3. Storage
+  const r2 = await wrangler(["r2", "bucket", "create", bucket], { cwd: work, quiet: true });
+  if (r2.code !== 0 && !/already exists|already own/i.test(r2.output)) {
+    if (/enable R2|R2 is not enabled|10042/i.test(r2.output)) {
+      throw new Error("R2 isn't turned on for this Cloudflare account yet. Open https://dash.cloudflare.com/?to=/:account/r2 , turn it on (free tier, may ask for a card), then run setup again.");
+    }
+    throw new Error(`Couldn't create the R2 bucket:\n${r2.output.slice(-1500)}`);
+  }
+  out.log(`${c.green("✓")} R2 bucket ${c.bold(bucket)}`);
+
+  let databaseId = previous?.deploy?.databaseId;
+  if (!databaseId) {
+    const list = await wrangler(["d1", "list", "--json"], { cwd: work, quiet: true });
+    try {
+      const dbs = JSON.parse(list.output.slice(list.output.indexOf("["))) as { uuid: string; name: string }[];
+      databaseId = dbs.find((d) => d.name === bucket)?.uuid;
+    } catch {}
+  }
+  if (!databaseId) {
+    const created = await wrangler(["d1", "create", bucket], { cwd: work, quiet: true });
+    databaseId = created.output.match(/database_id"?\s*[:=]\s*"([0-9a-f-]{36})"/)?.[1];
+    if (!databaseId) throw new Error(`Couldn't create the D1 database:\n${created.output.slice(-1500)}`);
+  }
+  out.log(`${c.green("✓")} D1 database ${c.bold(bucket)}`);
+
+  // 4. Play Worker first: the site needs its address.
+  const playName = `${prefix}-play`;
+  const siteName = prefix;
+  const main = "./index.js";
+  await writeFile(join(work, "play.jsonc"), workerConfig({ name: playName, role: "play", arcade, playUrl: "", bucket, databaseId, main }));
+  out.log(c.dim("\nDeploying the game server…"));
+  const playDeploy = await wrangler(["deploy", "-c", "play.jsonc"], { cwd: work });
+  const playUrl = workersDevUrl(playDeploy.output, playName) ?? previous?.playUrl;
+  if (playDeploy.code !== 0 || !playUrl) throw new Error("Deploying the game server failed (see above). If wrangler asked you to register a workers.dev subdomain, do that in the dashboard and run setup again.");
+  out.log(`${c.green("✓")} Game server ${c.bold(playUrl)}`);
+
+  await writeFile(join(work, "site.jsonc"), workerConfig({ name: siteName, role: "site", arcade, playUrl, bucket, databaseId, main }));
+  const migrate = await wrangler(["d1", "migrations", "apply", bucket, "--remote", "-c", "site.jsonc"], { cwd: work, quiet: true, input: "y\n" });
+  if (migrate.code !== 0) throw new Error(`Database migration failed:\n${migrate.output.slice(-1500)}`);
+  out.log(`${c.green("✓")} Database is up to date`);
+
+  out.log(c.dim("\nDeploying the arcade…"));
+  const siteDeploy = await wrangler(["deploy", "-c", "site.jsonc"], { cwd: work });
+  const siteUrl = workersDevUrl(siteDeploy.output, siteName) ?? previous?.url;
+  if (siteDeploy.code !== 0 || !siteUrl) throw new Error("Deploying the arcade failed (see above).");
+
+  // 5. Token
+  const token = !opts.rotateToken && previous?.token && previous.url === siteUrl ? previous.token : randomBytes(32).toString("base64url");
+  if (token !== previous?.token || previous?.url !== siteUrl) {
+    const secret = await wrangler(["secret", "put", "ADMIN_TOKEN", "-c", "site.jsonc"], { cwd: work, quiet: true, input: token });
+    if (secret.code !== 0) throw new Error(`Couldn't set the arcade token:\n${secret.output.slice(-1500)}`);
+  }
+  out.log(`${c.green("✓")} Arcade ${c.bold(siteUrl)}`);
+
+  const cfg: ArcadeConfig = { url: siteUrl, token, playUrl, deploy: { prefix, name: arcade, databaseId, bucket } };
+  await saveConfig(cfg);
+
+  out.log(`
+${c.ember("▲")} ${c.bold(`${arcade} is live.`)}
+
+${qr(siteUrl)}
+  ${c.bold(siteUrl)}
+
+  ${c.bold("Publish a game")}        npx vesta-cli publish        ${c.dim("(from a folder with index.html, or a built dist/)")}
+  ${c.bold("Let your agent do it")}  claude mcp add vesta -- npx -y vesta-cli mcp
+  ${c.bold("Dashboard")}             ${siteUrl}/admin ${c.dim("(your token is in ~/.config/vesta/config.json)")}
+
+  ${c.dim("Your token was saved to")} ${c.dim(join(configDir(), "config.json"))}${c.dim(". Keep it secret: it can publish and delete games.")}
+`);
+  return cfg;
+}

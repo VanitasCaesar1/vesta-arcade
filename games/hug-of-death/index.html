@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Hug of Death</title>
+<meta name="description" content="Your side project just hit #1 on the front page. You are the load balancer. Keep it alive.">
+<style>
+  html, body { margin: 0; height: 100%; background: #0e0c0a; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100vw; height: 100vh; height: 100dvh; cursor: crosshair; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+"use strict";
+// HUG OF DEATH: you are the load balancer for a side project that just hit #1.
+// Route each wave of requests to a server that can take it, block bots, buy
+// capacity, and keep uptime above 90% until the post falls off the front page.
+
+const cv = document.getElementById("c");
+const ctx = cv.getContext("2d");
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  layout();
+}
+window.addEventListener("resize", resize);
+
+const C = {
+  bg: "#0e0c0a", grid: "rgba(255,255,255,0.035)", text: "#f5ede2", muted: "#a8998a", dim: "#6f6458",
+  ember: "#ff5b1f", ember2: "#ff8a4c", gold: "#f4c25b", blue: "#5bb8ff", red: "#ff4d4d", green: "#7bd389", panel: "#1b1714", line: "#2d2620",
+};
+const SERIF = '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif';
+const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+const SANS = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
+
+const vesta = () => window.vesta || { milestone() {}, error() {} };
+
+// ---------- sound: tiny synth, no assets ----------
+let audio = null, muted = false;
+try { muted = localStorage.getItem("muted") === "1"; } catch (e) {}
+function beep(freq, dur, type, vol, slide) {
+  if (muted) return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+    o.type = type || "square"; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    g.gain.setValueAtTime(vol || 0.04, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+let lastTick = 0;
+const sfx = {
+  serve() { const n = performance.now(); if (n - lastTick > 70) { lastTick = n; beep(880 + Math.random() * 220, 0.04, "triangle", 0.018); } },
+  drop() { beep(140, 0.12, "sawtooth", 0.035, 90); },
+  crash() { beep(220, 0.5, "sawtooth", 0.06, 40); },
+  block() { beep(1200, 0.06, "square", 0.03, 600); },
+  buy() { beep(660, 0.08, "triangle", 0.05); setTimeout(() => beep(990, 0.12, "triangle", 0.05), 70); },
+  route() { beep(520, 0.03, "square", 0.02); },
+  phase() { beep(392, 0.12, "triangle", 0.05); setTimeout(() => beep(523, 0.12, "triangle", 0.05), 110); setTimeout(() => beep(784, 0.2, "triangle", 0.05), 220); },
+};
+
+// ---------- the story: an HN post's life ----------
+const PHASES = [
+  { t: 0,   rps: 2.2, label: "Show HN: my side project", rank: "new", points: 1, mix: { page: 0.75, static: 0.25 } },
+  { t: 14,  rps: 4.5, label: "Rising on /newest", rank: "#58", points: 9, mix: { page: 0.65, static: 0.35 } },
+  { t: 34,  rps: 7.5, label: "Made the front page", rank: "#22", points: 41, mix: { page: 0.55, static: 0.35, api: 0.1 } },
+  { t: 62,  rps: 12, label: "Climbing the front page", rank: "#7", points: 156, mix: { page: 0.45, static: 0.35, api: 0.12, bot: 0.08 } },
+  { t: 95,  rps: 18, label: "#1 on Hacker News", rank: "#1", points: 412, mix: { page: 0.42, static: 0.33, api: 0.15, bot: 0.1 } },
+  { t: 130, rps: 24, label: "Someone posted it to Reddit", rank: "#1", points: 688, mix: { page: 0.4, static: 0.32, api: 0.14, bot: 0.14 } },
+  { t: 160, rps: 28, label: "A very big account quote-posted you", rank: "#2", points: 803, mix: { page: 0.38, static: 0.3, api: 0.18, bot: 0.14 } },
+];
+const WIN_AT = 190;
+
+const TYPES = {
+  page:   { work: 1.0, pay: 1,   color: C.ember,  r: 4.2, speed: 1.0, label: "GET /" },
+  static: { work: 0.35, pay: 0.4, color: C.blue,   r: 3.2, speed: 1.15, label: "GET /app.js" },
+  api:    { work: 3.0, pay: 3,   color: C.gold,   r: 6.5, speed: 0.8, label: "POST /api/search" },
+  bot:    { work: 4.5, pay: 0,   color: C.red,    r: 7.5, speed: 0.75, label: "scraper" },
+};
+
+const COMMENTS_BAD = [
+  "Hug of death'd. Archive link: …", "502 for me", "Works on my machine", "Have you considered a static site?",
+  "This is why I host on a Raspberry Pi", "Still down. Ironic for a \"scales to zero\" pitch", "Loading… loading…",
+  "Mods, can we change the URL to the archive?", "Is it written in Rust? That would've helped", "Down for me too (Europe)",
+];
+const COMMENTS_GOOD = [
+  "Wow, this is snappy", "Bookmarked", "How are you hosting this?", "Love the UI", "This is the HN I come here for",
+  "Starred on GitHub", "Finally something not about LLMs", "Neat. What's the stack?", "Signed up",
+];
+
+// ---------- state ----------
+let S;
+let best = { time: 0, served: 0 };
+try { best = JSON.parse(localStorage.getItem("best") || "null") || best; } catch (e) {}
+let firstRun = !best.time;
+
+function newGame() {
+  S = {
+    mode: "play", t: 0, money: 30, served: 0, dropped: 0, blocked: 0, peak: 0, uptime: 1,
+    servers: [], target: 0, reqs: [], fx: [], comments: [], phase: -1, spawnAcc: 0, rpsWindow: [],
+    cpu: 1, cdn: false, limiter: false, sre: false, shake: 0, won: false, banner: null, hintT: 0,
+    cost: { server: 35, cpu: 60, cdn: 110, limiter: 150, sre: 320 },
+  };
+  addServer(); addServer();
+  layout();
+  vesta().milestone("started");
+}
+
+function addServer() {
+  const n = S.servers.length + 1;
+  S.servers.push({ name: "web-" + n, queue: 0, cap: 14, speed: 6.5, down: 0, heat: 0, flash: 0, y: 0, h: 0, served: 0 });
+}
+
+// ---------- layout ----------
+let L = {};
+function layout() {
+  if (!S) return;
+  const portrait = H > W * 1.1;
+  const top = portrait ? 110 : 92, bottom = portrait ? 150 : 112;
+  L.top = top; L.bottom = H - bottom;
+  L.inX = Math.max(30, W * 0.05);
+  L.routerX = portrait ? W * 0.36 : W * 0.38;
+  L.routerY = (L.top + L.bottom) / 2;
+  L.serverX = portrait ? W * 0.6 : W * 0.7;
+  L.serverW = Math.min(portrait ? W * 0.36 : 240, W - L.serverX - 16);
+  const n = S.servers.length, gap = 10;
+  const avail = L.bottom - L.top;
+  const h = Math.min(86, (avail - gap * (n - 1)) / n);
+  const start = L.routerY - (h * n + gap * (n - 1)) / 2;
+  S.servers.forEach((s, i) => { s.y = start + i * (h + gap); s.h = h; });
+  L.shopY = H - bottom + 18; L.shopH = bottom - 30;
+}
+
+// ---------- spawning ----------
+function currentPhase() {
+  let p = 0;
+  for (let i = 0; i < PHASES.length; i++) if (S.t >= PHASES[i].t) p = i;
+  return p;
+}
+function rpsNow() {
+  const i = currentPhase(), p = PHASES[i];
+  if (S.t > WIN_AT) return p.rps + (S.t - WIN_AT) * 0.12; // endless: it never stops
+  const next = PHASES[i + 1];
+  if (!next) return p.rps;
+  const k = (S.t - p.t) / (next.t - p.t);
+  // Hold steady, then ramp into the next phase over its second half.
+  return p.rps + (next.rps - p.rps) * Math.max(0, (k - 0.5) * 2);
+}
+function pickType(mix) {
+  let r = Math.random();
+  for (const k in mix) { r -= mix[k]; if (r <= 0) return k; }
+  return "page";
+}
+function spawn(dt) {
+  const p = PHASES[currentPhase()];
+  // Traffic arrives in bursts, like real traffic.
+  const burst = 1 + 0.45 * Math.sin(S.t * 1.7) + 0.25 * Math.sin(S.t * 4.3);
+  S.spawnAcc += rpsNow() * burst * dt;
+  while (S.spawnAcc >= 1) {
+    S.spawnAcc -= 1;
+    const type = pickType(p.mix);
+    const T = TYPES[type];
+    const y = L.top + Math.random() * (L.bottom - L.top);
+    S.reqs.push({ type, x: L.inX - 10, y, sx: L.inX - 10, sy: y, stage: 0, k: 0, target: -1, r: T.r, speed: (0.55 + Math.random() * 0.2) * T.speed, wob: Math.random() * 6 });
+  }
+}
+
+// ---------- routing ----------
+function leastLoaded() {
+  let bestI = -1, bestV = Infinity;
+  S.servers.forEach((s, i) => { if (s.down > 0) return; const v = s.queue / (s.cap * S.cpu); if (v < bestV) { bestV = v; bestI = i; } });
+  return bestI < 0 ? S.target : bestI;
+}
+function route(r) {
+  if (r.type === "static" && S.cdn) { serve(r, null); fx(r.x, r.y, "CDN", C.blue); return; }
+  if (r.type === "bot" && S.limiter && Math.random() < 0.7) { block(r, true); return; }
+  r.stage = 1; r.k = 0; r.sx = r.x; r.sy = r.y;
+  r.target = S.sre ? leastLoaded() : S.target;
+}
+function arrive(r) {
+  const s = S.servers[r.target];
+  const T = TYPES[r.type];
+  if (!s || s.down > 0) { drop(r, "502"); return; }
+  if (s.queue + T.work > s.cap * S.cpu) {
+    drop(r, "503");
+    s.heat += 0.35;
+    if (s.heat > 1) crash(s);
+    return;
+  }
+  s.queue += T.work;
+  s.served++;
+  serve(r, s);
+}
+function serve(r, s) {
+  r.dead = true;
+  const T = TYPES[r.type];
+  S.money += T.pay;
+  S.served++;
+  S.uptime = S.uptime * 0.985 + 0.015;
+  S.rpsWindow.push(S.t);
+  if (T.pay >= 1 && Math.random() < 0.35) fx(s ? L.serverX - 18 : r.x, s ? s.y + s.h / 2 - 8 : r.y, "+$" + T.pay, C.green);
+  sfx.serve();
+}
+function drop(r, code) {
+  r.dead = true;
+  S.dropped++;
+  S.uptime = S.uptime * 0.985;
+  fx(r.x, r.y, code, C.red);
+  sfx.drop();
+  if (Math.random() < 0.18) comment(COMMENTS_BAD, true);
+}
+function block(r, auto) {
+  r.dead = true;
+  S.blocked++;
+  fx(r.x, r.y, auto ? "rate-limited" : "blocked", C.gold);
+  sfx.block();
+}
+function crash(s) {
+  s.down = 4; s.queue = 0; s.heat = 0; S.shake = 10;
+  fx(L.serverX + L.serverW / 2, s.y + s.h / 2, s.name + " crashed", C.red, 1.6);
+  sfx.crash();
+  comment(COMMENTS_BAD, true);
+  vesta().milestone("first-crash");
+}
+function fx(x, y, text, color, scale) {
+  S.fx.push({ x, y, text, color, life: 1, scale: scale || 1 });
+}
+function comment(list, bad) {
+  S.comments.unshift({ text: list[(Math.random() * list.length) | 0], bad, life: 7 });
+  if (S.comments.length > 4) S.comments.pop();
+}
+
+// ---------- shop ----------
+const SHOP = [
+  { id: "server", key: "Q", name: "+ Server", desc: "another web box", can: () => S.servers.length < 6 },
+  { id: "cpu", key: "W", name: "Bigger boxes", desc: "+35% capacity", can: () => S.cpu < 3 },
+  { id: "cdn", key: "E", name: "CDN", desc: "serves blue static", can: () => !S.cdn },
+  { id: "limiter", key: "R", name: "Rate limiter", desc: "stops most bots", can: () => !S.limiter },
+  { id: "sre", key: "T", name: "Hire an SRE", desc: "auto-routes", can: () => !S.sre },
+];
+function buy(id) {
+  if (!S || S.mode !== "play") return;
+  const item = SHOP.find((i) => i.id === id);
+  if (!item || !item.can() || S.money < S.cost[id]) { beep(110, 0.08, "square", 0.03); return; }
+  S.money -= S.cost[id];
+  if (id === "server") { addServer(); layout(); S.cost.server = Math.round(S.cost.server * 1.75); }
+  if (id === "cpu") { S.cpu *= 1.35; S.cost.cpu = Math.round(S.cost.cpu * 1.8); }
+  if (id === "cdn") S.cdn = true;
+  if (id === "limiter") S.limiter = true;
+  if (id === "sre") { S.sre = true; comment(["Our new SRE says hi. You can stop clicking now. Mostly."], false); }
+  sfx.buy();
+  vesta().milestone("bought-" + id);
+}
+function shopRects() {
+  const n = SHOP.length, pad = 8;
+  const portrait = H > W * 1.1;
+  const cols = portrait ? 3 : n;
+  const rows = Math.ceil(n / cols);
+  const w = Math.min(190, (W - 24 - pad * (cols - 1)) / cols);
+  const h = Math.min(64, (L.shopH - pad * (rows - 1)) / rows);
+  const total = w * cols + pad * (cols - 1);
+  const x0 = (W - total) / 2;
+  return SHOP.map((item, i) => ({ item, x: x0 + (i % cols) * (w + pad), y: L.shopY + Math.floor(i / cols) * (h + pad), w, h }));
+}
+
+// ---------- update ----------
+function update(dt) {
+  if (S.mode !== "play") return;
+  S.t += dt;
+  const p = currentPhase();
+  if (p !== S.phase) {
+    S.phase = p;
+    S.banner = { text: PHASES[p].label, life: 3.2 };
+    if (p > 0) sfx.phase();
+    if (p === 2) vesta().milestone("front-page");
+    if (p === 4) vesta().milestone("rank-1");
+    if (p >= 2) comment(COMMENTS_GOOD, false);
+  }
+  if (!S.won && S.t >= WIN_AT) {
+    S.won = true; S.mode = "won"; vesta().milestone("survived");
+    saveBest();
+  }
+  spawn(dt);
+
+  for (const r of S.reqs) {
+    if (r.stage === 0) {
+      // Travel from the internet to the load balancer.
+      r.k += dt * r.speed * 0.55;
+      const e = Math.min(1, r.k);
+      r.x = r.sx + (L.routerX - r.sx) * e;
+      r.y = r.sy + (L.routerY - r.sy) * (e * e) + Math.sin(r.wob + S.t * 3) * 2 * (1 - e);
+      if (e >= 1) route(r);
+    } else if (!r.dead) {
+      const s = S.servers[r.target];
+      if (!s) { r.dead = true; continue; }
+      r.k += dt * r.speed * 1.1;
+      const e = Math.min(1, r.k);
+      const tx = L.serverX, ty = s.y + s.h / 2;
+      r.x = r.sx + (tx - r.sx) * e;
+      r.y = r.sy + (ty - r.sy) * e;
+      if (e >= 1) arrive(r);
+    }
+  }
+  S.reqs = S.reqs.filter((r) => !r.dead);
+
+  for (const s of S.servers) {
+    if (s.down > 0) { s.down -= dt; if (s.down <= 0) { s.down = 0; fx(L.serverX + L.serverW / 2, s.y + s.h / 2, s.name + " is back", C.green); } continue; }
+    s.queue = Math.max(0, s.queue - s.speed * S.cpu * dt);
+    const load = s.queue / (s.cap * S.cpu);
+    s.heat = Math.max(0, s.heat - dt * (load > 0.85 ? 0.05 : 0.45));
+    s.flash = Math.max(0, s.flash - dt * 3);
+  }
+  for (const f of S.fx) { f.life -= dt * 0.9; f.y -= dt * 26; }
+  S.fx = S.fx.filter((f) => f.life > 0);
+  for (const c of S.comments) c.life -= dt;
+  S.comments = S.comments.filter((c) => c.life > 0);
+  if (S.banner) { S.banner.life -= dt; if (S.banner.life <= 0) S.banner = null; }
+  S.shake = Math.max(0, S.shake - dt * 30);
+
+  while (S.rpsWindow.length && S.rpsWindow[0] < S.t - 1) S.rpsWindow.shift();
+  S.peak = Math.max(S.peak, S.rpsWindow.length);
+
+  // Hint for first-timers: the target is melting, switch.
+  if (firstRun && S.t < 60) {
+    const s = S.servers[S.target];
+    S.hintT = s && s.queue / (s.cap * S.cpu) > 0.7 ? S.hintT + dt : Math.max(0, S.hintT - dt);
+  } else S.hintT = 0;
+
+  if (S.t > 20 && S.uptime < 0.9) { S.mode = "over"; vesta().milestone("game-over"); saveBest(); sfx.crash(); }
+}
+
+function saveBest() {
+  if (S.t > best.time) best = { time: Math.round(S.t), served: S.served };
+  try { localStorage.setItem("best", JSON.stringify(best)); } catch (e) {}
+  firstRun = false;
+}
+
+// ---------- draw ----------
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+function fmtTime(t) { t = Math.max(0, Math.floor(t)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); }
+
+function drawBackground() {
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W * 0.5, -H * 0.2, 10, W * 0.5, -H * 0.2, H * 1.1);
+  g.addColorStop(0, "rgba(255,91,31,0.12)"); g.addColorStop(1, "rgba(255,91,31,0)");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let x = (S ? -(S.t * 12) % 32 : 0); x < W; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+}
+
+function drawWorld() {
+  // The internet
+  const ig = ctx.createLinearGradient(0, 0, L.inX * 2.5, 0);
+  ig.addColorStop(0, "rgba(255,91,31,0.16)"); ig.addColorStop(1, "rgba(255,91,31,0)");
+  ctx.fillStyle = ig; ctx.fillRect(0, 0, L.inX * 2.5, H);
+  ctx.save(); ctx.translate(14, L.routerY); ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = C.dim; ctx.font = "600 10px " + MONO; ctx.textAlign = "center"; ctx.fillText("T H E   I N T E R N E T", 0, 4);
+  ctx.restore();
+
+  // Route lines
+  S.servers.forEach((s, i) => {
+    const active = S.sre ? false : i === S.target;
+    ctx.strokeStyle = s.down > 0 ? "rgba(255,77,77,0.15)" : active ? "rgba(255,91,31,0.55)" : "rgba(255,255,255,0.06)";
+    ctx.lineWidth = active ? 3 : 1.5;
+    ctx.setLineDash(active ? [] : [4, 6]);
+    ctx.beginPath(); ctx.moveTo(L.routerX, L.routerY); ctx.lineTo(L.serverX, s.y + s.h / 2); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // Load balancer
+  const rs = 26;
+  ctx.save(); ctx.translate(L.routerX, L.routerY);
+  ctx.shadowColor = C.ember; ctx.shadowBlur = 24;
+  ctx.fillStyle = C.panel; ctx.strokeStyle = C.ember; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i + Math.PI / 6; ctx.lineTo(Math.cos(a) * rs, Math.sin(a) * rs); }
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = C.text; ctx.font = "700 9px " + MONO; ctx.textAlign = "center";
+  ctx.fillText(S.sre ? "SRE" : "YOU", 0, 3);
+  ctx.restore();
+  ctx.fillStyle = C.dim; ctx.font = "600 10px " + MONO; ctx.textAlign = "center";
+  ctx.fillText("load balancer", L.routerX, L.routerY + rs + 16);
+
+  // Servers
+  S.servers.forEach((s, i) => {
+    const x = L.serverX, y = s.y, w = L.serverW, h = s.h;
+    const load = s.down > 0 ? 0 : Math.min(1, s.queue / (s.cap * S.cpu));
+    const selected = !S.sre && i === S.target;
+    const sx = S.shake && s.heat > 0.6 ? (Math.random() - 0.5) * 3 : 0;
+    ctx.save(); ctx.translate(sx, 0);
+    if (selected) { ctx.shadowColor = C.ember; ctx.shadowBlur = 18; }
+    rr(x, y, w, h, 10); ctx.fillStyle = s.down > 0 ? "#2a1212" : C.panel; ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = selected ? 2 : 1;
+    ctx.strokeStyle = s.down > 0 ? C.red : selected ? C.ember : C.line; ctx.stroke();
+    const pad = 10;
+    ctx.fillStyle = C.text; ctx.font = "600 " + Math.min(14, h * 0.24) + "px " + MONO; ctx.textAlign = "left";
+    ctx.fillText(s.name, x + pad, y + Math.min(22, h * 0.36));
+    ctx.fillStyle = C.dim; ctx.font = "600 10px " + MONO; ctx.textAlign = "right";
+    ctx.fillText("[" + (i + 1) + "]", x + w - pad, y + Math.min(20, h * 0.34));
+    if (s.down > 0) {
+      ctx.fillStyle = Math.floor(S.t * 4) % 2 ? C.red : "#ff9a9a"; ctx.textAlign = "left"; ctx.font = "700 11px " + MONO;
+      ctx.fillText("REBOOTING " + s.down.toFixed(1) + "s", x + pad, y + h - 12);
+    } else {
+      const bw = w - pad * 2, by = y + h - 18;
+      rr(x + pad, by, bw, 8, 4); ctx.fillStyle = "#0b0907"; ctx.fill();
+      const col = load < 0.6 ? C.green : load < 0.85 ? C.gold : C.red;
+      if (load > 0.01) { rr(x + pad, by, Math.max(6, bw * load), 8, 4); ctx.fillStyle = col; ctx.fill(); }
+      if (h > 60) { ctx.fillStyle = C.muted; ctx.font = "500 10px " + MONO; ctx.textAlign = "left"; ctx.fillText(Math.round(load * 100) + "% load", x + pad, by - 6); }
+    }
+    ctx.restore();
+  });
+
+  // Requests
+  for (const r of S.reqs) {
+    const T = TYPES[r.type];
+    ctx.fillStyle = T.color;
+    if (r.type === "bot") {
+      ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(S.t * 4);
+      ctx.shadowColor = C.red; ctx.shadowBlur = 10;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rad = i % 2 ? r.r * 0.55 : r.r * 1.15; ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad); }
+      ctx.closePath(); ctx.fill(); ctx.restore();
+    } else {
+      ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // Floating text
+  ctx.textAlign = "center";
+  for (const f of S.fx) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, f.life * 1.5));
+    ctx.fillStyle = f.color; ctx.font = "700 " + Math.round(11 * f.scale) + "px " + MONO;
+    ctx.fillText(f.text, f.x, f.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawHud() {
+  const p = PHASES[S.phase] || PHASES[0];
+  const portrait = H > W * 1.1;
+  // HN-ish rank card
+  const points = Math.round(p.points + (S.t - p.t) * (S.phase >= 2 ? 3.2 : 0.4));
+  ctx.textAlign = "left";
+  ctx.fillStyle = C.ember; ctx.font = "700 13px " + MONO;
+  ctx.fillText("▲ " + points + " points · " + (p.rank === "new" ? "just posted" : p.rank + (S.phase >= 2 ? " on the front page" : " on /newest")), 16, 26);
+  ctx.fillStyle = C.text; ctx.font = "500 " + (portrait ? 18 : 22) + "px " + SERIF;
+  ctx.fillText(S.t >= WIN_AT ? "Endless mode: it never stops" : p.label, 16, portrait ? 52 : 56);
+
+  // Stats
+  const stats = [
+    ["$" + Math.floor(S.money), C.green],
+    [(S.uptime * 100).toFixed(1) + "% up", S.uptime > 0.97 ? C.text : S.uptime > 0.93 ? C.gold : C.red],
+    [S.rpsWindow.length + " req/s", C.text],
+    [fmtTime(S.t) + (S.t < WIN_AT ? " / " + fmtTime(WIN_AT) : ""), C.muted],
+  ];
+  ctx.font = "700 " + (portrait ? 13 : 15) + "px " + MONO;
+  if (portrait) {
+    let x = 16;
+    stats.forEach(([t, col]) => { ctx.fillStyle = col; ctx.textAlign = "left"; ctx.fillText(t, x, 82); x += ctx.measureText(t).width + 16; });
+  } else {
+    let x = W - 16;
+    ctx.textAlign = "right";
+    stats.slice().reverse().forEach(([t, col]) => { ctx.fillStyle = col; ctx.fillText(t, x, 26); x -= ctx.measureText(t).width + 22; });
+  }
+  // Uptime bar
+  const bw = portrait ? W - 32 : 260, bx = portrait ? 16 : W - 16 - bw, by = portrait ? 92 : 40;
+  rr(bx, by, bw, 5, 3); ctx.fillStyle = "#1f1a16"; ctx.fill();
+  const k = Math.max(0, (S.uptime - 0.9) / 0.1);
+  rr(bx, by, Math.max(4, bw * k), 5, 3); ctx.fillStyle = k > 0.6 ? C.green : k > 0.3 ? C.gold : C.red; ctx.fill();
+  if (!portrait) { ctx.fillStyle = C.dim; ctx.font = "500 10px " + MONO; ctx.textAlign = "right"; ctx.fillText("uptime · game over below 90%", W - 16, 60); }
+
+  // Comments feed
+  ctx.textAlign = "left";
+  S.comments.forEach((c, i) => {
+    ctx.globalAlpha = Math.min(1, c.life / 1.5) * (1 - i * 0.18);
+    ctx.fillStyle = c.bad ? "#e8a7a7" : "#b7d9bd"; ctx.font = "italic 13px " + SERIF;
+    const y = L.bottom - 8 - i * 18;
+    ctx.fillText((c.bad ? "▼ " : "▲ ") + c.text, L.inX + 6, y);
+  });
+  ctx.globalAlpha = 1;
+
+  // Banner
+  if (S.banner) {
+    const a = Math.min(1, S.banner.life, (3.2 - S.banner.life) * 4);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = C.text; ctx.font = "500 " + Math.min(40, W / 16) + "px " + SERIF; ctx.textAlign = "center";
+    ctx.fillText(S.banner.text, W / 2, L.top + 34);
+    ctx.globalAlpha = 1;
+  }
+
+  // First-run hint
+  if (S.hintT > 0.6) {
+    const other = S.servers.findIndex((s, i) => i !== S.target && s.down <= 0);
+    if (other >= 0) {
+      const s = S.servers[other];
+      ctx.globalAlpha = 0.6 + 0.4 * Math.sin(S.t * 8);
+      ctx.fillStyle = C.gold; ctx.font = "700 13px " + MONO; ctx.textAlign = "right";
+      ctx.fillText("tap " + s.name + " to route traffic there →", L.serverX - 12, s.y + s.h / 2 + 4);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Shop
+  shopRects().forEach(({ item, x, y, w, h }) => {
+    const owned = !item.can();
+    const afford = S.money >= S.cost[item.id];
+    rr(x, y, w, h, 10);
+    ctx.fillStyle = owned ? "#14110f" : afford ? "rgba(255,91,31,0.12)" : C.panel; ctx.fill();
+    ctx.strokeStyle = owned ? C.line : afford ? C.ember : C.line; ctx.lineWidth = 1; ctx.stroke();
+    const price = owned ? (item.id === "server" ? "max" : "✓") : "$" + S.cost[item.id];
+    const priceColor = owned ? C.dim : afford ? C.green : C.muted;
+    ctx.textAlign = "left";
+    ctx.fillStyle = owned ? C.dim : C.text; ctx.font = "600 " + (h < 50 ? 12 : 13) + "px " + SANS;
+    ctx.fillText(item.name, x + 10, y + (h < 50 ? 18 : 22));
+    if (w < 165) {
+      // Narrow (phones): price under the name, no description.
+      ctx.fillStyle = priceColor; ctx.font = "700 12px " + MONO;
+      ctx.fillText(price, x + 10, y + (h < 50 ? 34 : 42));
+    } else {
+      ctx.fillStyle = C.dim; ctx.font = "500 11px " + SANS;
+      if (h >= 50) ctx.fillText(item.desc, x + 10, y + 40);
+      ctx.textAlign = "right"; ctx.font = "700 12px " + MONO;
+      ctx.fillStyle = priceColor;
+      ctx.fillText(price, x + w - 10, y + (h < 50 ? 18 : 22));
+      if (h >= 50) { ctx.fillStyle = C.dim; ctx.font = "600 10px " + MONO; ctx.fillText(item.key, x + w - 10, y + 40); }
+    }
+  });
+
+  // Mute
+  ctx.textAlign = "right"; ctx.fillStyle = C.dim; ctx.font = "600 11px " + MONO;
+  ctx.fillText(muted ? "sound off [M]" : "sound on [M]", W - 16, H - 10);
+}
+
+function drawTitle() {
+  drawBackground();
+  // Background traffic for atmosphere
+  const t = performance.now() / 1000;
+  const rand = (n) => { const v = Math.sin(n * 127.1) * 43758.5453; return v - Math.floor(v); };
+  for (let i = 0; i < 70; i++) {
+    const sp = 0.04 + rand(i + 0.5) * 0.1;
+    const x = ((rand(i) * (W + 40) + t * sp * W) % (W + 40)) - 20;
+    const y = rand(i + 0.25) * H;
+    const type = ["page", "static", "api", "page", "bot"][i % 5];
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = TYPES[type].color;
+    ctx.beginPath(); ctx.arc(x, y, TYPES[type].r * 0.8, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  const cx = W / 2, cy = H / 2;
+  const big = Math.min(110, W / 7.5);
+  ctx.textAlign = "center";
+  ctx.fillStyle = C.ember; ctx.font = "700 13px " + MONO;
+  ctx.fillText("▲ 1 point · Show HN: my side project", cx, cy - big * 1.15);
+  ctx.shadowColor = "rgba(255,91,31,0.55)"; ctx.shadowBlur = 40;
+  ctx.fillStyle = C.text; ctx.font = "500 " + big + "px " + SERIF;
+  ctx.fillText("Hug of Death", cx, cy - big * 0.2);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = C.muted; ctx.font = "400 " + Math.min(20, W / 26) + "px " + SANS;
+  ctx.fillText("Your side project is about to hit #1. You are the load balancer.", cx, cy + 30);
+  const lines = [
+    ["Tap a server", " (or 1–6) to send traffic there. Don't let one melt."],
+    ["Tap red bots", " to block them before they eat your CPU."],
+    ["Spend what you earn", " on servers, a CDN, a rate limiter… or an SRE."],
+  ];
+  ctx.font = "500 " + Math.min(15, W / 34) + "px " + SANS;
+  lines.forEach(([a, b], i) => {
+    const y = cy + 74 + i * 24;
+    const wa = ctx.measureText(a).width, wb = ctx.measureText(b).width;
+    ctx.textAlign = "left";
+    ctx.fillStyle = C.text; ctx.fillText(a, cx - (wa + wb) / 2, y);
+    ctx.fillStyle = C.muted; ctx.fillText(b, cx - (wa + wb) / 2 + wa, y);
+  });
+  const pulse = 0.75 + 0.25 * Math.sin(t * 4);
+  ctx.globalAlpha = pulse;
+  ctx.textAlign = "center"; ctx.fillStyle = C.ember; ctx.font = "700 16px " + MONO;
+  ctx.fillText("CLICK OR TAP TO GO LIVE", cx, cy + 172);
+  ctx.globalAlpha = 1;
+  if (best.time) { ctx.fillStyle = C.dim; ctx.font = "500 12px " + MONO; ctx.fillText("best: survived " + fmtTime(best.time) + " · " + best.served.toLocaleString() + " requests", cx, cy + 200); }
+}
+
+let buttons = [];
+function drawEnd() {
+  ctx.fillStyle = "rgba(10,8,7,0.82)"; ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2;
+  const won = S.mode === "won";
+  ctx.textAlign = "center";
+  ctx.fillStyle = won ? C.green : C.red; ctx.font = "700 13px " + MONO;
+  ctx.fillText(won ? "IT FELL OFF THE FRONT PAGE. YOU'RE STILL UP." : "UPTIME DROPPED BELOW 90%", cx, cy - 120);
+  ctx.fillStyle = C.text; ctx.font = "500 " + Math.min(64, W / 11) + "px " + SERIF;
+  ctx.fillText(won ? "You survived." : "Hugged to death.", cx, cy - 64);
+  ctx.fillStyle = C.muted; ctx.font = "500 16px " + MONO;
+  const stats = [
+    fmtTime(S.t) + " live", S.served.toLocaleString() + " served", S.dropped.toLocaleString() + " dropped",
+    "peak " + S.peak + " req/s", S.blocked + " bots blocked",
+  ];
+  ctx.fillText(stats.slice(0, 3).join("  ·  "), cx, cy - 22);
+  ctx.fillText(stats.slice(3).join("  ·  "), cx, cy + 4);
+  ctx.fillStyle = C.dim; ctx.font = "italic 15px " + SERIF;
+  ctx.fillText(won ? "Top comment: \"How are you hosting this?\"" : "Top comment: \"" + COMMENTS_BAD[(S.served + S.dropped) % COMMENTS_BAD.length] + "\"", cx, cy + 38);
+
+  buttons = [];
+  const labels = won ? [["Keep going (endless)", "endless"], ["Share", "share"], ["Play again", "again"]] : [["Play again", "again"], ["Share", "share"]];
+  const bw = Math.min(200, (W - 40) / labels.length - 10), bh = 46;
+  const total = labels.length * bw + (labels.length - 1) * 12;
+  labels.forEach(([label, id], i) => {
+    const x = cx - total / 2 + i * (bw + 12), y = cy + 70;
+    rr(x, y, bw, bh, 10);
+    ctx.fillStyle = i === 0 ? C.ember : C.panel; ctx.fill();
+    ctx.strokeStyle = i === 0 ? C.ember : C.line; ctx.stroke();
+    ctx.fillStyle = i === 0 ? "#160800" : C.text; ctx.font = "700 14px " + SANS; ctx.textAlign = "center";
+    ctx.fillText(label, x + bw / 2, y + 28);
+    buttons.push({ x, y, w: bw, h: bh, id });
+  });
+  if (shareToast > 0) { ctx.fillStyle = C.green; ctx.font = "600 13px " + MONO; ctx.fillText("Copied. Paste it anywhere.", cx, cy + 140); }
+}
+
+let shareToast = 0;
+function share() {
+  const url = (window.vesta && window.vesta.shareUrl) || location.href;
+  const text = (S.mode === "won" ? "I survived the Hug of Death: " : "I got hugged to death after " + fmtTime(S.t) + ": ") +
+    S.served.toLocaleString() + " requests served, peak " + S.peak + " req/s. Can you keep a side project alive at #1?";
+  if (navigator.share && matchMedia("(pointer: coarse)").matches) { navigator.share({ title: "Hug of Death", text, url }).catch(() => {}); return; }
+  const full = text + " " + url;
+  (navigator.clipboard ? navigator.clipboard.writeText(full) : Promise.reject()).then(() => { shareToast = 2.5; }, () => { prompt("Copy this:", full); });
+}
+
+// ---------- input ----------
+function pointer(e) {
+  e.preventDefault();
+  const x = e.clientX, y = e.clientY;
+  if (audio && audio.state === "suspended") audio.resume();
+  if (!S || S.mode === "title") { newGame(); return; }
+  if (S.mode === "over" || S.mode === "won") {
+    for (const b of buttons) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
+      if (b.id === "again") newGame();
+      if (b.id === "endless") { S.mode = "play"; S.banner = { text: "Endless mode: the traffic keeps coming", life: 3 }; }
+      if (b.id === "share") share();
+    }
+    return;
+  }
+  if (S.mode !== "play") return;
+  // Bots first: they're small and moving, so be generous.
+  let hit = null, hd = 26 * 26;
+  for (const r of S.reqs) { if (r.type !== "bot") continue; const d = (r.x - x) ** 2 + (r.y - y) ** 2; if (d < hd) { hd = d; hit = r; } }
+  if (hit) { block(hit, false); vesta().milestone("blocked-a-bot"); return; }
+  for (const b of shopRects()) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) { buy(b.item.id); return; }
+  if (x > L.routerX + 30) {
+    // Tap anywhere in a server's row to route there.
+    let bestI = 0, bestD = Infinity;
+    S.servers.forEach((s, i) => { const d = Math.abs(s.y + s.h / 2 - y); if (d < bestD) { bestD = d; bestI = i; } });
+    if (bestD < S.servers[bestI].h) setTarget(bestI);
+  }
+}
+function setTarget(i) {
+  if (!S || i < 0 || i >= S.servers.length || S.sre) return;
+  if (S.target !== i) { S.target = i; sfx.route(); }
+}
+cv.addEventListener("pointerdown", pointer);
+window.addEventListener("keydown", (e) => {
+  const k = e.key.toLowerCase();
+  if (k === "m") { muted = !muted; try { localStorage.setItem("muted", muted ? "1" : "0"); } catch (x) {} return; }
+  if (!S || S.mode === "title") { if (k === " " || k === "enter") newGame(); return; }
+  if ((S.mode === "over") && (k === " " || k === "enter")) { newGame(); return; }
+  if (k === "p" || k === "escape") { if (S.mode === "play") S.mode = "paused"; else if (S.mode === "paused") S.mode = "play"; return; }
+  if (/^[1-6]$/.test(k)) setTarget(Number(k) - 1);
+  if (k === "arrowdown") setTarget(S.target + 1);
+  if (k === "arrowup") setTarget(S.target - 1);
+  const item = SHOP.find((i) => i.key.toLowerCase() === k);
+  if (item) buy(item.id);
+});
+document.addEventListener("visibilitychange", () => { if (document.hidden && S && S.mode === "play") S.mode = "paused"; });
+
+// ---------- demo: ?demo plays itself (trailers, screenshots); ?demo=fast at 3x ----------
+const DEMO = new URLSearchParams(location.search).get("demo");
+let demoAcc = 0;
+function demoStep(dt) {
+  if (!DEMO || !S || S.mode !== "play") return;
+  demoAcc += dt;
+  if (demoAcc < 0.35) return;
+  demoAcc = 0;
+  if (!S.sre) setTarget(leastLoaded());
+  for (const r of S.reqs) if (r.type === "bot" && r.stage === 0 && Math.random() < 0.5) { block(r, false); break; }
+  for (const id of ["server", "cpu", "cdn", "server", "limiter", "cpu", "server"]) {
+    const item = SHOP.find((i) => i.id === id);
+    if (item.can() && S.money >= S.cost[id] + 10) { buy(id); break; }
+  }
+}
+
+// ---------- loop ----------
+S = { mode: "title", servers: [], t: 0 };
+resize();
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  try {
+    if (S.mode === "title") { drawTitle(); if (DEMO && now > 1500) newGame(); }
+    else {
+      const steps = DEMO === "fast" ? 3 : 1;
+      for (let i = 0; i < steps; i++) { update(dt); demoStep(dt); }
+      drawBackground();
+      ctx.save();
+      if (S.shake) ctx.translate((Math.random() - 0.5) * S.shake, (Math.random() - 0.5) * S.shake);
+      drawWorld();
+      ctx.restore();
+      drawHud();
+      if (S.mode === "paused") {
+        ctx.fillStyle = "rgba(10,8,7,0.7)"; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = C.text; ctx.font = "500 48px " + SERIF; ctx.textAlign = "center"; ctx.fillText("Paused", W / 2, H / 2);
+        ctx.fillStyle = C.muted; ctx.font = "500 14px " + MONO; ctx.fillText("press P or tap to resume", W / 2, H / 2 + 34);
+      }
+      if (S.mode === "over" || S.mode === "won") { drawEnd(); shareToast = Math.max(0, shareToast - dt); }
+    }
+  } catch (err) {
+    vesta().error("frame: " + err.message);
+    throw err;
+  }
+  requestAnimationFrame(frame);
+}
+cv.addEventListener("pointerdown", () => { if (S.mode === "paused") S.mode = "play"; }, true);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

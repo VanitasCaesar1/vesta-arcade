@@ -1,0 +1,20 @@
+{
+  "name": "vesta-arcade",
+  "private": true,
+  "description": "Your own arcade for AI-made games. One command from your coding agent to a playable link, with feedback your agent can fix. Free on Cloudflare.",
+  "license": "MIT",
+  "workspaces": [
+    "worker",
+    "cli"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace worker",
+    "build": "npm run build --workspace cli",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm test --workspaces --if-present"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261102.1": true
+  }
+}

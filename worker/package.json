@@ -1,0 +1,19 @@
+{
+  "name": "@vesta/worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "migrate:local": "wrangler d1 migrations apply DB --local --persist-to ../.wrangler/state",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types test/*.test.ts"
+  },
+  "dependencies": {
+    "hono": "^4.13.16"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261102.1",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.156.2"
+  }
+}

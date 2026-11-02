@@ -1,0 +1,33 @@
+// Local development config. `npx vesta-cli setup` writes its own config when
+// it deploys to your Cloudflare account, so you never need to edit this file.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "vesta",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // Locally one process serves both roles: play.localhost gets the game files,
+  // anything else gets the arcade. Browsers treat them as separate origins.
+  "vars": {
+    "ROLE": "auto",
+    "ARCADE_NAME": "Vesta Arcade",
+    "PLAY_URL": "http://play.localhost:8787"
+  },
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "vesta-games" }],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "vesta", "database_id": "local", "migrations_dir": "migrations" }
+  ],
+  "env": {
+    // Serves game files from a separate origin, so a game's JavaScript can
+    // never read the arcade's cookies or call its admin API.
+    "play": {
+      "name": "vesta-play",
+      "vars": { "ROLE": "play", "ARCADE_NAME": "Vesta Arcade", "PLAY_URL": "http://play.localhost:8787" },
+      "r2_buckets": [{ "binding": "FILES", "bucket_name": "vesta-games" }],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "vesta", "database_id": "local", "migrations_dir": "migrations" }
+      ]
+    }
+  }
+}
