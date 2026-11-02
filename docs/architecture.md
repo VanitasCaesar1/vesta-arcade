@@ -82,6 +82,7 @@ D1 holds totals, not events (`worker/migrations/0001_init.sql`):
 - `errors (slug, version, fingerprint)`: count, first and last seen, latest stack and user agent. The fingerprint hashes kind, message (with digits masked), source and line.
 - `milestones (slug, version, name)`: counts; the report divides by the version's plays.
 - `comments`, `likes`: public feedback, rate-limited by a peppered IP hash.
+- `scores`: high scores from `window.vesta.submitScore()`, posted to the play origin's `/__vesta/score`. Scores come from the browser, so they can be faked; they're rate-limited per IP and boards show the best score per set of initials.
 
 Every beacon becomes a single `DB.batch()` of UPSERTs, run after the response is sent with `ctx.waitUntil`.
 

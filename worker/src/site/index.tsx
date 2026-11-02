@@ -6,8 +6,11 @@ import { validateSlug } from "../lib/manifest.ts";
 import { api, VERSION } from "./api.ts";
 import { APP_JS, FAVICON_SVG, fontFiles, STYLE } from "./assets.ts";
 import { mascotSvg } from "./mascot.ts";
+import { OG_PNG } from "./og.ts";
+
+let ogBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
-import { feedbackReport, getGame, listComments, listGames, listVersions, madeWithCounts, type Sort } from "./db.ts";
+import { feedbackReport, getGame, listComments, listGames, listVersions, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
 import { EmbedPage, GamePage, HomePage, NotFoundPage } from "./pages.tsx";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
@@ -71,6 +74,7 @@ site.get("/static/geist-mono.woff2", (c) => c.body(fontFiles().mono, 200, FONT_H
 site.get("/static/style.css", (c) => c.body(STYLE, 200, { "content-type": "text/css; charset=utf-8", "cache-control": "public, max-age=86400" }));
 site.get("/static/app.js", (c) => c.body(APP_JS, 200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=86400" }));
 site.get("/favicon.svg", (c) => c.body(FAVICON_SVG(mascotSvg()), 200, { "content-type": "image/svg+xml", "cache-control": "public, max-age=604800" }));
+site.get("/og.png", (c) => c.body((ogBytes ??= Uint8Array.from(atob(OG_PNG), (x) => x.charCodeAt(0))), 200, { "content-type": "image/png", "cache-control": "public, max-age=86400" }));
 site.get("/mascot.svg", (c) => c.body(mascotSvg({ label: "Vesta" }), 200, { "content-type": "image/svg+xml", "cache-control": "public, max-age=604800" }));
 site.get("/favicon.ico", (c) => c.redirect("/favicon.svg", 301));
 site.get("/robots.txt", (c) => c.text(`User-agent: *\nDisallow: /admin\nDisallow: /api/\nAllow: /\n`));
@@ -103,7 +107,11 @@ const playSrc = (c: Context<AppEnv>, slug: string, n: number) => `${c.env.PLAY_U
 site.get("/g/:slug", async (c) => {
   const game = await loadGame(c);
   if (!game) return notFound(c);
-  const [versions, comments] = await Promise.all([listVersions(c.env, game.slug, 12), listComments(c.env, game.slug, { limit: 30 })]);
+  const [versions, comments, scores] = await Promise.all([
+    listVersions(c.env, game.slug, 12),
+    listComments(c.env, game.slug, { limit: 30 }),
+    topScores(c.env, game.slug, 10),
+  ]);
   return c.html(
     <GamePage
       arcade={arcade(c)}
@@ -112,6 +120,7 @@ site.get("/g/:slug", async (c) => {
       playSrc={playSrc(c, game.slug, game.version!)}
       versions={versions}
       comments={comments}
+      scores={scores}
       feedback={c.req.query("feedback")?.slice(0, 120)}
     />,
   );
@@ -190,7 +199,7 @@ The game must be a folder with an index.html at its top level (a static build su
 
 ## Report progress from a game
 
-Vesta injects window.vesta into every game. Call \`window.vesta?.milestone("reached-level-2")\` at key moments; the creator sees what share of plays reach each one. \`window.vesta?.error("message")\` reports a game-level problem. Saves in localStorage are kept per game automatically.
+Vesta injects window.vesta into every game. Call \`window.vesta?.milestone("reached-level-2")\` at key moments; the creator sees what share of plays reach each one. \`window.vesta?.error("message")\` reports a game-level problem. \`await window.vesta?.submitScore(score)\` at game over shows an arcade "enter your initials" box and puts the score on the game's high-score table (higher is better). Saves in localStorage are kept per game automatically.
 
 ## Limits
 

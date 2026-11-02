@@ -29,7 +29,7 @@ function limited(req: Request): boolean {
   return ++h.n > PER_MINUTE;
 }
 
-async function isLive(env: Env, slug: string, version: number): Promise<boolean> {
+export async function isLive(env: Env, slug: string, version: number): Promise<boolean> {
   const key = `${slug}/${version}`;
   const cached = liveVersions.get(key);
   if (cached && cached.until > Date.now()) return cached.live;

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/vesta-cli/vesta.schema.json",
+  "slug": "ignore-previous-instructions",
+  "title": "Ignore Previous Instructions",
+  "description": "You're the guardrail between an AI agent and the internet. Emails, web pages, GitHub issues and tool output stream in. Some of them are trying to take control of the agent. Block the prompt injections, let everything else through, and don't make your user miss their mail.\n\nControls: Left arrow or A to block, Right arrow or D to allow. Swipe on phones.",
+  "author": "Chakravarthi",
+  "tags": [
+    "arcade",
+    "ai",
+    "security"
+  ],
+  "aspect": "16/10",
+  "sourceUrl": "https://github.com/VanitasCaesar1/vesta-arcade/tree/main/games/ignore-previous-instructions",
+  "madeWith": [
+    "Claude Code"
+  ],
+  "cover": "cover.png"
+}

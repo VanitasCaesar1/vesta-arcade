@@ -2,6 +2,11 @@
 
 ## Title (pick one, 80 characters max)
 
+If you'd rather launch all three games at once:
+
+0. **Show HN: Three games about being software: load balancer, GC, AI guardrail**
+
+
 1. **Show HN: Hug of Death – your Show HN hits #1 and you're the load balancer**
 2. Show HN: A game where you keep your side project alive on the HN front page
 3. Show HN: I made a game about surviving the HN hug of death

@@ -339,6 +339,9 @@ function saveBest() {
   if (S.t > best.time) best = { time: Math.round(S.t), served: S.served };
   try { localStorage.setItem("best", JSON.stringify(best)); } catch (e) {}
   firstRun = false;
+  // Arcade high score: requests served. Vesta asks for initials and ranks it.
+  const v = window.vesta;
+  if (v && v.submitScore && !S.submitted) { S.submitted = true; setTimeout(() => v.submitScore(S.served, { label: "Requests served" }), 900); }
 }
 
 // ---------- draw ----------

@@ -167,6 +167,7 @@ export interface FeedbackReport {
   errors: ErrorRow[];
   olderErrors: ErrorRow[];
   comments: CommentRow[];
+  scores?: ScoreRow[];
 }
 
 export async function feedbackReport(env: Env, slug: string, days = 14): Promise<FeedbackReport | null> {
@@ -174,7 +175,7 @@ export async function feedbackReport(env: Env, slug: string, days = 14): Promise
   if (!game) return null;
   const v = game.version ?? 0;
   const since = daysAgo(days - 1);
-  const [daily, versions, dropoff, milestones, errors, olderErrors, comments] = await Promise.all([
+  const [daily, versions, dropoff, milestones, errors, olderErrors, comments, scores] = await Promise.all([
     env.DB.prepare("SELECT day, plays, sessions, seconds, errors FROM daily_stats WHERE slug = ? AND day >= ? ORDER BY day")
       .bind(slug, since)
       .all<FeedbackReport["daily"][number]>(),
@@ -186,6 +187,7 @@ export async function feedbackReport(env: Env, slug: string, days = 14): Promise
       .bind(slug, v, now() - days * 86_400)
       .all<ErrorRow>(),
     listComments(env, slug, { limit: 40 }),
+    topScores(env, slug, 10),
   ]);
 
   // Fill every day so charts and agents see zeros, not gaps.
@@ -213,6 +215,7 @@ export async function feedbackReport(env: Env, slug: string, days = 14): Promise
     errors: errors.results,
     olderErrors: olderErrors.results,
     comments,
+    scores,
   };
 }
 
@@ -280,9 +283,33 @@ export function reportMarkdown(r: FeedbackReport, siteUrl: string): string {
   }
   out.push("");
 
+  const scores = r.scores ?? [];
+  if (scores.length) {
+    out.push("## High scores");
+    out.push(scores.slice(0, 5).map((x, i) => `${i + 1}. ${x.name} ${x.score}`).join(" · "));
+    out.push("");
+  }
+
   out.push("## Versions");
   for (const v of r.versions.slice(0, 5)) {
     out.push(`- v${v.n} (${timeAgo(v.live_at ?? v.created_at)}, ${v.plays} plays)${v.notes ? `: ${v.notes}` : ""}`);
   }
   return out.join("\n");
+}
+
+export interface ScoreRow {
+  name: string;
+  score: number;
+  created_at: number;
+}
+
+/** Best score per set of initials, so one player can't fill the board. */
+export async function topScores(env: Env, slug: string, limit = 10): Promise<ScoreRow[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT name, MAX(score) AS score, MIN(created_at) AS created_at FROM scores
+     WHERE slug = ? AND hidden = 0 GROUP BY name ORDER BY score DESC, created_at ASC LIMIT ?`,
+  )
+    .bind(slug, limit)
+    .all<ScoreRow>();
+  return results;
 }

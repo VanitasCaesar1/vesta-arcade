@@ -1,4 +1,4 @@
-import type { CommentRow, Game, Sort, VersionRow } from "./db.ts";
+import type { CommentRow, Game, ScoreRow, Sort, VersionRow } from "./db.ts";
 import { compactNumber, timeAgo } from "../lib/util.ts";
 import { Icon, Layout, Mascot, REPO_URL } from "./layout.tsx";
 
@@ -158,6 +158,7 @@ export function GamePage(p: {
   playSrc: string;
   versions: VersionRow[];
   comments: CommentRow[];
+  scores: ScoreRow[];
   feedback?: string;
 }) {
   const g = p.game;
@@ -296,6 +297,21 @@ export function GamePage(p: {
                 </button>
               </div>
             </div>
+
+            {p.scores.length ? (
+              <div>
+                <h3>High scores</h3>
+                <ol class="scores">
+                  {p.scores.map((x, i) => (
+                    <li class={i === 0 ? "top" : ""}>
+                      <span class="pos">{i + 1}</span>
+                      <b>{x.name}</b>
+                      <span class="pts">{Math.round(x.score).toLocaleString("en-US")}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
 
             <div>
               <h3>Changelog</h3>

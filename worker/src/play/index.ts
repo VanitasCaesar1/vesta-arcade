@@ -5,6 +5,7 @@ import { contentType } from "../lib/mime.ts";
 import { validateSlug } from "../lib/manifest.ts";
 import { CLIENT_SCRIPT } from "./client.ts";
 import { ingest } from "./telemetry.ts";
+import { submitScore } from "./scores.ts";
 
 const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",
@@ -20,6 +21,10 @@ export async function handlePlay(req: Request, env: Env, ctx: ExecutionContext):
     return new Response(CLIENT_SCRIPT, {
       headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=3600", ...SECURITY_HEADERS },
     });
+  }
+  if (url.pathname === "/__vesta/score") {
+    if (req.method !== "POST") return new Response("method not allowed", { status: 405 });
+    return submitScore(req, env);
   }
   if (url.pathname === "/__vesta/e") {
     if (req.method !== "POST") return new Response("method not allowed", { status: 405 });

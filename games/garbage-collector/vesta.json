@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/vesta-cli/vesta.schema.json",
+  "slug": "garbage-collector",
+  "title": "Garbage Collector",
+  "description": "You are the garbage collector. Stack frames and globals hold references into the heap, and the program keeps allocating, dropping references and returning from functions. Click the objects nobody can reach to free them. Free something still in use and you segfault. Let the heap fill and the kernel OOM-kills you.\n\nWatch out for cycles: objects pointing at each other aren't reachable unless a root points at them. Hover an object to see who references it. Space stops the world, at a price.",
+  "author": "Chakravarthi",
+  "tags": [
+    "arcade",
+    "puzzle",
+    "programming"
+  ],
+  "aspect": "16/9",
+  "sourceUrl": "https://github.com/VanitasCaesar1/vesta-arcade/tree/main/games/garbage-collector",
+  "madeWith": [
+    "Claude Code"
+  ],
+  "cover": "cover.png"
+}

@@ -153,7 +153,79 @@ export const CLIENT_SCRIPT = String.raw`(function () {
     }
   } catch (e) {}
 
+  // High scores: an arcade-style "enter your initials" box, isolated in a shadow root
+  // so it can't clash with the game's CSS, and swallowing keys so typing a name
+  // doesn't trigger the game's controls.
+  var lastName = "";
+  try { lastName = (localStorage.getItem("name") || "").slice(0, 3); } catch (e) {}
+  function submitScore(score, opts) {
+    score = Number(score);
+    if (!isFinite(score)) return Promise.resolve(null);
+    opts = opts || {};
+    return new Promise(function (resolve) {
+      var host = document.createElement("div");
+      host.style.cssText = "position:fixed;inset:0;z-index:2147483647";
+      var root = host.attachShadow ? host.attachShadow({ mode: "open" }) : host;
+      var label = String(opts.label || "Score").slice(0, 24);
+      var shown = opts.format ? String(opts.format(score)) : Math.round(score).toLocaleString();
+      root.innerHTML =
+        "<style>" +
+        ":host,*{box-sizing:border-box}" +
+        ".s{position:fixed;inset:0;background:rgba(10,10,10,.72);display:grid;place-items:center;font-family:'Arial Black','Helvetica Neue',Arial,sans-serif;animation:f .2s}" +
+        "@keyframes f{from{opacity:0}}" +
+        ".b{background:#1d1d1d;color:#f2f2ee;border:3px solid #f2f2ee;box-shadow:8px 8px 0 #ffd60a;padding:26px 28px;width:min(360px,calc(100vw - 32px));text-align:center}" +
+        ".k{font:700 11px ui-monospace,Menlo,monospace;letter-spacing:.14em;color:#b9b9b6;text-transform:uppercase}" +
+        ".n{font-size:46px;font-weight:900;line-height:1;margin:8px 0 18px;color:#ffd60a}" +
+        "input{all:unset;display:block;width:100%;font:900 40px/1 'Arial Black',Arial,sans-serif;letter-spacing:.5em;text-indent:.5em;text-align:center;text-transform:uppercase;border-bottom:3px solid #f2f2ee;padding:8px 0;margin:8px 0 18px;caret-color:#ffd60a}" +
+        ".r{display:flex;gap:10px}" +
+        "button{all:unset;flex:1;cursor:pointer;font:900 13px 'Arial Black',Arial,sans-serif;text-transform:uppercase;letter-spacing:.04em;padding:12px 0;border:2px solid #f2f2ee;text-align:center}" +
+        "button.y{background:#ffd60a;color:#161616;border-color:#ffd60a}" +
+        ".rank{font-size:30px;font-weight:900;margin:6px 0 4px}" +
+        ".m{font:12px ui-monospace,Menlo,monospace;color:#b9b9b6;margin-bottom:18px}" +
+        "</style>" +
+        "<div class=s><form class=b><div class=k></div><div class=n></div>" +
+        "<div class=k>Enter your initials</div><input maxlength=3 autocomplete=off spellcheck=false aria-label='Your initials'>" +
+        "<div class=r><button type=button class=skip>Skip</button><button class=y>Save</button></div></form></div>";
+      root.querySelector(".k").textContent = label;
+      root.querySelector(".n").textContent = shown;
+      var input = root.querySelector("input");
+      var form = root.querySelector("form");
+      input.value = lastName;
+      ["keydown", "keyup", "keypress"].forEach(function (t) {
+        host.addEventListener(t, function (e) { e.stopPropagation(); }, false);
+      });
+      input.addEventListener("input", function () { input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3); });
+      function close(result) {
+        if (host.parentNode) host.parentNode.removeChild(host);
+        resolve(result);
+      }
+      root.querySelector(".skip").addEventListener("click", function () { close(null); });
+      host.addEventListener("keydown", function (e) { if (e.key === "Escape") close(null); });
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var name = input.value;
+        if (!name) { input.focus(); return; }
+        lastName = name;
+        try { localStorage.setItem("name", name); } catch (x) {}
+        var btn = root.querySelector(".y"); btn.textContent = "...";
+        fetch("/__vesta/score", { method: "POST", headers: { "content-type": "text/plain" }, body: JSON.stringify({ g: game, v: version, score: score, name: name }) })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (!j || !j.rank) throw new Error((j && j.error) || "failed");
+            form.innerHTML = "<div class=k>" + name + "</div><div class=rank>#" + j.rank + " all time</div><div class=m>#" + j.rankToday + " today, of " + j.total + " scores</div><div class=r><button class=y type=button>Continue</button></div>";
+            var go = form.querySelector("button");
+            go.addEventListener("click", function () { close(j); });
+            go.focus();
+          })
+          .catch(function () { btn.textContent = "Retry"; });
+      });
+      (document.body || document.documentElement).appendChild(host);
+      setTimeout(function () { input.focus(); input.select(); }, 30);
+    });
+  }
+
   window.vesta = {
+    submitScore: submitScore,
     game: game,
     version: version,
     shareUrl: shareUrl,

@@ -24,6 +24,7 @@ export interface Meta {
 
 export function Layout(props: { meta: Meta; children: Child; bare?: boolean }) {
   const { meta } = props;
+  const image = meta.image ?? `${new URL(meta.url).origin}/og.png`;
   return (
     <html lang="en">
       <head>
@@ -40,17 +41,17 @@ export function Layout(props: { meta: Meta; children: Child; bare?: boolean }) {
         <meta property="og:title" content={meta.title} />
         <meta property="og:description" content={meta.description} />
         <meta property="og:url" content={meta.url} />
-        {meta.image ? <meta property="og:image" content={meta.image} /> : null}
-        <meta name="twitter:card" content={meta.image ? "summary_large_image" : "summary"} />
+        <meta property="og:image" content={image} />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={meta.title} />
         <meta name="twitter:description" content={meta.description} />
-        {meta.image ? <meta name="twitter:image" content={meta.image} /> : null}
+        <meta name="twitter:image" content={image} />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="alternate" type="application/rss+xml" title={meta.arcade} href="/feed.xml" />
         <link rel="preload" href="/static/archivo.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
         <link rel="preload" href="/static/geist.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-        <link rel="stylesheet" href="/static/style.css?v=4" />
-        <script src="/static/app.js?v=4" defer></script>
+        <link rel="stylesheet" href="/static/style.css?v=5" />
+        <script src="/static/app.js?v=5" defer></script>
       </head>
       <body>
         {props.bare ? (

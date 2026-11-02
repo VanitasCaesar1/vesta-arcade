@@ -5,7 +5,7 @@ import { ManifestError, validateManifest, validatePath, validateSlug, type Manif
 import { contentType, COVER_TYPES } from "../lib/mime.ts";
 import { cleanList, cleanText, ipHash, now, safeEqual } from "../lib/util.ts";
 import { endSession, isAdmin, requireAdmin, startSession, tokenConfigured } from "./auth.ts";
-import { feedbackReport, getGame, getGameRow, listGames, reportMarkdown, type Sort } from "./db.ts";
+import { feedbackReport, getGame, getGameRow, listGames, reportMarkdown, topScores, type Sort } from "./db.ts";
 
 export const VERSION = "0.1.0";
 const KEEP_VERSIONS = 3;
@@ -41,6 +41,12 @@ api.get("/games/:slug", async (c) => {
   const game = await getGame(c.env, slugParam(c));
   if (!game || (game.hidden && !(await isAdmin(c)))) return c.json({ error: "not found" }, 404);
   return c.json({ ...game, url: `${siteUrl(c)}/g/${game.slug}`, playUrl: game.version ? playBase(c.env, game.slug, game.version) : null });
+});
+
+api.get("/games/:slug/scores", async (c) => {
+  const slug = slugParam(c);
+  c.header("cache-control", "public, max-age=15");
+  return c.json({ scores: await topScores(c.env, slug, Math.min(50, Math.max(1, Number(c.req.query("limit")) || 10))) });
 });
 
 api.post("/games/:slug/like", async (c) => {
@@ -140,7 +146,7 @@ admin.delete("/games/:slug", requireAdmin, async (c) => {
   await deletePrefix(c.env, `g/${slug}/`);
   await deletePrefix(c.env, `c/${slug}/`);
   await c.env.DB.batch(
-    ["comments", "likes", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
+    ["comments", "likes", "scores", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
       c.env.DB.prepare(`DELETE FROM ${t} WHERE slug = ?`).bind(slug),
     ),
   );

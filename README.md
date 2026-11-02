@@ -17,6 +17,10 @@ Runs on your own Cloudflare account, on the free plan.</p>
   <a href="games/hug-of-death">Demo game</a>
 </p>
 
+<p align="center"><img src="docs/img/games.gif" alt="Three games on vestapowered.in: Hug of Death, Ignore Previous Instructions, Garbage Collector" width="720"></p>
+
+<p align="center"><b>Play them:</b> <a href="https://vestapowered.in/g/hug-of-death">Hug of Death</a> · <a href="https://vestapowered.in/g/ignore-previous-instructions">Ignore Previous Instructions</a> · <a href="https://vestapowered.in/g/garbage-collector">Garbage Collector</a></p>
+
 <p align="center"><img src="docs/img/home.png" alt="The Vesta arcade at vestapowered.in" width="860"></p>
 
 ## Why
@@ -85,7 +89,10 @@ Every arcade also serves [`/llms.txt`](worker/src/site/index.tsx), so an agent t
 window.vesta?.milestone("reached-level-2"); // the report shows what share of plays get here
 window.vesta?.error("Physics exploded");    // a game-level problem, grouped like any other error
 window.vesta?.shareUrl;                     // the arcade page's URL, for your share button
+await window.vesta?.submitScore(4210);       // arcade high scores: players enter 3 initials
 ```
+
+`submitScore` shows an arcade-style "enter your initials" box inside the game (in a shadow root, so it can't clash with the game's CSS or controls), ranks the score, and resolves with `{ rank, rankToday, total }` or `null` if the player skips. The game page shows the top ten.
 
 What the agent gets back from `get_feedback`:
 
@@ -197,9 +204,15 @@ Created on first publish, next to your source. Commit it.
 
 `madeWith` is detected automatically when you publish from Claude Code, Cursor, Codex and others, or when the project has their config files (`CLAUDE.md`, `.cursor/`, …). Use `"aspect": "9/16"` for portrait phone games.
 
-## The demo game
+## The games
 
-[**Hug of Death**](https://vestapowered.in/g/hug-of-death) ([source](games/hug-of-death)) is the game in the screenshots. It's an original arcade game written with Claude Code and published with Vesta: your side project just hit #1, and you're the load balancer. Route traffic before servers melt, block scraper bots, and spend what you earn on servers, a CDN, a rate limiter or an SRE. It's one HTML file with no dependencies, and it reports milestones through `window.vesta`. Add `?demo` to its URL to watch it play itself.
+Three original games, written with Claude Code and published with Vesta. Each is one HTML file with no dependencies, reports milestones and high scores through `window.vesta`, and plays itself if you add `?demo` to its URL.
+
+| | |
+|---|---|
+| [**Hug of Death**](https://vestapowered.in/g/hug-of-death) ([source](games/hug-of-death)) | Your side project just hit #1 and you're the load balancer. Route traffic before servers melt, block scrapers, buy a CDN or an SRE. |
+| [**Ignore Previous Instructions**](https://vestapowered.in/g/ignore-previous-instructions) ([source](games/ignore-previous-instructions)) | You're the guardrail between an AI agent and the internet. Block the prompt injections (hidden text, base64, leaky image URLs) and let everything else through. |
+| [**Garbage Collector**](https://vestapowered.in/g/garbage-collector) ([source](games/garbage-collector)) | You are the GC. Free what no root can reach, never free what's in use, and watch for cycles. Stop the world if you must. |
 
 ## Development
 
@@ -225,6 +238,7 @@ The code: [`worker/src/play`](worker/src/play) (game files, injected script, tel
 - Custom domain with a subdomain per game (full storage isolation between games)
 - Source maps: show errors at the original file and line
 - Remixes: “fork this game”, with credit back to the original
+- Signed scores, so high scores can't be posted from outside the game
 - Jams: a time-boxed arcade page with voting
 - Accounts for other creators, so an arcade can be shared by a team or a class
 

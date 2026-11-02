@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Garbage Collector</title>
+<meta name="description" content="You are the garbage collector. Free what nobody can reach. Never free what someone still uses.">
+<style>
+  html, body { margin: 0; height: 100%; background: #0b1410; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100vw; height: 100vh; height: 100dvh; cursor: pointer; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+"use strict";
+// GARBAGE COLLECTOR. Roots (stack frames and globals) hold references into the
+// heap. The program keeps allocating, dropping references and returning from
+// functions. Click objects that no root can reach to free them. Freeing a
+// reachable object is a segfault. If the heap fills up, you're OOM-killed.
+
+const cv = document.getElementById("c");
+const ctx = cv.getContext("2d");
+const vesta = () => window.vesta || { milestone() {}, error() {}, submitScore() { return Promise.resolve(null); } };
+const C = { bg: "#0b1410", grid: "rgba(120,255,170,.035)", text: "#e3f5e9", muted: "#86a894", dim: "#4e6a5a", green: "#5dff9e", amber: "#ffc542", red: "#ff5a4f", node: "#14261d", nodeLine: "#2d4a3b", root: "#1d3a2b" };
+const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+const SANS = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
+let W = 0, H = 0, DPR = 1, portrait = false;
+
+const TYPES = [
+  ["User", 1], ["Session", 1], ["String", 0.5], ["Buffer", 4], ["Array", 2], ["Closure", 1], ["Promise", 0.5], ["Image", 6],
+  ["Map", 2], ["Request", 1], ["Response", 2], ["JSON", 3], ["Socket", 1], ["Texture", 8], ["Node", 0.5], ["Row", 0.5],
+];
+const FRAMES = ["main()", "handleRequest()", "render()", "parseJSON()", "fetchUser()", "onClick()", "resize()", "worker.run()", "db.query()", "loadImage()"];
+
+let S;
+let best = 0;
+try { best = Number(localStorage.getItem("best") || 0); } catch (e) {}
+
+function newGame() {
+  S = {
+    mode: "play", t: 0, score: 0, freed: 0, segfaults: 0, combo: 0, comboT: 0,
+    roots: [], objs: [], nextId: 1, capacity: 64, acc: { alloc: 0, drop: 0, frame: 0, link: 0 },
+    stw: 0, stwCooldown: 0, fx: [], shake: 0, hover: null, banner: { text: "Free what nobody can reach.", life: 3 },
+    cacheT: 0, milestones: {},
+  };
+  // Globals never go away; frames come and go.
+  addRoot("globals", true);
+  addRoot("cache", true);
+  for (let i = 0; i < 2; i++) addRoot(FRAMES[i]);
+  for (let i = 0; i < 6; i++) allocate();
+  layout();
+  vesta().milestone("started");
+}
+
+function addRoot(name, permanent) {
+  const r = { id: "r" + S.nextId++, name, permanent: !!permanent, refs: new Set(), age: 0 };
+  S.roots.push(r);
+  layout();
+  return r;
+}
+
+// ---------- heap slots ----------
+let SLOTS = [];
+function layout() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  portrait = H > W * 1.05;
+  if (!S) return;
+  const top = portrait ? 150 : 86, bottom = H - 70;
+  const n = S.roots.length;
+  if (portrait) {
+    const w = (W - 24) / n;
+    S.roots.forEach((r, i) => { r.x = 12 + i * w + w / 2; r.y = top - 34; r.w = w - 8; r.h = 40; });
+  } else {
+    const h = Math.min(56, (bottom - top - 20) / n);
+    S.roots.forEach((r, i) => { r.w = 150; r.h = h - 10; r.x = 24 + r.w / 2; r.y = top + 10 + i * h + h / 2; });
+  }
+  const hx = portrait ? 12 : 220, hy = top + (portrait ? 16 : 0), hw = W - hx - 16, hh = bottom - hy;
+  const cols = Math.max(3, Math.floor(hw / (portrait ? 92 : 128))), rows = Math.max(3, Math.floor(hh / (portrait ? 74 : 86)));
+  SLOTS = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    SLOTS.push({ x: hx + (c + 0.5) * (hw / cols) + (r % 2 ? 14 : -14), y: hy + (r + 0.5) * (hh / rows) });
+  }
+  // Keep objects in their slot index after a resize.
+  S.objs.forEach((o) => { const s = SLOTS[o.slot % SLOTS.length]; o.tx = s.x; o.ty = s.y; });
+}
+window.addEventListener("resize", layout);
+
+function freeSlot() {
+  const used = new Set(S.objs.map((o) => o.slot));
+  const free = SLOTS.map((_, i) => i).filter((i) => !used.has(i));
+  return free.length ? free[(Math.random() * free.length) | 0] : -1;
+}
+
+// ---------- the mutator (the program) ----------
+function allocate(parent) {
+  const slot = freeSlot();
+  if (slot < 0) return null;
+  const [type, mb] = TYPES[(Math.random() * TYPES.length) | 0];
+  const size = Math.max(0.5, Math.round(mb * (0.6 + Math.random() * 0.8) * 2) / 2);
+  const s = SLOTS[slot];
+  const o = { id: S.nextId++, type, size, slot, x: s.x + (Math.random() - 0.5) * 40, y: s.y + (Math.random() - 0.5) * 40, tx: s.x, ty: s.y, refs: new Set(), born: S.t, pop: 1 };
+  S.objs.push(o);
+  // Someone reachable points at it.
+  const owner = parent || pickOwner();
+  if (owner) owner.refs.add(o.id);
+  return o;
+}
+
+function pickOwner() {
+  const reach = reachable();
+  const live = S.objs.filter((o) => reach.has(o.id));
+  const frames = S.roots.filter((r) => r.name !== "globals" || Math.random() < 0.3);
+  if (live.length && Math.random() < 0.45) return live[(Math.random() * live.length) | 0];
+  return frames[(Math.random() * frames.length) | 0];
+}
+
+function dropRef() {
+  const holders = [...S.roots.filter((r) => r.name !== "cache"), ...S.objs].filter((h) => h.refs.size);
+  if (!holders.length) return;
+  const h = holders[(Math.random() * holders.length) | 0];
+  const ids = [...h.refs];
+  h.refs.delete(ids[(Math.random() * ids.length) | 0]);
+}
+
+function link() {
+  // Objects pointing at each other: this is how cycles happen.
+  if (S.objs.length < 2) return;
+  const a = S.objs[(Math.random() * S.objs.length) | 0];
+  const b = S.objs[(Math.random() * S.objs.length) | 0];
+  if (a !== b) { a.refs.add(b.id); if (Math.random() < 0.5 + level() * 0.08) b.refs.add(a.id); }
+}
+
+function frameEvent() {
+  const frames = S.roots.filter((r) => !r.permanent);
+  // Return from a function (its references vanish), or call a new one.
+  if (frames.length > 1 && (frames.length >= 4 || Math.random() < 0.5)) {
+    const f = frames[(Math.random() * frames.length) | 0];
+    S.roots.splice(S.roots.indexOf(f), 1);
+    S.fx.push({ x: f.x, y: f.y, text: f.name + " returned", color: C.muted, life: 1.4 });
+    layout();
+  } else {
+    const used = new Set(S.roots.map((r) => r.name));
+    const name = FRAMES.filter((n) => !used.has(n))[0] || FRAMES[(Math.random() * FRAMES.length) | 0];
+    const r = addRoot(name);
+    for (let i = 0; i < 1 + (Math.random() * 2 | 0); i++) allocate(r);
+  }
+}
+
+const level = () => Math.min(6, Math.floor(S.t / 25));
+
+function reachable() {
+  const seen = new Set();
+  const byId = new Map(S.objs.map((o) => [o.id, o]));
+  const stack = [];
+  S.roots.forEach((r) => r.refs.forEach((id) => stack.push(id)));
+  while (stack.length) {
+    const id = stack.pop();
+    if (seen.has(id) || !byId.has(id)) continue;
+    seen.add(id);
+    byId.get(id).refs.forEach((n) => stack.push(n));
+  }
+  return seen;
+}
+
+const used = () => S.objs.reduce((s, o) => s + o.size, 0);
+
+// ---------- player actions ----------
+function collect(o) {
+  if (S.mode !== "play") return;
+  const reach = reachable();
+  if (reach.has(o.id)) {
+    S.segfaults++;
+    S.combo = 0;
+    S.shake = 12;
+    S.fx.push({ x: o.x, y: o.y, text: "SEGFAULT: " + o.type + " still in use", color: C.red, life: 1.8, big: 1 });
+    o.flash = 1;
+    vesta().milestone("first-segfault");
+    sfx(110, 0.3, "sawtooth");
+    if (S.segfaults >= 3) end("Three segfaults. The process core-dumped.");
+    return;
+  }
+  removeObj(o);
+  S.combo++; S.comboT = 2.2;
+  const pts = Math.round(o.size * 20 * (1 + Math.min(S.combo, 12) * 0.25));
+  S.score += pts; S.freed += o.size;
+  S.fx.push({ x: o.x, y: o.y, text: "+" + pts + "  freed " + fmtMB(o.size), color: C.green, life: 1.1 });
+  sfx(660 + Math.min(S.combo, 10) * 60, 0.06, "triangle");
+  if (!S.milestones.first) { S.milestones.first = 1; vesta().milestone("first-collect"); }
+}
+
+function removeObj(o) {
+  S.objs.splice(S.objs.indexOf(o), 1);
+  S.roots.forEach((r) => r.refs.delete(o.id));
+  S.objs.forEach((x) => x.refs.delete(o.id));
+}
+
+function stopTheWorld() {
+  if (S.mode !== "play" || S.stwCooldown > 0) return;
+  const reach = reachable();
+  const dead = S.objs.filter((o) => !reach.has(o.id));
+  dead.forEach(removeObj);
+  const freed = dead.reduce((s, o) => s + o.size, 0);
+  S.freed += freed;
+  S.stw = 1.2; S.stwCooldown = 30; S.combo = 0;
+  S.score = Math.max(0, S.score - 250);
+  S.banner = { text: "STOP THE WORLD: freed " + fmtMB(freed) + ". p99 latency 900ms. Users noticed. -250", life: 3 };
+  vesta().milestone("stop-the-world");
+  sfx(220, 0.5, "square");
+}
+
+// ---------- sound ----------
+let audio = null, muted = false;
+function sfx(f, d, type) {
+  if (muted) return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(0.04, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + d + 0.02);
+  } catch (e) {}
+}
+
+// ---------- loop ----------
+function update(dt) {
+  if (S.mode !== "play") return;
+  if (S.stw > 0) { S.stw -= dt; return; } // the world is stopped
+  S.t += dt;
+  const lv = level();
+  S.acc.alloc += dt * (0.9 + lv * 0.32);
+  S.acc.drop += dt * (0.55 + lv * 0.18);
+  S.acc.frame += dt * (0.18 + lv * 0.03);
+  S.acc.link += dt * (0.25 + lv * 0.12);
+  while (S.acc.alloc >= 1) { S.acc.alloc--; allocate(); }
+  while (S.acc.drop >= 1) { S.acc.drop--; dropRef(); }
+  while (S.acc.frame >= 1) { S.acc.frame--; frameEvent(); }
+  while (S.acc.link >= 1) { S.acc.link--; link(); }
+  // The cache only ever grows... until someone clears it.
+  S.cacheT += dt;
+  if (S.cacheT > 40) {
+    S.cacheT = 0;
+    const cache = S.roots.find((r) => r.name === "cache");
+    if (cache) { cache.refs.clear(); S.banner = { text: "cache.clear() ran. Lots of new garbage.", life: 2.5 }; }
+  } else if (Math.random() < dt * 0.12) {
+    const cache = S.roots.find((r) => r.name === "cache");
+    if (cache) allocate(cache);
+  }
+  if (S.comboT > 0) { S.comboT -= dt; if (S.comboT <= 0) S.combo = 0; }
+  if (S.stwCooldown > 0) S.stwCooldown -= dt;
+  S.capacity = 64 + lv * 8;
+  for (const o of S.objs) { o.x += (o.tx - o.x) * Math.min(1, dt * 6); o.y += (o.ty - o.y) * Math.min(1, dt * 6); o.pop = Math.max(0, o.pop - dt * 3); o.flash = Math.max(0, (o.flash || 0) - dt * 2); }
+  for (const f of S.fx) { f.life -= dt; f.y -= dt * 24; }
+  S.fx = S.fx.filter((f) => f.life > 0);
+  if (S.banner) { S.banner.life -= dt; if (S.banner.life <= 0) S.banner = null; }
+  S.shake = Math.max(0, S.shake - dt * 30);
+  if (S.t > 60 && !S.milestones.m60) { S.milestones.m60 = 1; vesta().milestone("survived-60s"); }
+  if (S.t > 150 && !S.milestones.m150) { S.milestones.m150 = 1; vesta().milestone("survived-150s"); }
+  if (used() >= S.capacity) end("Heap full. The kernel OOM-killed your process.");
+}
+
+function fmtMB(mb) { return mb >= 1 ? mb.toFixed(mb % 1 ? 1 : 0) + " MB" : Math.round(mb * 1024) + " KB"; }
+function fmtTime(t) { t = Math.floor(t); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); }
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+function nodeR(o) { return 22 + Math.sqrt(o.size) * 7; }
+
+function arrow(x1, y1, x2, y2, r2, color, width) {
+  const dx = x2 - x1, dy = y2 - y1, d = Math.hypot(dx, dy) || 1;
+  const ex = x2 - (dx / d) * (r2 + 4), ey = y2 - (dy / d) * (r2 + 4);
+  const mx = (x1 + ex) / 2 - (dy / d) * 18, my = (y1 + ey) / 2 + (dx / d) * 18;
+  ctx.strokeStyle = color; ctx.lineWidth = width;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(mx, my, ex, ey); ctx.stroke();
+  const ang = Math.atan2(ey - my, ex - mx);
+  ctx.fillStyle = color; ctx.beginPath();
+  ctx.moveTo(ex, ey); ctx.lineTo(ex - Math.cos(ang - 0.45) * 9, ey - Math.sin(ang - 0.45) * 9); ctx.lineTo(ex - Math.cos(ang + 0.45) * 9, ey - Math.sin(ang + 0.45) * 9);
+  ctx.closePath(); ctx.fill();
+}
+
+function draw() {
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 28) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  if (S.mode === "title") return drawTitle();
+
+  ctx.save();
+  if (S.shake) ctx.translate((Math.random() - 0.5) * S.shake, (Math.random() - 0.5) * S.shake);
+  const byId = new Map(S.objs.map((o) => [o.id, o]));
+  const hov = S.hover;
+  // Edges: incoming edges of the hovered object are highlighted, which is all the help you get.
+  for (const r of S.roots) for (const id of r.refs) { const o = byId.get(id); if (o) arrow(r.x + (portrait ? 0 : r.w / 2), r.y + (portrait ? r.h / 2 : 0), o.x, o.y, nodeR(o), hov === o ? C.amber : "rgba(93,255,158,.28)", hov === o ? 2.5 : 1.5); }
+  for (const a of S.objs) for (const id of a.refs) { const o = byId.get(id); if (o) arrow(a.x, a.y, o.x, o.y, nodeR(o), hov === o ? C.amber : "rgba(160,200,180,.22)", hov === o ? 2.5 : 1.2); }
+
+  for (const r of S.roots) {
+    const x = r.x - r.w / 2, y = r.y - r.h / 2;
+    rr(x, y, r.w, r.h, 8); ctx.fillStyle = C.root; ctx.fill();
+    ctx.strokeStyle = r.permanent ? "rgba(255,197,66,.55)" : "rgba(93,255,158,.55)"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = r.permanent ? C.amber : C.green; ctx.font = "600 " + (portrait ? 11 : 13) + "px " + MONO; ctx.textAlign = "center";
+    ctx.fillText(r.name, r.x, r.y + 4);
+  }
+  if (!portrait) { ctx.fillStyle = C.dim; ctx.font = "600 10px " + MONO; ctx.textAlign = "left"; ctx.fillText("ROOTS", 24, 76); ctx.fillText("HEAP", 220, 76); }
+
+  for (const o of S.objs) {
+    const r = nodeR(o) * (1 + o.pop * 0.25);
+    ctx.beginPath(); ctx.arc(o.x, o.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = o.flash ? "rgba(255,90,79," + (0.3 + o.flash * 0.6) + ")" : C.node; ctx.fill();
+    ctx.lineWidth = hov === o ? 2.5 : 1.5; ctx.strokeStyle = hov === o ? C.amber : C.nodeLine; ctx.stroke();
+    ctx.fillStyle = C.text; ctx.textAlign = "center"; ctx.font = "600 " + (r > 34 ? 12 : 11) + "px " + MONO;
+    ctx.fillText(o.type, o.x, o.y + 1);
+    ctx.fillStyle = C.muted; ctx.font = "500 10px " + MONO; ctx.fillText(fmtMB(o.size), o.x, o.y + 14);
+  }
+  ctx.textAlign = "center";
+  for (const f of S.fx) { ctx.globalAlpha = Math.min(1, f.life * 1.5); ctx.fillStyle = f.color; ctx.font = "700 " + (f.big ? 15 : 12) + "px " + MONO; ctx.fillText(f.text, f.x, f.y - 30); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // HUD: memory bar is the main thing to watch.
+  const u = used(), k = Math.min(1, u / S.capacity);
+  const bx = 16, by = 16, bw = Math.min(520, W - 32 - (portrait ? 0 : 260)), bh = 12;
+  ctx.fillStyle = "rgba(255,255,255,.06)"; rr(bx, by + 18, bw, bh, 6); ctx.fill();
+  ctx.fillStyle = k < 0.6 ? C.green : k < 0.85 ? C.amber : C.red; rr(bx, by + 18, Math.max(8, bw * k), bh, 6); ctx.fill();
+  ctx.textAlign = "left"; ctx.fillStyle = C.text; ctx.font = "700 13px " + MONO;
+  ctx.fillText("HEAP " + fmtMB(u) + " / " + S.capacity + " MB", bx, by + 10);
+  ctx.textAlign = "right";
+  const hudX = portrait ? W - 16 : W - 16;
+  ctx.fillText(S.score.toLocaleString() + " pts", hudX, by + 10);
+  ctx.fillStyle = C.muted; ctx.font = "600 12px " + MONO;
+  ctx.fillText((S.combo > 1 ? "combo x" + S.combo + "   " : "") + "segfaults " + "●".repeat(S.segfaults) + "○".repeat(3 - S.segfaults) + "   " + fmtTime(S.t), hudX, by + 30);
+
+  // Stop-the-world button
+  const sw = portrait ? W - 32 : 230, sx = portrait ? 16 : 24, sy = H - 54;
+  rr(sx, sy, sw, 40, 8);
+  ctx.fillStyle = S.stwCooldown > 0 ? "rgba(255,255,255,.05)" : "rgba(255,90,79,.18)"; ctx.fill();
+  ctx.strokeStyle = S.stwCooldown > 0 ? C.dim : C.red; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.textAlign = "center"; ctx.fillStyle = S.stwCooldown > 0 ? C.dim : C.red; ctx.font = "800 13px " + MONO;
+  ctx.fillText(S.stwCooldown > 0 ? "STOP THE WORLD in " + Math.ceil(S.stwCooldown) + "s" : "STOP THE WORLD [space]", sx + sw / 2, sy + 25);
+  S.stwBtn = { x: sx, y: sy, w: sw, h: 40 };
+
+  if (S.stw > 0) { ctx.fillStyle = "rgba(255,90,79,.08)"; ctx.fillRect(0, 0, W, H); }
+  if (S.banner) {
+    ctx.globalAlpha = Math.min(1, S.banner.life * 2);
+    ctx.fillStyle = C.text; ctx.font = "700 " + (portrait ? 14 : 17) + "px " + SANS; ctx.textAlign = portrait ? "center" : "right";
+    ctx.fillText(S.banner.text, portrait ? W / 2 : W - 16, portrait ? H - 70 : H - 28);
+    ctx.globalAlpha = 1;
+  }
+  if (S.mode === "over") drawOver();
+}
+
+function drawTitle() {
+  const cx = W / 2, cy = H / 2;
+  ctx.textAlign = "center";
+  ctx.fillStyle = C.green; ctx.font = "700 13px " + MONO; ctx.fillText("$ node --max-old-space-size=64 app.js", cx, cy - 120);
+  ctx.fillStyle = C.text; ctx.font = "900 " + Math.min(92, W / 8) + "px " + SANS; ctx.fillText("Garbage Collector", cx, cy - 40);
+  ctx.fillStyle = C.muted; ctx.font = "500 " + Math.min(19, W / 24) + "px " + SANS;
+  ctx.fillText("You are the GC. The program keeps allocating. You keep it alive.", cx, cy + 4);
+  const lines = [
+    ["Click", " objects no root can reach to free them."],
+    ["Never", " free something still in use: segfault."],
+    ["Watch", " for cycles. Pointing at each other isn't being reachable."],
+    ["Space", " stops the world. It works. Users hate it."],
+  ];
+  ctx.font = "500 " + Math.min(15, W / 30) + "px " + SANS;
+  lines.forEach(([a, b], i) => {
+    const y = cy + 48 + i * 24;
+    const wa = ctx.measureText(a).width, wb = ctx.measureText(b).width;
+    ctx.textAlign = "left";
+    ctx.fillStyle = C.green; ctx.fillText(a, cx - (wa + wb) / 2, y);
+    ctx.fillStyle = C.text; ctx.fillText(b, cx - (wa + wb) / 2 + wa, y);
+  });
+  ctx.textAlign = "center";
+  ctx.globalAlpha = 0.7 + 0.3 * Math.sin(performance.now() / 250);
+  ctx.fillStyle = C.green; ctx.font = "800 16px " + MONO; ctx.fillText("CLICK OR TAP TO START", cx, cy + 170);
+  ctx.globalAlpha = 1;
+  if (best) { ctx.fillStyle = C.dim; ctx.font = "500 12px " + MONO; ctx.fillText("best: " + best.toLocaleString() + " pts", cx, cy + 198); }
+}
+
+let buttons = [];
+function drawOver() {
+  ctx.fillStyle = "rgba(6,12,9,.85)"; ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2;
+  ctx.textAlign = "center";
+  ctx.fillStyle = C.red; ctx.font = "700 13px " + MONO; ctx.fillText(S.why.toUpperCase(), cx, cy - 96);
+  ctx.fillStyle = C.text; ctx.font = "900 " + Math.min(72, W / 9) + "px " + SANS; ctx.fillText(S.score.toLocaleString() + " pts", cx, cy - 30);
+  ctx.fillStyle = C.muted; ctx.font = "500 15px " + MONO;
+  ctx.fillText("uptime " + fmtTime(S.t) + "  ·  freed " + fmtMB(S.freed) + "  ·  " + S.segfaults + " segfaults", cx, cy + 8);
+  buttons = [];
+  [["Restart process", "again"], ["Share", "share"]].forEach(([label, id], i) => {
+    const bw = 200, x = cx - 210 + i * 220, y = cy + 44;
+    rr(x, y, bw, 46, 8); ctx.fillStyle = i ? "rgba(255,255,255,.06)" : C.green; ctx.fill();
+    ctx.fillStyle = i ? C.text : "#06210f"; ctx.font = "800 15px " + SANS; ctx.fillText(label, x + bw / 2, y + 29);
+    buttons.push({ x, y, w: bw, h: 46, id });
+  });
+  if (S.shareMsg) { ctx.fillStyle = C.green; ctx.font = "600 13px " + MONO; ctx.fillText(S.shareMsg, cx, cy + 120); }
+}
+
+async function end(why) {
+  if (S.mode !== "play") return;
+  S.mode = "over"; S.why = why;
+  vesta().milestone("game-over");
+  if (S.score > best) { best = S.score; try { localStorage.setItem("best", String(best)); } catch (e) {} }
+  sfx(90, 0.6, "sawtooth");
+  await vesta().submitScore(S.score, { label: "GC score" });
+}
+
+function share() {
+  const url = (window.vesta && window.vesta.shareUrl) || location.href;
+  const text = "I kept a 64 MB heap alive for " + fmtTime(S.t) + " as the garbage collector and freed " + fmtMB(S.freed) + ". " + S.score.toLocaleString() + " pts in Garbage Collector.";
+  if (navigator.share && matchMedia("(pointer: coarse)").matches) return navigator.share({ title: "Garbage Collector", text, url }).catch(() => {});
+  (navigator.clipboard ? navigator.clipboard.writeText(text + " " + url) : Promise.reject()).then(() => (S.shareMsg = "Copied. Paste it anywhere."), () => prompt("Copy this:", text + " " + url));
+}
+
+function hit(x, y) {
+  let bestO = null, bd = Infinity;
+  for (const o of S.objs) { const d = Math.hypot(o.x - x, o.y - y); if (d < nodeR(o) + 8 && d < bd) { bd = d; bestO = o; } }
+  return bestO;
+}
+cv.addEventListener("pointermove", (e) => { if (S && S.mode === "play") S.hover = hit(e.clientX, e.clientY); });
+cv.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (audio && audio.state === "suspended") audio.resume();
+  const x = e.clientX, y = e.clientY;
+  if (!S || S.mode === "title") { newGame(); return; }
+  if (S.mode === "over") { for (const b of buttons) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) { if (b.id === "again") newGame(); else share(); } return; }
+  const b = S.stwBtn;
+  if (b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return stopTheWorld();
+  const o = hit(x, y);
+  if (o) collect(o);
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key === " ") { e.preventDefault(); if (!S || S.mode === "title") newGame(); else if (S.mode === "play") stopTheWorld(); }
+  if (e.key === "m" || e.key === "M") muted = !muted;
+  if (e.key === "Enter" && S && S.mode === "over") newGame();
+});
+
+S = { mode: "title", objs: [], roots: [], fx: [] };
+layout();
+const DEMO = /[?&]demo/.test(location.search);
+let last = performance.now(), demoT = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (DEMO && S.mode === "title" && now > 1200) newGame();
+  update(dt);
+  if (DEMO && S.mode === "play") {
+    demoT += dt;
+    if (demoT > 0.45) {
+      demoT = 0;
+      const reach = reachable();
+      const dead = S.objs.filter((o) => !reach.has(o.id));
+      if (dead.length && Math.random() < 0.7) collect(dead[0]);
+    }
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
