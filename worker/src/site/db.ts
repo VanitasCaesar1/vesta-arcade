@@ -313,3 +313,50 @@ export async function topScores(env: Env, slug: string, limit = 10): Promise<Sco
     .all<ScoreRow>();
   return results;
 }
+
+export interface LoopData {
+  game: Game;
+  plays: number;
+  avgSeconds: number;
+  errorKinds: { kind: string; count: number }[];
+  milestone: { name: string; share: number } | null;
+  weekPlays: number;
+  weekGames: number;
+  comment: { body: string; name: string; title: string; slug: string; created_at: number } | null;
+}
+
+/** Live numbers for the home page's "how it works" section. Error text is reduced to its type, never shown raw. */
+export async function loopData(env: Env): Promise<LoopData | null> {
+  const [top] = await listGames(env, { sort: "top", limit: 1 });
+  if (!top) return null;
+  const v = top.version ?? 0;
+  const since = daysAgo(13);
+  const [stats, errs, ms, week, comment] = await env.DB.batch<Record<string, unknown>>([
+    env.DB.prepare("SELECT COALESCE(SUM(plays),0) AS plays, COALESCE(SUM(sessions),0) AS sessions, COALESCE(SUM(seconds),0) AS seconds FROM daily_stats WHERE slug = ? AND day >= ?").bind(top.slug, since),
+    env.DB.prepare("SELECT kind, message, count FROM errors WHERE slug = ? AND version = ? ORDER BY count DESC LIMIT 20").bind(top.slug, v),
+    env.DB.prepare("SELECT name, count FROM milestones WHERE slug = ? AND version = ? ORDER BY count ASC LIMIT 40").bind(top.slug, v),
+    env.DB.prepare("SELECT COALESCE(SUM(d.plays),0) AS plays, COUNT(DISTINCT d.slug) AS games FROM daily_stats d JOIN games g ON g.slug = d.slug WHERE g.hidden = 0 AND d.day >= ?").bind(daysAgo(6)),
+    env.DB.prepare("SELECT c.body, c.name, c.created_at, g.title, g.slug FROM comments c JOIN games g ON g.slug = c.slug WHERE c.hidden = 0 AND g.hidden = 0 ORDER BY c.created_at DESC LIMIT 1"),
+  ]);
+  const st = (stats?.results[0] ?? {}) as { plays: number; sessions: number; seconds: number };
+  const kinds = new Map<string, number>();
+  for (const e of (errs?.results ?? []) as { kind: string; message: string; count: number }[]) {
+    const k = /^(?:Uncaught )?([A-Z][A-Za-z]{2,30}Error)\b/.exec(e.message)?.[1] ?? (e.kind === "resource" ? "Failed asset load" : e.kind === "rejection" ? "Unhandled rejection" : "Error");
+    kinds.set(k, (kinds.get(k) ?? 0) + e.count);
+  }
+  const versionPlays = (await listVersions(env, top.slug, 1))[0]?.plays ?? 0;
+  const msRows = (ms?.results ?? []) as { name: string; count: number }[];
+  // The rarest milestone that a meaningful share of players still reach makes the best headline.
+  const m = versionPlays ? msRows.map((r) => ({ name: r.name, share: Math.min(1, r.count / versionPlays) })).find((r) => r.share >= 0.05 && r.share < 0.95) ?? null : null;
+  const wk = (week?.results[0] ?? {}) as { plays: number; games: number };
+  return {
+    game: top,
+    plays: st.plays ?? 0,
+    avgSeconds: st.sessions ? Math.round(st.seconds / st.sessions) : 0,
+    errorKinds: [...kinds].map(([kind, count]) => ({ kind, count })).sort((a, b) => b.count - a.count).slice(0, 3),
+    milestone: m,
+    weekPlays: wk.plays ?? 0,
+    weekGames: wk.games ?? 0,
+    comment: (comment?.results[0] as LoopData["comment"]) ?? null,
+  };
+}

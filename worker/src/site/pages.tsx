@@ -1,4 +1,4 @@
-import type { CommentRow, Game, ScoreRow, Sort, VersionRow } from "./db.ts";
+import { duration, type CommentRow, type Game, type LoopData, type ScoreRow, type Sort, type VersionRow } from "./db.ts";
 import { compactNumber, timeAgo } from "../lib/util.ts";
 import { Icon, Layout, Mascot, REPO_URL } from "./layout.tsx";
 
@@ -52,7 +52,77 @@ function Slot({ i }: { i: number }) {
   );
 }
 
-export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[] }) {
+function Loop({ d, siteUrl }: { d: LoopData; siteUrl: string }) {
+  const g = d.game;
+  const host = new URL(siteUrl).host;
+  const errors = d.errorKinds.length ? d.errorKinds.map((e) => `${e.kind} x${e.count}`).join(", ") : "none reported";
+  return (
+    <section class="loop">
+      <h2 class="display">
+        Players break it.
+        <br />
+        Your agent fixes it.
+      </h2>
+      <p class="lead">Vesta records every crash, how long people play and what they say, and hands it back as a report your coding agent can act on.</p>
+      <div class="bento">
+        <div class="term">
+          <span class="live">
+            <i /> Live from {host}
+          </span>
+          <pre>
+            <span class="p">$ </span>npx vesta-cli publish{"\n"}
+            <span class="y">▲</span> {g.title} v{g.version} is live{"\n"}
+            {"  "}
+            {siteUrl}/g/{g.slug}
+            {"\n\n"}
+            <span class="p">$ </span>npx vesta-cli feedback {g.slug}
+            {"\n"}
+            <span class="h"># Player feedback: {g.title}</span>
+            {"\n"}- {compactNumber(d.plays)} plays in 14 days, average {duration(d.avgSeconds)} of active play{"\n"}- Errors on v{g.version}: <span class={d.errorKinds.length ? "r" : "g"}>{errors}</span>
+            {"\n"}
+            {d.milestone ? (
+              <>
+                - Milestone "{d.milestone.name}": {Math.round(d.milestone.share * 100)}% of plays{"\n"}
+              </>
+            ) : null}
+            {"\n"}
+            <span class="p">&gt; </span>
+            <span class="a">
+              {d.errorKinds.length
+                ? `fix the ${d.errorKinds[0]!.kind} and publish again`
+                : d.milestone
+                  ? `only ${Math.round(d.milestone.share * 100)}% reach "${d.milestone.name}". make that part easier`
+                  : "read the feedback and improve the game"}
+            </span>
+          </pre>
+        </div>
+        <div class="stat">
+          <b>{compactNumber(d.weekPlays)}</b>
+          <span>
+            plays this week across {d.weekGames} {d.weekGames === 1 ? "game" : "games"}
+          </span>
+        </div>
+        <a class="quote" href={d.comment ? `/g/${d.comment.slug}#feedback` : `/g/${g.slug}#feedback`}>
+          {d.comment ? (
+            <>
+              <p>“{d.comment.body.length > 140 ? `${d.comment.body.slice(0, 137)}...` : d.comment.body}”</p>
+              <span>
+                {d.comment.name || "A player"} on {d.comment.title}, {timeAgo(d.comment.created_at)}
+              </span>
+            </>
+          ) : (
+            <>
+              <p>No player feedback yet.</p>
+              <span>Play something and leave the first note.</span>
+            </>
+          )}
+        </a>
+      </div>
+    </section>
+  );
+}
+
+export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null }) {
   const qs = (sort: Sort, tool?: string) => {
     const q = new URLSearchParams();
     if (sort !== "trending") q.set("sort", sort);
@@ -119,14 +189,16 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
           </div>
         </section>
 
+        {p.loop ? <Loop d={p.loop} siteUrl={p.siteUrl} /> : null}
+
         <section class="make" id="publish">
           <div>
             <h2 class="display">
-              Your agent makes it.
+              Run your own
               <br />
-              Vesta ships it.
+              arcade.
             </h2>
-            <p>Vesta is open source and runs on your own Cloudflare account for free. Publish from the terminal, or let Claude Code, Cursor or Codex do it, and read back every crash players hit.</p>
+            <p>Vesta is open source and runs on your own Cloudflare account, on the free plan. Publish from the terminal, or let Claude Code, Cursor or Codex do it.</p>
             <a class="btn" href={REPO_URL}>
               <Icon name="github" /> Get Vesta
             </a>

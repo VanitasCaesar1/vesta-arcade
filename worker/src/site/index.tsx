@@ -10,7 +10,7 @@ import { OG_PNG } from "./og.ts";
 
 let ogBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
-import { feedbackReport, getGame, listComments, listGames, listVersions, madeWithCounts, topScores, type Sort } from "./db.ts";
+import { feedbackReport, getGame, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
 import { EmbedPage, GamePage, HomePage, NotFoundPage } from "./pages.tsx";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
@@ -83,9 +83,9 @@ site.get("/", async (c) => {
   const sortQ = c.req.query("sort");
   const sort: Sort = sortQ === "new" || sortQ === "top" ? sortQ : "trending";
   const tool = c.req.query("made_with")?.slice(0, 32) || undefined;
-  const [games, tools] = await Promise.all([listGames(c.env, { sort, tool }), madeWithCounts(c.env)]);
+  const [games, tools, loop] = await Promise.all([listGames(c.env, { sort, tool }), madeWithCounts(c.env), loopData(c.env)]);
   c.header("cache-control", "public, max-age=30");
-  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} />);
+  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} />);
 });
 
 async function loadGame(c: Context<AppEnv>) {

@@ -7,6 +7,8 @@ import { configPath, loadConfig, requireConfig, saveConfig } from "./config.ts";
 import { findProjectRoot, loadProject } from "./project.ts";
 import { publish } from "./publish.ts";
 import { bytes, c, qr, terminalOut } from "./ui.ts";
+import { readFile } from "node:fs/promises";
+import { keyArt, screenshot } from "./screenshot.ts";
 import { VERSION } from "./version.ts";
 
 const HELP = `
@@ -19,6 +21,7 @@ ${c.bold("Usage")}
   vesta feedback [slug]       Errors, session lengths and comments, as Markdown for your agent
   vesta list                  Your games
   vesta open [slug]           Open a game (or the arcade) in your browser
+  vesta cover [slug]          Regenerate a game's key art (--image <file>, --query demo, --raw)
   vesta login [url]           Connect to an arcade that already exists
   vesta delete <slug>         Delete a game and all its data
   vesta mcp                   Run as an MCP server for Claude Code, Cursor, Codex…
@@ -57,6 +60,10 @@ async function main() {
       "rotate-token": { type: "boolean" },
       days: { type: "string" },
       json: { type: "boolean" },
+      image: { type: "string" },
+      raw: { type: "boolean" },
+      query: { type: "string" },
+      wait: { type: "string" },
       yes: { type: "boolean", short: "y" },
       help: { type: "boolean", short: "h" },
       version: { type: "boolean", short: "v" },
@@ -129,6 +136,30 @@ ${qr(r.url)}
   ${c.dim("Feedback later:")} vesta feedback ${r.slug}
 `);
       if (v.open) openUrl(r.url);
+      return;
+    }
+
+    case "cover": {
+      const cfg = await requireConfig();
+      const client = new Client(cfg);
+      const slug = args[0] ?? (await loadProject(findProjectRoot(process.cwd()))).config.slug;
+      if (!slug) throw new Error("Which game? Run this in the game's folder, or pass its slug: vesta cover <slug>");
+      const game = (await client.request<{ title: string; author: string; playUrl: string | null }>("GET", `/api/games/${slug}`));
+      let shot: Uint8Array | null;
+      if (v.image) shot = new Uint8Array(await readFile(v.image));
+      else {
+        if (!game.playUrl) throw new Error(`${slug} has no live version yet.`);
+        out.progress(c.dim("Screenshotting the game…"));
+        const q = (v.query ?? "").replace(/^\?/, "");
+        shot = await screenshot(`${game.playUrl}?${q ? q + "&" : ""}vesta-preview=1`, { waitMs: Number(v.wait ?? 4000) });
+        out.done();
+        if (!shot) throw new Error("Couldn't take a screenshot. Install Chrome (or set VESTA_CHROME), or pass --image <file>.");
+      }
+      out.progress(c.dim("Composing key art…"));
+      const art = v.raw ? shot : ((await keyArt(shot, { title: game.title, author: game.author, arcadeUrl: cfg.url })) ?? shot);
+      out.done();
+      const r = await client.request<{ cover: string }>("PUT", `/api/games/${slug}/cover`, art, { "content-type": "image/png" });
+      out.log(`${c.green("✓")} Cover updated: ${r.cover}`);
       return;
     }
 

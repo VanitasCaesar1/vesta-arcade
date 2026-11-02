@@ -18,7 +18,7 @@ import {
   type FileEntry,
   type ProjectConfig,
 } from "./project.ts";
-import { screenshot } from "./screenshot.ts";
+import { keyArt, screenshot } from "./screenshot.ts";
 import { bytes, c, type Out } from "./ui.ts";
 
 export interface PublishOptions {
@@ -109,12 +109,14 @@ export async function publish(opts: PublishOptions): Promise<PublishResult> {
     cover = "uploaded";
   } else if (!existing?.hasCover && opts.screenshot !== false) {
     out.progress(c.dim("Taking a cover screenshot…"));
-    const png = await screenshot(`${live.playUrl}?vesta-preview=1`);
-    out.done();
-    if (png) {
-      await client.request("PUT", `/api/games/${slug}/cover`, png, { "content-type": "image/png" });
+    const shot = await screenshot(`${live.playUrl}?vesta-preview=1`);
+    if (shot) {
+      out.progress(c.dim("Composing key art…"));
+      const art = (await keyArt(shot, { title, author: project.author, arcadeUrl: cfg.url }).catch(() => null)) ?? shot;
+      await client.request("PUT", `/api/games/${slug}/cover`, art, { "content-type": "image/png" });
       cover = "screenshot";
     }
+    out.done();
   }
 
   const next: ProjectConfig = { ...project, slug, title, dir: relDir === "." ? undefined : relDir };

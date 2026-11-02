@@ -36,6 +36,8 @@ const FRAMES = ["main()", "handleRequest()", "render()", "parseJSON()", "fetchUs
 let S;
 let best = 0;
 try { best = Number(localStorage.getItem("best") || 0); } catch (e) {}
+let firstRun = !best;
+let sparks = [];
 
 function newGame() {
   S = {
@@ -188,6 +190,10 @@ function collect(o) {
   const pts = Math.round(o.size * 20 * (1 + Math.min(S.combo, 12) * 0.25));
   S.score += pts; S.freed += o.size;
   S.fx.push({ x: o.x, y: o.y, text: "+" + pts + "  freed " + fmtMB(o.size), color: C.green, life: 1.1 });
+  for (let i = 0; i < 14 + o.size * 2; i++) {
+    const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 180;
+    sparks.push({ x: o.x, y: o.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.5 + Math.random() * 0.4, s: 2 + Math.random() * 3 });
+  }
   sfx(660 + Math.min(S.combo, 10) * 60, 0.06, "triangle");
   if (!S.milestones.first) { S.milestones.first = 1; vesta().milestone("first-collect"); }
 }
@@ -253,6 +259,8 @@ function update(dt) {
   S.capacity = 64 + lv * 8;
   for (const o of S.objs) { o.x += (o.tx - o.x) * Math.min(1, dt * 6); o.y += (o.ty - o.y) * Math.min(1, dt * 6); o.pop = Math.max(0, o.pop - dt * 3); o.flash = Math.max(0, (o.flash || 0) - dt * 2); }
   for (const f of S.fx) { f.life -= dt; f.y -= dt * 24; }
+  for (const p of sparks) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.92; p.vy *= 0.92; }
+  sparks = sparks.filter((p) => p.life > 0);
   S.fx = S.fx.filter((f) => f.life > 0);
   if (S.banner) { S.banner.life -= dt; if (S.banner.life <= 0) S.banner = null; }
   S.shake = Math.max(0, S.shake - dt * 30);
@@ -310,6 +318,20 @@ function draw() {
     ctx.fillStyle = C.text; ctx.textAlign = "center"; ctx.font = "600 " + (r > 34 ? 12 : 11) + "px " + MONO;
     ctx.fillText(o.type, o.x, o.y + 1);
     ctx.fillStyle = C.muted; ctx.font = "500 10px " + MONO; ctx.fillText(fmtMB(o.size), o.x, o.y + 14);
+  }
+  for (const p of sparks) { ctx.globalAlpha = Math.min(1, p.life * 2); ctx.fillStyle = C.green; ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s); }
+  ctx.globalAlpha = 1;
+  // First run: point at the first piece of garbage so the idea clicks.
+  if (firstRun && S.t < 40 && S.mode === "play") {
+    const reach = reachable();
+    const g = S.objs.find((o) => !reach.has(o.id));
+    if (g) {
+      const pulse = 1 + 0.15 * Math.sin(performance.now() / 160);
+      ctx.strokeStyle = C.amber; ctx.lineWidth = 2.5; ctx.setLineDash([6, 5]);
+      ctx.beginPath(); ctx.arc(g.x, g.y, (nodeR(g) + 10) * pulse, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = C.amber; ctx.font = "700 13px " + MONO; ctx.textAlign = "center";
+      ctx.fillText("no root can reach this: click to free", g.x, g.y - nodeR(g) - 22);
+    }
   }
   ctx.textAlign = "center";
   for (const f of S.fx) { ctx.globalAlpha = Math.min(1, f.life * 1.5); ctx.fillStyle = f.color; ctx.font = "700 " + (f.big ? 15 : 12) + "px " + MONO; ctx.fillText(f.text, f.x, f.y - 30); }
@@ -397,6 +419,7 @@ function drawOver() {
 
 async function end(why) {
   if (S.mode !== "play") return;
+  firstRun = false;
   S.mode = "over"; S.why = why;
   vesta().milestone("game-over");
   if (S.score > best) { best = S.score; try { localStorage.setItem("best", String(best)); } catch (e) {} }
