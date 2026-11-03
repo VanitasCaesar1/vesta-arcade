@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Microservices</title>
+<meta name="description" content="Fifteen tiny developer jobs, a few seconds each, faster every round. Center the div. Exit vim. Don't deploy on Friday.">
+<style>
+  :root { --bg: #15121f; --paper: #f5f3ec; --ink: #17151f; --muted: #6d6a78; --yellow: #ffd60a; --red: #ff4b3e; --green: #22c56b; --blue: #3d6bff; --line: #dcd8cc; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: #ece9f5; font: 15px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none; }
+  body { background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); background-size: 22px 22px; }
+  button { font: inherit; color: inherit; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  #app { position: fixed; inset: 0; display: grid; grid-template-rows: auto 1fr; }
+  header { display: flex; align-items: center; gap: 18px; padding: 12px 18px; }
+  header .title { font-weight: 900; font-size: 15px; letter-spacing: -.01em; }
+  header .sp { flex: 1; }
+  .stat { font: 600 12px ui-monospace, Menlo, monospace; color: #9c97ad; display: flex; gap: 8px; align-items: center; letter-spacing: .04em; }
+  .stat b { color: #fff; font-size: 16px; }
+  .pips { display: inline-flex; gap: 4px; }
+  .pip { width: 11px; height: 11px; border-radius: 2px; background: rgba(255,255,255,.14); }
+  .pip.on { background: var(--yellow); }
+  .sound { font: 600 11px ui-monospace, Menlo, monospace; color: #77728a; background: none; border: 0; cursor: pointer; }
+  main { position: relative; display: grid; place-items: center; overflow: hidden; padding: 0 12px 12px; }
+
+  /* the job window */
+  .win { position: relative; width: min(780px, 100%); height: min(470px, 100%); background: var(--paper); color: var(--ink); border-radius: 10px; display: grid; grid-template-rows: 34px 1fr 6px; overflow: hidden; box-shadow: 0 30px 70px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(0,0,0,.4); }
+  .bar { display: flex; align-items: center; gap: 7px; padding: 0 12px; background: #24212e; color: #b9b4c8; font: 600 12px ui-monospace, Menlo, monospace; }
+  .bar i { width: 11px; height: 11px; border-radius: 50%; background: #4a4658; }
+  .bar i:nth-child(1) { background: #ff5f57; } .bar i:nth-child(2) { background: #febc2e; } .bar i:nth-child(3) { background: #28c840; }
+  .bar span { margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar .sp { flex: 1; }
+  .count { font: 900 20px/1 ui-monospace, Menlo, monospace; color: #fff; min-width: 1ch; text-align: right; }
+  .count.hot { color: var(--red); animation: pulse .3s; }
+  @keyframes pulse { 0% { transform: scale(1.6); } 100% { transform: scale(1); } }
+  .stage { position: relative; overflow: hidden; }
+  .root { position: absolute; inset: 0; }
+  .fusewrap { background: #e2ded2; }
+  .fuse { height: 100%; background: var(--ink); transform-origin: left; }
+  .fuse.hot { background: var(--red); }
+
+  /* big command text */
+  .slam { position: absolute; left: 50%; top: 46%; z-index: 6; pointer-events: none; font: italic 900 clamp(34px, 8.4vw, 86px)/.92 ui-sans-serif, system-ui, sans-serif; letter-spacing: -.035em; text-transform: uppercase; text-align: center; color: var(--yellow); width: 96%; -webkit-text-stroke: 2px #000; paint-order: stroke fill; text-shadow: 5px 6px 0 #000; transform: translate(-50%, -50%); opacity: 0; }
+  .slam.on { animation: slam 1.05s cubic-bezier(.2,1.2,.3,1) forwards; }
+  @keyframes slam { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.2) rotate(-4deg); } 14% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-4deg); } 70% { opacity: 1; transform: translate(-50%, -50%) scale(1.04) rotate(-4deg); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1) rotate(-4deg); } }
+  .stamp { position: absolute; inset: 34px 0 6px; z-index: 5; display: grid; place-items: center; align-content: center; gap: 10px; background: rgba(245,243,236,.86); text-align: center; padding: 16px; }
+  .stamp b { font: italic 900 clamp(40px, 9vw, 92px)/.9 ui-sans-serif, system-ui, sans-serif; letter-spacing: -.04em; transform: rotate(-5deg); }
+  .stamp.ok b { color: var(--green); } .stamp.bad b { color: var(--red); }
+  .stamp p { margin: 0; font-weight: 650; font-size: clamp(14px, 2.4vw, 18px); max-width: 34ch; color: var(--ink); }
+  .stamp.on b { animation: pop .3s cubic-bezier(.2,1.5,.4,1); }
+  @keyframes pop { from { transform: rotate(-5deg) scale(1.8); opacity: 0; } }
+
+  /* between jobs */
+  .inter { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; align-content: center; gap: 14px; background: var(--bg); background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); background-size: 22px 22px; text-align: center; }
+  .inter h2 { margin: 0; font: italic 900 clamp(40px, 9vw, 88px)/.9 ui-sans-serif, system-ui, sans-serif; letter-spacing: -.04em; text-transform: uppercase; }
+  .inter h2.fast { color: var(--yellow); animation: pop .35s cubic-bezier(.2,1.5,.4,1); }
+  .inter .pips .pip { width: 16px; height: 16px; }
+  .face { width: clamp(84px, 16vw, 140px); aspect-ratio: 1; }
+  .face.bounce { animation: bob .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes bob { from { transform: translateY(16px) scale(.9); } }
+  .vm .e-x, .vm .e-happy, .vm .m-smile, .vm .m-o { display: none; }
+  .ok .vm .e-dot, .ok .vm .m-dash, .bad .vm .e-dot, .bad .vm .m-dash { display: none; }
+  .ok .vm .e-happy, .ok .vm .m-smile, .bad .vm .e-x, .bad .vm .m-o { display: inline; }
+
+  /* screens */
+  .screen { position: absolute; inset: 0; z-index: 9; display: grid; place-items: center; align-content: center; gap: 14px; text-align: center; padding: 24px; background: var(--bg); background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); background-size: 22px 22px; overflow: auto; }
+  .screen h1 { margin: 0; font: italic 900 clamp(44px, 10vw, 104px)/.88 ui-sans-serif, system-ui, sans-serif; letter-spacing: -.045em; text-transform: uppercase; color: var(--yellow); -webkit-text-stroke: 2px #000; paint-order: stroke fill; text-shadow: 6px 7px 0 #000; transform: rotate(-3deg); }
+  .screen p { margin: 0; color: #c4bfd3; max-width: 44ch; font-size: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 560px; }
+  .chips span { font: 600 12px ui-monospace, Menlo, monospace; padding: 4px 8px; border-radius: 4px; background: rgba(255,255,255,.08); color: #d8d4e6; }
+  .go { height: 54px; padding: 0 30px; border: 0; border-radius: 10px; background: var(--yellow); color: #000; font: 900 17px ui-sans-serif, system-ui, sans-serif; cursor: pointer; box-shadow: 0 5px 0 #000; transition: transform .08s; }
+  .go:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
+  .go.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 2px rgba(255,255,255,.4); }
+  .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .muted { color: #8f8aa1; font-size: 13px; }
+  .big { font: 900 clamp(56px, 12vw, 96px)/1 ui-monospace, Menlo, monospace; letter-spacing: -.04em; color: #fff; }
+  .grid { font-size: 18px; line-height: 1.25; letter-spacing: 2px; max-width: 340px; word-break: break-all; }
+  .flash { position: fixed; inset: 0; background: var(--red); opacity: 0; pointer-events: none; z-index: 20; }
+  .flash.on { animation: flash .45s; }
+  @keyframes flash { 0% { opacity: .4; } 100% { opacity: 0; } }
+  .shake { animation: shake .35s; }
+  @keyframes shake { 20% { transform: translateX(-10px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(4px); } }
+
+  /* ---------- the jobs ---------- */
+  .key { min-width: 46px; height: 46px; padding: 0 12px; border-radius: 8px; border: 0; background: #fff; color: var(--ink); font-weight: 800; font-size: 18px; box-shadow: 0 3px 0 #b9b4a6, 0 0 0 1px #cfcabd; cursor: pointer; }
+  .key:active { transform: translateY(2px); box-shadow: 0 1px 0 #b9b4a6, 0 0 0 1px #cfcabd; }
+  .keys { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 0 10px; }
+
+  .c-target { position: absolute; border: 2px dashed #b3ad9d; border-radius: 6px; }
+  .c-target::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -5px; border-radius: 50%; background: #b3ad9d; }
+  .c-box { position: absolute; border-radius: 6px; background: var(--blue); color: #fff; display: grid; place-items: center; font-weight: 700; cursor: grab; box-shadow: 0 8px 20px -8px rgba(30,40,120,.7); touch-action: none; }
+  .c-box.drag { cursor: grabbing; }
+  .c-box.near { background: var(--green); }
+  .c-read { position: absolute; left: 14px; bottom: 12px; font-size: 13px; color: var(--muted); }
+
+  .v-scr { position: absolute; inset: 0 0 72px; background: #1d1b24; color: #d8d4e2; font-size: clamp(13px, 2.2vw, 16px); display: grid; grid-template-rows: 1fr auto; }
+  .v-buf { padding: 12px 14px; white-space: pre-wrap; overflow: hidden; word-break: break-all; }
+  .v-buf .t { color: #6b6680; }
+  .v-st { padding: 6px 14px; background: #2a2734; min-height: 30px; font-weight: 700; }
+  .v-st .err { color: #ff7b72; }
+  .v-cur { display: inline-block; width: .6em; height: 1.1em; vertical-align: text-bottom; background: #d8d4e2; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .job-vim .root { background: #1d1b24; }
+  .job-vim .key { background: #34303f; color: #fff; box-shadow: 0 3px 0 #0e0d13, 0 0 0 1px #4b4658; }
+
+  .k-page { position: absolute; inset: 0; padding: 22px 26px; color: #b9b4a6; }
+  .k-page h3 { margin: 0 0 14px; color: #8a8576; font: 800 22px/1.15 Georgia, serif; }
+  .k-page i { display: block; height: 10px; border-radius: 3px; background: #e2ded2; margin: 9px 0; }
+  .k-modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(420px, 90%); background: #fff; border-radius: 12px; padding: 20px 20px 34px; box-shadow: 0 20px 60px -10px rgba(0,0,0,.4), 0 0 0 1px rgba(0,0,0,.06); }
+  .k-modal b { font-size: 18px; }
+  .k-modal p { margin: 8px 0 14px; font-size: 13.5px; color: #555; }
+  .k-row { display: grid; gap: 8px; }
+  .k-acc { height: 48px; border: 0; border-radius: 8px; background: var(--blue); color: #fff; font-weight: 800; font-size: 16px; cursor: pointer; }
+  .k-acc.alt { background: #e9e6f5; color: var(--ink); }
+  .k-rej { position: absolute; bottom: 9px; border: 0; background: none; padding: 4px; font-size: 10.5px; color: #a9a5b3; cursor: pointer; text-decoration: underline; }
+
+  .code { position: absolute; inset: 0; padding: 16px 18px; font: clamp(13px, 2.3vw, 17px)/1.6 ui-monospace, Menlo, monospace; color: var(--ink); }
+  .code .ln { display: flex; gap: 14px; border-radius: 4px; padding: 0 6px; white-space: pre; cursor: pointer; }
+  .code .ln:hover { background: #ebe7da; }
+  .code .ln u { text-decoration: none; color: #b0ab9c; width: 2ch; text-align: right; flex: none; }
+  .tok { border-radius: 3px; padding: 0 1px; cursor: pointer; }
+  .tok:hover { background: #ffe9a3; }
+  .b-code { color: #d8d4c6; pointer-events: none; }
+  .b-bug { position: absolute; left: 0; top: 0; width: 46px; height: 46px; margin: -23px; padding: 6px; cursor: crosshair; }
+  .b-bug svg { width: 100%; height: 100%; display: block; }
+  .b-bug.dead { pointer-events: none; }
+  .b-bug.dead svg { display: none; }
+  .b-bug.dead::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: radial-gradient(circle, #7a8a2a 30%, transparent 70%); animation: fade .6s forwards; }
+  @keyframes fade { to { opacity: 0; transform: scale(1.6); } }
+
+  .br-line { position: absolute; left: 0; right: 0; top: 30%; text-align: center; font: 700 clamp(18px, 3.6vw, 30px)/1.3 ui-monospace, Menlo, monospace; padding: 0 12px; word-break: break-all; }
+  .br-line .next { background: var(--yellow); border-radius: 3px; }
+  .br-line .ok { color: var(--green); }
+
+  .p-table { position: absolute; inset: 14px; font: clamp(12px, 2.1vw, 15px)/1 ui-monospace, Menlo, monospace; background: #1d1b24; color: #cfcbdb; border-radius: 6px; padding: 8px; overflow: hidden; }
+  .p-row { display: grid; grid-template-columns: 7ch 1fr 7ch 7ch; gap: 8px; padding: 9px 8px; border-radius: 4px; cursor: pointer; }
+  .p-row:hover { background: #2e2a3a; }
+  .p-row.h { color: #7d7890; cursor: default; background: none; }
+  .p-row .cpu { text-align: right; } .p-row .mem { text-align: right; color: #8a859c; }
+  .p-row.hog .cpu { color: #ff6a5e; font-weight: 800; }
+
+  .f-btn { position: absolute; width: clamp(120px, 24vw, 170px); aspect-ratio: 1; margin: calc(clamp(120px, 24vw, 170px) / -2) 0 0 calc(clamp(120px, 24vw, 170px) / -2); border-radius: 50%; border: 0; background: radial-gradient(circle at 35% 30%, #ff8a7f, var(--red) 55%, #b51d12); color: #fff; font: 900 clamp(15px, 2.8vw, 20px)/1.05 ui-sans-serif, system-ui, sans-serif; box-shadow: 0 10px 0 #7d140c, 0 20px 40px -10px rgba(180,20,10,.6); cursor: pointer; animation: throb .8s ease-in-out infinite; }
+  @keyframes throb { 50% { filter: brightness(1.15); } }
+  .f-msgs { position: absolute; left: 12px; top: 12px; display: grid; gap: 6px; width: min(300px, 70%); }
+  .f-msgs div { background: #fff; border-radius: 10px; padding: 8px 11px; font-size: 13px; box-shadow: 0 4px 14px -6px rgba(0,0,0,.3); animation: slidein .25s ease-out; }
+  .f-msgs b { display: block; font-size: 11px; color: var(--muted); }
+  @keyframes slidein { from { transform: translateX(-20px); opacity: 0; } }
+
+  .m-card { position: absolute; background: #fff; border-radius: 10px; padding: 11px 12px; box-shadow: 0 8px 24px -10px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.06); border-left: 5px solid var(--blue); display: grid; gap: 4px; animation: slidein .2s ease-out; }
+  .m-card .t { font-weight: 800; font-size: clamp(13px, 2.2vw, 15px); line-height: 1.2; }
+  .m-card .w { font-size: 12px; color: var(--muted); }
+  .m-card .bs { display: flex; gap: 6px; margin-top: 4px; }
+  .m-card button { flex: 1; height: 36px; border-radius: 7px; border: 0; font-weight: 800; font-size: 13px; cursor: pointer; }
+  .m-card .acc { background: var(--blue); color: #fff; }
+  .m-card .dec { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 2px #cfcabd; }
+  .m-card.gone { transition: transform .25s, opacity .25s; transform: translateX(60px) rotate(8deg); opacity: 0; pointer-events: none; }
+
+  .o-wrap { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); display: grid; justify-items: center; gap: 10px; }
+  .o-len { font: 700 clamp(15px, 2.8vw, 20px) ui-monospace, Menlo, monospace; }
+  .o-cells { display: flex; gap: 6px; }
+  .o-cell { width: clamp(38px, 8.5vw, 64px); aspect-ratio: 1; border-radius: 8px; background: #fff; box-shadow: 0 0 0 2px var(--ink); display: grid; place-items: center; font: 800 clamp(16px, 3vw, 24px) ui-monospace, Menlo, monospace; position: relative; }
+  .o-cell.ghost { box-shadow: 0 0 0 2px var(--red); background: #ffe6e3; color: var(--red); font-size: clamp(9px, 1.6vw, 12px); border: 0; outline: 2px dashed var(--red); outline-offset: -2px; box-shadow: none; }
+  .o-cell.at { background: var(--yellow); }
+  .o-cell.ghost.at { background: var(--red); color: #fff; }
+  .o-cell small { position: absolute; bottom: -22px; font-size: 12px; color: var(--muted); }
+  .o-i { font: 800 clamp(16px, 3vw, 22px) ui-monospace, Menlo, monospace; margin-top: 18px; }
+  .o-tip { font-size: 13px; color: var(--muted); }
+
+  .x-pad { position: absolute; left: 0; top: 0; height: 30px; border-radius: 6px; background: var(--ink); color: #9be6b8; display: grid; place-items: center; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .x-drop { position: absolute; left: 0; top: 0; padding: 5px 9px; border-radius: 5px; background: var(--red); color: #fff; font: 800 12px ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .x-drop.caught { background: var(--green); transition: opacity .3s; opacity: 0; }
+
+  .g-pr { position: absolute; inset: 16px; display: grid; align-content: start; gap: 10px; }
+  .g-pr h4 { margin: 0; font-size: clamp(16px, 2.8vw, 20px); }
+  .g-pr h4 span { color: var(--muted); font-weight: 400; }
+  .g-checks { border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  .g-check { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-top: 1px solid #eee9dd; font-size: 14px; }
+  .g-check:first-child { border-top: 0; }
+  .g-check i { width: 14px; height: 14px; border-radius: 50%; border: 3px solid #d9a400; border-right-color: transparent; animation: spin .7s linear infinite; flex: none; }
+  .g-check.done i { border: 0; background: var(--green); animation: none; }
+  .g-check em { margin-left: auto; font-style: normal; font-size: 12px; color: var(--muted); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .g-merge { height: 46px; border-radius: 8px; border: 0; background: #1f883d; color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; justify-self: start; padding: 0 20px; }
+
+  .q-wrap { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 16px; padding: 16px; text-align: center; }
+  .q-code { font: 700 clamp(14px, 2.6vw, 19px)/1.4 ui-monospace, Menlo, monospace; background: #fff; border-radius: 8px; padding: 12px 14px; box-shadow: 0 0 0 1px var(--line); max-width: 100%; }
+  .q-code u { text-decoration: none; display: inline-block; min-width: 5ch; border-bottom: 3px solid var(--blue); color: transparent; }
+  .q-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: min(440px, 100%); }
+  .q-opts button { height: 48px; border-radius: 8px; border: 0; background: #fff; box-shadow: 0 3px 0 #c9c4b6, 0 0 0 1px #d6d1c4; font: 700 clamp(13px, 2.4vw, 16px) ui-monospace, Menlo, monospace; cursor: pointer; color: var(--ink); padding: 0 6px; overflow: hidden; text-overflow: ellipsis; }
+  .q-inc { background: var(--red); color: #fff; border-radius: 10px; padding: 12px 16px; display: grid; gap: 2px; width: min(440px, 100%); }
+  .q-inc b { font-size: clamp(17px, 3vw, 22px); }
+  .q-inc span { font-size: 13px; opacity: .9; }
+
+  .sound { white-space: nowrap; }
+  @media (max-width: 560px) {
+    header { gap: 10px; padding: 9px 12px; } header .title, #speedStat { display: none; } .bar span { display: none; } main { padding: 0 6px 6px; }
+    .keys { gap: 5px; padding: 0 6px; } .key { min-width: 36px; height: 42px; padding: 0 7px; font-size: 16px; }
+    .code { padding: 12px 10px; font-size: 12.5px; } .code .ln { white-space: pre-wrap; gap: 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .slam.on, .stamp.on b, .inter h2.fast { animation-duration: .01s; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="title">Microservices</span>
+    <span class="sp"></span>
+    <span class="stat">SHIPPED <b id="score">0</b></span>
+    <span class="stat">SANITY <span class="pips" id="lives"></span></span>
+    <span class="stat" id="speedStat">SPEED <b id="speed">1.0x</b></span>
+    <button class="sound" id="soundBtn" type="button">SOUND ON [M]</button>
+  </header>
+  <main id="main">
+    <div class="win" id="win">
+      <div class="bar"><i></i><i></i><i></i><span id="wtitle">~</span><span class="sp"></span><b class="count" id="count"></b></div>
+      <div class="stage" id="stage"></div>
+      <div class="fusewrap"><div class="fuse" id="fuse"></div></div>
+      <div class="stamp" id="stamp" hidden><b id="stampWord"></b><p id="stampMsg"></p></div>
+    </div>
+    <div class="slam" id="slam"></div>
+    <div class="inter" id="inter" hidden>
+      <div class="face" id="face"></div>
+      <h2 id="interH"></h2>
+      <span class="pips" id="interLives"></span>
+    </div>
+  </main>
+</div>
+<div class="flash" id="flash"></div>
+
+<div class="screen" id="title">
+  <div class="face" id="titleFace"></div>
+  <h1>Micro&shy;services</h1>
+  <p>Fifteen tiny developer jobs. A few seconds each. Every four jobs, everything gets faster. Mess up four times and you burn out.</p>
+  <div class="chips" id="chips"></div>
+  <button class="go" id="startBtn">Clock in</button>
+  <span class="muted" id="best"></span>
+</div>
+
+<div class="screen" id="over" hidden>
+  <div class="face bad" id="overFace"></div>
+  <p class="muted" id="overWhy"></p>
+  <div class="big" id="overScore">0</div>
+  <p id="overLine"></p>
+  <div class="grid" id="overGrid"></div>
+  <div class="row">
+    <button class="go" id="againBtn">Clock in again</button>
+    <button class="go ghost" id="shareBtn">Share</button>
+  </div>
+  <span class="muted" id="shareMsg"></span>
+</div>
+
+<script>
+"use strict";
+const vesta = () => window.vesta || { milestone() {}, error() {}, submitScore() { return Promise.resolve(null); } };
+const $ = (id) => document.getElementById(id);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const ri = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = (a) => a[(Math.random() * a.length) | 0];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+// Vesta, the arcade's mascot, is your manager. Its face changes with how the last job went.
+const FACE = '<svg class="vm" viewBox="150 140 1632 1640" aria-hidden="true">' +
+  '<path d="M438 175H873L960 460L700 900L560 523Z" fill="#fff"/><path d="M1492 175H1057L970 460L1230 900L1370 523Z" fill="#fff"/>' +
+  '<circle cx="966" cy="966" r="773" fill="#fff"/><path d="M551 255H813L968 768H972L1127 255H1379L1108 1022H823Z" fill="#262626"/>' +
+  '<g class="e-dot" fill="#262626"><circle cx="584" cy="966" r="81"/><circle cx="1354" cy="966" r="81"/></g>' +
+  '<g class="e-x" stroke="#262626" stroke-width="42" stroke-linecap="square"><path d="M522 904l124 124M646 904l-124 124M1292 904l124 124M1416 904l-124 124"/></g>' +
+  '<g class="e-happy" fill="none" stroke="#262626" stroke-width="40" stroke-linecap="round"><path d="M498 996q86-120 172 0M1268 996q86-120 172 0"/></g>' +
+  '<g class="m-dash" fill="#262626"><rect x="800" y="1427" width="46" height="16"/><rect x="862" y="1427" width="46" height="16"/><rect x="923" y="1427" width="46" height="16"/><rect x="985" y="1427" width="46" height="16"/><rect x="1047" y="1427" width="46" height="16"/><rect x="1109" y="1427" width="23" height="16"/></g>' +
+  '<path class="m-smile" d="M790 1390q176 150 352 0" fill="none" stroke="#262626" stroke-width="34" stroke-linecap="round"/>' +
+  '<ellipse class="m-o" cx="966" cy="1435" rx="70" ry="84" fill="#262626"/></svg>';
+const BUG = '<svg viewBox="0 0 40 40"><g stroke="#1d1b24" stroke-width="2.6" stroke-linecap="round"><path d="M13 15L5 10M12 21H3M13 27L6 33M27 15l8-5M28 21h9M27 27l7 6M17 6l-3-4M23 6l3-4"/></g><ellipse cx="20" cy="23" rx="9.5" ry="11.5" fill="#3a2f1f"/><circle cx="20" cy="10" r="5.5" fill="#1d1b24"/><path d="M20 13v21" stroke="#6b5a3c" stroke-width="1.6"/></svg>';
+
+// ---------- sound ----------
+let actx = null, muted = store.get("muted") === "1";
+function tone(f, d, type, vol, slide, delay) {
+  if (muted) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime + (delay || 0), o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d + 0.02);
+  } catch (e) {}
+}
+const sfx = {
+  slam() { tone(196, 0.14, "square", 0.05, 392); tone(587, 0.2, "square", 0.035, 880, 0.06); },
+  tap() { tone(880, 0.05, "triangle", 0.045); },
+  tick() { tone(1320, 0.04, "square", 0.025); },
+  win() { [659, 880, 1319].forEach((f, i) => tone(f, 0.13, "triangle", 0.06, 0, i * 0.07)); },
+  lose() { tone(311, 0.4, "sawtooth", 0.06, 87); tone(233, 0.4, "square", 0.03, 70, 0.05); },
+  faster() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.09, "square", 0.04, 0, i * 0.06)); },
+  over() { [392, 330, 262, 196].forEach((f, i) => tone(f, 0.28, "triangle", 0.06, 0, i * 0.18)); },
+};
+function soundLabel() { $("soundBtn").textContent = muted ? "SOUND OFF [M]" : "SOUND ON [M]"; }
+
+// ---------- the jobs ----------
+// Each job builds its own UI inside c.root and calls c.win() or c.lose(). Jobs marked
+// survive are won by waiting out the timer. setup() returns a function that solves the
+// job, used by ?demo.
+const JOBS = [
+  {
+    id: "center", name: "Center the div", verb: "Center the div!", title: "styles.css", time: 5.5, min: 2.6,
+    setup(c) {
+      const bw = Math.round(Math.min(150, c.w * 0.32)), bh = Math.round(Math.min(86, c.h * 0.2));
+      const cx = Math.round((c.w - bw) / 2), cy = Math.round((c.h - bh) / 2);
+      const t = c.at(c.el("div", "c-target"), cx, cy);
+      t.style.width = bw + "px"; t.style.height = bh + "px";
+      let x, y, tries = 0;
+      do { x = rnd(10, c.w - bw - 10); y = rnd(10, c.h - bh - 40); } while (Math.hypot(x - cx, y - cy) < Math.min(c.w, c.h) * 0.3 && ++tries < 50);
+      const b = c.el("div", "c-box mono", "&lt;div&gt;");
+      b.style.width = bw + "px"; b.style.height = bh + "px";
+      const read = c.el("div", "c-read mono");
+      const tol = Math.max(5, 12 / Math.sqrt(c.speed));
+      const near = () => Math.abs(x - cx) <= tol && Math.abs(y - cy) <= tol;
+      const put = () => { c.at(b, x, y); read.textContent = "margin: " + Math.round(y - cy) + "px 0 0 " + Math.round(x - cx) + "px;"; b.classList.toggle("near", near()); };
+      const check = () => { if (!near()) return; x = cx; y = cy; put(); read.textContent = "/* perfectly centered */"; c.win("Perfectly centered. Frame it."); };
+      put();
+      let drag = null;
+      b.addEventListener("pointerdown", (e) => { if (c.done) return; e.preventDefault(); b.setPointerCapture(e.pointerId); drag = { px: e.clientX, py: e.clientY, x, y }; b.classList.add("drag"); });
+      b.addEventListener("pointermove", (e) => { if (!drag || c.done) return; x = clamp(drag.x + e.clientX - drag.px, 0, c.w - bw); y = clamp(drag.y + e.clientY - drag.py, 0, c.h - bh); put(); });
+      const up = () => { if (!drag) return; drag = null; b.classList.remove("drag"); if (!c.done) check(); };
+      b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up);
+      c.key((e) => {
+        const d = e.shiftKey ? 1 : 5, k = e.key;
+        if (k === "ArrowLeft") x -= d; else if (k === "ArrowRight") x += d; else if (k === "ArrowUp") y -= d; else if (k === "ArrowDown") y += d; else return;
+        e.preventDefault(); put(); check();
+      });
+      return () => { x = cx; y = cy; put(); check(); };
+    },
+  },
+  {
+    id: "vim", name: "Exit vim", verb: "Exit vim!", title: "vim notes.txt", time: 7, min: 3.6, slow: "Still in vim. (Esc, then :q, then Enter.)",
+    setup(c) {
+      const scr = c.el("div", "v-scr mono"), buf = c.el("div", "v-buf", "", scr), st = c.el("div", "v-st", "", scr);
+      let mode = "insert", text = "todo: learn how to exit vim", cmd = "", msg = "";
+      const draw = () => {
+        buf.innerHTML = esc(text) + (mode === "insert" ? '<i class="v-cur"></i>' : "") + '\n<span class="t">' + "~\n".repeat(8) + "</span>";
+        st.innerHTML = mode === "insert" ? "-- INSERT --" : mode === "cmd" ? ":" + esc(cmd) + '<i class="v-cur"></i>' : '<span class="err">' + esc(msg) + "</span>";
+      };
+      const press = (k) => {
+        if (c.done) return;
+        sfx.tap();
+        if (mode === "insert") {
+          if (k === "Esc") mode = "normal";
+          else if (k === "Enter") text += "\n";
+          else if (k === "Backspace") text = text.slice(0, -1);
+          else text += k;
+        } else if (mode === "normal") {
+          msg = "";
+          if (k === ":") { mode = "cmd"; cmd = ""; } else if (k === "i" || k === "a") mode = "insert";
+        } else if (k === "Esc") mode = "normal";
+        else if (k === "Backspace") { if (cmd) cmd = cmd.slice(0, -1); else mode = "normal"; }
+        else if (k === "Enter") {
+          if (/^(q!?|qa!?|wq!?|x)$/.test(cmd)) { draw(); return c.win(":" + cmd + " worked. You're free."); }
+          msg = "E492: Not an editor command: " + cmd; mode = "normal";
+        } else cmd += k;
+        draw();
+      };
+      const keys = c.el("div", "keys");
+      for (const k of shuffle(["Esc", ":", "q", "!", "w", "i", "x", "Enter"])) c.tap(c.el("button", "key mono", k === "Enter" ? "&#9166;" : k, keys), () => press(k));
+      c.key((e) => {
+        let k = e.key;
+        if (k === "Escape") k = "Esc";
+        if (k === "Enter" || k === "Esc" || k === "Backspace" || k.length === 1) { e.preventDefault(); press(k); }
+      });
+      draw();
+      return () => ["Esc", ":", "q", "Enter"].forEach((k, i) => c.after(i * 140, () => press(k)));
+    },
+  },
+  {
+    id: "cookies", name: "Reject the cookies", verb: "Reject the cookies!", title: "local-news.com", time: 4.5, min: 2.4,
+    setup(c) {
+      c.el("div", "k-page", "<h3>Local developer finally exits vim after 11 years</h3>" + "<i></i>".repeat(14));
+      const m = c.el("div", "k-modal", "<b>We value your privacy</b><p>We and our 847 partners use cookies to personalise ads, measure you, and remember that you said no last time.</p>");
+      const row = c.el("div", "k-row", "", m);
+      c.el("button", "k-acc", "Accept all", row);
+      if (c.speed > 1.2) c.el("button", "k-acc alt", "Accept and continue", row);
+      const rej = c.el("button", "k-rej", "reject non-essential", m);
+      rej.style[pick(["left", "right"])] = "12px";
+      const lose = () => c.lose("You accepted 847 partners.");
+      row.querySelectorAll("button").forEach((b) => c.tap(b, lose));
+      c.tap(rej, () => c.win("Rejected. The ads don't know you."));
+      return () => c.win("Rejected. The ads don't know you.");
+    },
+  },
+  {
+    id: "brackets", name: "Close the brackets", verb: "Close the brackets!", title: "index.js", time: 5.5, min: 3,
+    setup(c) {
+      const n = Math.min(6, 3 + Math.floor((c.speed - 1) * 4));
+      const close = { "(": ")", "[": "]", "{": "}" };
+      const pre = { "(": ["fetch(", "map(", "if (", "f(", "Promise.all("], "[": ["[", "rows[", "["], "{": ["{ ", "{ id: ", "{ ...u, " ] };
+      const opens = Array.from({ length: n }, () => pick(["(", "[", "{"]));
+      const line = c.el("div", "br-line");
+      const parts = opens.map((o) => pick(pre[o]));
+      let typed = "";
+      // The innermost unclosed bracket is highlighted: that's the one to close next.
+      const render = () => {
+        const depth = n - typed.length;
+        line.innerHTML = "x = " + parts.map((s, i) => esc(s.slice(0, -1)) + (i === depth - 1 ? '<span class="next">' + esc(s.slice(-1)) + "</span>" : esc(s.slice(-1)))).join("") + '<span class="ok">' + esc(typed) + "</span>";
+      };
+      const press = (k) => {
+        if (c.done) return;
+        const want = close[opens[n - 1 - typed.length]];
+        if (k !== want) return c.lose("SyntaxError: Unexpected token '" + k + "'");
+        sfx.tap(); typed += k; render();
+        if (typed.length === n) c.win("Balanced. Lisp would be proud.");
+      };
+      const keys = c.el("div", "keys");
+      for (const k of [")", "]", "}"]) c.tap(c.el("button", "key mono", k, keys), () => press(k));
+      c.key((e) => { if (")]}".includes(e.key) && e.key.length === 1) { e.preventDefault(); press(e.key); } });
+      render();
+      return () => opens.slice().reverse().forEach((o, i) => c.after(i * 160, () => press(close[o])));
+    },
+  },
+  {
+    id: "kill", name: "Kill the runaway process", verb: "Kill the hog!", title: "top", time: 4.5, min: 2.6,
+    setup(c) {
+      const names = shuffle(["node", "Google Chrome", "Slack", "postgres", "dockerd", "webpack", "python3", "Xcode", "Electron", "java", "kernel_task", "zoom.us", "Spotify", "tsserver"]).slice(0, 6);
+      const procs = names.map((name) => ({ pid: ri(300, 9999), name, cpu: rnd(0.2, 9), mem: ri(20, 900) }));
+      const hog = pick(procs);
+      hog.cpu = rnd(99, 100); hog.mem = ri(2000, 9000);
+      const tbl = c.el("div", "p-table");
+      const render = () => {
+        tbl.innerHTML = '<div class="p-row h"><span>PID</span><span>COMMAND</span><span class="cpu">%CPU</span><span class="mem">MEM</span></div>' +
+          procs.map((p, i) => '<div class="p-row' + (p === hog ? " hog" : "") + '" data-i="' + i + '"><span>' + p.pid + "</span><span>" + esc(p.name) + '</span><span class="cpu">' + p.cpu.toFixed(1) + '</span><span class="mem">' + p.mem + "M</span></div>").join("");
+      };
+      const refresh = () => {
+        const order = shuffle(procs);
+        procs.length = 0; procs.push(...order);
+        for (const p of procs) if (p !== hog) p.cpu = clamp(p.cpu + rnd(-2, 2), 0.1, 14);
+        hog.cpu = rnd(98.5, 100);
+        render();
+        c.after(Math.max(320, 950 / c.speed), refresh);
+      };
+      c.tap(tbl, (e) => {
+        const row = e.target.closest("[data-i]");
+        if (!row) return;
+        const p = procs[+row.dataset.i];
+        if (p === hog) c.win("kill -9 " + p.pid + ". The fans spin down.");
+        else c.lose("You killed " + p.name + ". It was fine.");
+      });
+      render();
+      c.after(Math.max(320, 950 / c.speed), refresh);
+      return () => c.win("kill -9 " + hog.pid + ". The fans spin down.");
+    },
+  },
+  {
+    id: "semicolon", name: "Find the missing semicolon", verb: "Find the missing ;", title: "app.js", time: 5, min: 2.8,
+    setup(c) {
+      const pool = ["import fs from 'node:fs';", "const port = env.PORT ?? 3000;", "let total = 0;", "await db.connect();", "const user = await getUser(id);", "items.forEach(addToCart);", "console.log(total);", "app.listen(port);", "throw new Error('nope');", "export default app;", "res.json({ ok: true });", "const ids = rows.map(r => r.id);"];
+      const lines = shuffle(pool).slice(0, c.speed > 1.4 ? 7 : 6);
+      const miss = ri(0, lines.length - 1);
+      const box = c.el("div", "code");
+      lines.forEach((l, i) => {
+        const ln = c.el("div", "ln", "<u>" + (i + 1) + "</u>" + esc(i === miss ? l.slice(0, -1) : l), box);
+        c.tap(ln, () => (i === miss ? c.win("Line " + (i + 1) + ". ASI is not your friend.") : c.lose("Line " + (i + 1) + " was fine. It was line " + (miss + 1) + ".")));
+      });
+      return () => c.win("Line " + (miss + 1) + ". ASI is not your friend.");
+    },
+  },
+  {
+    id: "typo", name: "Fix the typo", verb: "Find the typo!", title: "server.ts", time: 5, min: 2.8,
+    setup(c) {
+      const TYPO = { function: "fucntion", return: "retrun", length: "lenght", const: "cosnt", import: "improt", receive: "recieve", width: "widht", async: "asnyc", true: "ture", false: "flase", export: "exprot", console: "consloe", default: "defualt", await: "awiat", height: "hieght", status: "stauts" };
+      const pool = ["import { serve } from 'bun';", "export default async function main() {", "  const width = el.clientWidth;", "  const msg = await receive(socket);", "  if (list.length === 0) return true;", "  return { status: 'ok', cached: false };", "  console.log('height', height);"];
+      const lines = shuffle(pool).slice(0, 4).map((l) => l.split(" "));
+      const cands = [];
+      lines.forEach((toks, li) => toks.forEach((t, ti) => { for (const w in TYPO) if (new RegExp("\\b" + w + "\\b").test(t)) cands.push([li, ti, w]); }));
+      const [li, ti, w] = pick(cands);
+      lines[li][ti] = lines[li][ti].replace(new RegExp("\\b" + w + "\\b"), TYPO[w]);
+      const bad = lines[li][ti];
+      const box = c.el("div", "code");
+      lines.forEach((toks, l) => {
+        const ln = c.el("div", "ln", "<u>" + (l + 1) + "</u>", box);
+        ln.style.cursor = "default";
+        const span = c.el("span", "", "", ln);
+        toks.forEach((t, k) => {
+          if (k) span.appendChild(document.createTextNode(" "));
+          if (!t) return;
+          const s = c.el("span", "tok", esc(t), span);
+          c.tap(s, () => (l === li && k === ti ? c.win(bad.trim() + " fixed. The linter sighs.") : c.lose("'" + t + "' was spelled right. '" + bad + "' wasn't.")));
+        });
+      });
+      return () => c.win(bad.trim() + " fixed. The linter sighs.");
+    },
+  },
+  {
+    id: "bugs", name: "Squash the bugs", verb: "Squash the bugs!", title: "legacy.php", time: 5, min: 3,
+    setup(c) {
+      c.el("div", "code b-code", ["<?php", "// TODO: refactor (2014)", "function getUser($id) {", "  global $db, $cache, $hope;", "  $u = mysql_query(\"SELECT *\");", "  if ($u == false) return true;", "  return $u ?: $u2 ?: null;", "}"].map(esc).join("<br>"));
+      const n = Math.min(7, 3 + Math.round((c.speed - 1) * 4));
+      let left = n;
+      const bugs = Array.from({ length: n }, () => {
+        const b = { x: rnd(40, c.w - 40), y: rnd(40, c.h - 40), a: rnd(0, Math.PI * 2), v: rnd(55, 85) * c.speed, dead: false };
+        b.el = c.el("div", "b-bug", BUG);
+        c.tap(b.el, () => {
+          if (b.dead) return;
+          b.dead = true; b.el.classList.add("dead"); sfx.tap(); left--;
+          if (!left) c.win("Zero bugs. In this file.");
+        });
+        return b;
+      });
+      c.frame((dt) => {
+        for (const b of bugs) {
+          if (b.dead) continue;
+          b.a += rnd(-3, 3) * dt;
+          b.x += Math.cos(b.a) * b.v * dt; b.y += Math.sin(b.a) * b.v * dt;
+          if (b.x < 24 || b.x > c.w - 24) { b.a = Math.PI - b.a; b.x = clamp(b.x, 24, c.w - 24); }
+          if (b.y < 24 || b.y > c.h - 24) { b.a = -b.a; b.y = clamp(b.y, 24, c.h - 24); }
+          b.el.style.transform = "translate(" + b.x + "px," + b.y + "px) rotate(" + (b.a + Math.PI / 2) + "rad)";
+        }
+      });
+      return () => bugs.forEach((b, i) => c.after(i * 120, () => b.el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }))));
+    },
+  },
+  {
+    id: "friday", name: "Don't deploy on Friday", verb: "Don't deploy!", title: "deploy · Friday 4:58 PM", time: 4, min: 3, survive: true, ok: "Good call. See you Monday.",
+    setup(c) {
+      const btn = c.el("button", "f-btn", "DEPLOY<br>TO PROD");
+      let x = c.w / 2, y = c.h / 2 + 10, tx = x, ty = y;
+      const fine = matchMedia("(pointer: fine)").matches;
+      c.root.addEventListener("pointermove", (e) => { const r = c.root.getBoundingClientRect(); tx = e.clientX - r.left; ty = e.clientY - r.top; });
+      c.frame((dt) => {
+        if (fine) { const k = Math.min(1, dt * 1.6 * c.speed); x += (tx - x) * k; y += (ty - y) * k; }
+        btn.style.left = clamp(x, 60, c.w - 60) + "px"; btn.style.top = clamp(y, 60, c.h - 60) + "px";
+      });
+      c.tap(btn, () => c.lose("You deployed on Friday. Your weekend is gone."));
+      const msgs = c.el("div", "f-msgs");
+      const lines = [["PM", "tiny change, can we ship before the weekend?"], ["CI", "all checks passed"], ["you", "it's literally one line"], ["CEO", "customers are waiting!!"], ["intern", "just press it lol"]];
+      lines.forEach(([who, text], i) => c.after(250 + (i * 650) / c.speed, () => c.el("div", "", "<b>" + who + "</b>" + esc(text), msgs)));
+      return null;
+    },
+  },
+  {
+    id: "meetings", name: "Decline the meetings", verb: "Decline them all!", title: "Calendar", time: 5.5, min: 3.2,
+    setup(c) {
+      const n = Math.min(5, 3 + Math.floor((c.speed - 1) * 3));
+      const titles = shuffle(["Sync about the sync", "Quick 1:1 (90 min)", "Alignment on alignment", "Retro of the retro", "Can we hop on a call?", "Brainstorm: synergy", "Pre-meeting for Thursday", "All-hands re: all-hands", "Kickoff for the kickoff"]).slice(0, n);
+      const cols = c.w > 540 ? 3 : 2, rows = Math.ceil(6 / cols);
+      const cw = (c.w - 24 - (cols - 1) * 10) / cols, ch = (c.h - 24 - (rows - 1) * 10) / rows;
+      const slots = shuffle(Array.from({ length: cols * rows }, (_, i) => i)).slice(0, n);
+      const swap = c.speed > 1.25;
+      let declined = 0;
+      const cards = [];
+      titles.forEach((t, i) => c.after((i * 430) / c.speed, () => {
+        const s = slots[i], card = c.el("div", "m-card");
+        c.at(card, 12 + (s % cols) * (cw + 10) + rnd(0, 8), 12 + Math.floor(s / cols) * (ch + 10) + rnd(0, 8));
+        card.style.width = cw - 8 + "px";
+        card.innerHTML = '<div class="t">' + esc(t) + '</div><div class="w">' + pick(["Today", "Tomorrow", "Fri"]) + " " + pick(["9:00", "11:30", "1:00", "4:30"]) + ' · 14 guests</div><div class="bs"></div>';
+        const bs = card.querySelector(".bs");
+        const acc = c.el("button", "acc", "Accept"), dec = c.el("button", "dec", "Decline");
+        (swap && Math.random() < 0.5 ? [dec, acc] : [acc, dec]).forEach((b) => bs.appendChild(b));
+        const decline = () => { card.classList.add("gone"); sfx.tap(); if (++declined === n) c.win("Calendar cleared. Deep work, finally."); };
+        c.tap(dec, decline);
+        c.tap(acc, () => c.lose('You accepted "' + t + '". There goes Tuesday.'));
+        cards.push({ card, decline, done: false });
+      }));
+      return () => { const go = () => { const k = cards.find((x) => !x.done); if (k) { k.done = true; k.decline(); } c.after(180, go); }; go(); };
+    },
+  },
+  {
+    id: "offbyone", name: "Stop at the last index", verb: "Stop at the last index!", title: "loop.js", time: 5.5, min: 3, slow: "The loop never ended.",
+    setup(c) {
+      const N = ri(4, 7);
+      const wrap = c.el("div", "o-wrap");
+      c.el("div", "o-len", "arr.length === " + N, wrap);
+      const cells = c.el("div", "o-cells", "", wrap);
+      const els = [];
+      for (let k = 0; k <= N; k++) els.push(c.el("div", "o-cell" + (k === N ? " ghost" : ""), (k === N ? "undefined" : "ABCDEFGH"[k]) + "<small>" + k + "</small>", cells));
+      const iel = c.el("div", "o-i", "", wrap);
+      c.el("div", "o-tip", "Tap, click or press Space to stop", wrap);
+      let i = 0, acc = 0, solving = false;
+      const step = Math.max(0.15, 0.36 / c.speed);
+      const draw = () => { els.forEach((e, k) => e.classList.toggle("at", k === i)); iel.textContent = "i = " + i; };
+      const stop = () => {
+        if (c.done) return;
+        if (i === N - 1) c.win("arr[" + i + "]. The last one. Not off by one.");
+        else if (i === N) c.lose("arr[" + N + "] is undefined. Off by one.");
+        else c.lose("i = " + i + ". The last index was " + (N - 1) + ".");
+      };
+      c.frame((dt) => { acc += dt; if (acc >= step) { acc -= step; i = (i + 1) % (N + 1); draw(); if (solving && i === N - 1) stop(); } });
+      c.tap(c.root, stop);
+      c.key((e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); stop(); } });
+      draw();
+      return () => { solving = true; };
+    },
+  },
+  {
+    id: "catch", name: "Catch the exceptions", verb: "Catch them all!", title: "server.js", time: 4.8, min: 3.4, survive: true, ok: "All caught. The logs are clean.",
+    setup(c) {
+      const pw = Math.round(Math.max(120, c.w * 0.24)), py = c.h - 44;
+      const pad = c.el("div", "x-pad mono", "try { } catch (e)");
+      pad.style.width = pw + "px";
+      let px = (c.w - pw) / 2, tx = px;
+      const aim = (e) => { const r = c.root.getBoundingClientRect(); tx = e.clientX - r.left - pw / 2; };
+      c.root.addEventListener("pointermove", aim);
+      c.root.addEventListener("pointerdown", aim);
+      c.key((e) => { if (e.key === "ArrowLeft" || e.key === "a") tx = px - 60; else if (e.key === "ArrowRight" || e.key === "d") tx = px + 60; else return; e.preventDefault(); });
+      const n = Math.min(6, 3 + Math.floor((c.speed - 1) * 3));
+      const fall = Math.max(0.95, 1.7 / Math.sqrt(c.speed));
+      const last = Math.max(0.5, c.dur - fall - 0.3);
+      const names = ["TypeError", "NullPointerException", "ECONNRESET", "SIGSEGV", "OOMKilled", "undefined is not a function", "IndexError", "panic: nil map"];
+      const drops = [];
+      for (let k = 0; k < n; k++) {
+        const at = 0.35 + ((last - 0.35) * k) / Math.max(1, n - 1) + rnd(-0.08, 0.08);
+        drops.push({ at, name: pick(names), y: -30, el: null, done: false });
+      }
+      c.frame((dt, t) => {
+        px += (tx - px) * Math.min(1, dt * 14); px = clamp(px, 0, c.w - pw);
+        pad.style.transform = "translate(" + px + "px," + py + "px)";
+        for (const d of drops) {
+          if (d.done || t < d.at) continue;
+          if (!d.el) { d.el = c.el("div", "x-drop", esc(d.name)); d.w = d.el.offsetWidth; d.x = rnd(0, c.w - d.w); d.vy = (py + 30) / fall; if (c.demo) tx = d.x + d.w / 2 - pw / 2; }
+          d.y += d.vy * dt;
+          d.el.style.transform = "translate(" + d.x + "px," + d.y + "px)";
+          if (d.y + 24 >= py) {
+            if (d.x + d.w > px && d.x < px + pw) { d.done = true; d.el.classList.add("caught"); sfx.tap(); }
+            else if (d.y > py + 8) { d.done = true; return c.lose("Uncaught " + d.name + ". Prod is down."); }
+          }
+        }
+      });
+      return null;
+    },
+  },
+  {
+    id: "merge", name: "Merge when it's green", verb: "Merge when green!", title: "Pull request #412", time: 5.5, min: 3.2,
+    setup(c) {
+      const names = ["lint", "typecheck", "unit tests", "build", "e2e (chromium)"].slice(0, c.speed > 1.3 ? 5 : 4);
+      const pr = c.el("div", "g-pr");
+      c.el("h4", "", "Fix flaky login test <span>#412</span>", pr);
+      const box = c.el("div", "g-checks", "", pr);
+      const checks = names.map((n) => ({ n, at: rnd(0.2, 0.62) * c.dur, el: c.el("div", "g-check", "<i></i>" + esc(n) + "<em>In progress</em>", box) }));
+      const btn = c.el("button", "g-merge", "Merge pull request", pr);
+      let solving = false;
+      const green = () => checks.every((k) => k.ok);
+      c.frame((dt, t) => {
+        for (const k of checks) if (!k.ok && t >= k.at) { k.ok = true; k.el.classList.add("done"); k.el.querySelector("em").textContent = "Passed"; }
+        if (solving && green()) merge();
+      });
+      const merge = () => {
+        if (c.done) return;
+        if (green()) return c.win("Merged. Green across the board.");
+        const k = checks.find((x) => !x.ok);
+        c.lose("You merged with " + k.n + " still running. It failed.");
+      };
+      c.tap(btn, merge);
+      return () => { solving = true; };
+    },
+  },
+  {
+    id: "naming", name: "Pick a good name", verb: "Name it!", title: "utils.js", time: 4.5, min: 2.6,
+    setup(c) {
+      const Q = pick([
+        ["const ___ = users.filter(u => u.active).length;", "activeUserCount"],
+        ["const ___ = new Date(Date.now() + 7 * 864e5);", "oneWeekFromNow"],
+        ["const ___ = !navigator.onLine;", "isOffline"],
+        ["const ___ = await fetch('/api/me').then(r => r.json());", "currentUser"],
+        ["function ___(cents) { return (cents / 100).toFixed(2); }", "formatPrice"],
+        ["const ___ = cart.reduce((s, i) => s + i.price, 0);", "cartTotal"],
+      ]);
+      const opts = shuffle([Q[1]].concat(shuffle(["data", "x", "temp2", "thing", "foo", "stuff", "asdf", "myVar", "value1", "obj"]).slice(0, 3)));
+      const w = c.el("div", "q-wrap");
+      c.el("div", "q-code", esc(Q[0]).replace("___", "<u>___</u>"), w);
+      const grid = c.el("div", "q-opts", "", w);
+      for (const o of opts) c.tap(c.el("button", "", esc(o), grid), () => (o === Q[1] ? c.win(o + ". Your reviewer approves.") : c.lose("'" + o + "'. Your reviewer left 14 comments.")));
+      return () => c.win(Q[1] + ". Your reviewer approves.");
+    },
+  },
+  {
+    id: "dns", name: "Find the root cause", verb: "Find the root cause!", title: "#incident-4021", time: 4.5, min: 2.4,
+    setup(c) {
+      const w = c.el("div", "q-wrap");
+      c.el("div", "q-inc", "<b>SEV-1: everything is down</b><span>Nothing was deployed. Nothing changed. Pager is screaming.</span>", w);
+      const grid = c.el("div", "q-opts", "", w);
+      const opts = shuffle(["DNS"].concat(shuffle(["the database", "a cosmic ray", "the intern", "the cache", "Mercury in retrograde", "a bad deploy"]).slice(0, 3)));
+      for (const o of opts) c.tap(c.el("button", "", esc(o), grid), () => (o === "DNS" ? c.win("It was DNS. It's always DNS.") : c.lose("It wasn't " + o + ". It was DNS. It's always DNS.")));
+      return () => c.win("It was DNS. It's always DNS.");
+    },
+  },
+];
+
+// ---------- game loop ----------
+const DEMO = /[?&]demo/.test(location.search);
+const S = { running: false, score: 0, lives: 4, round: 0, speed: 1, hist: [], bag: [], last: null, cur: null, fast: null, killer: null, best: +(store.get("best") || 0), raf: 0 };
+
+function pips(el, n) { el.innerHTML = Array.from({ length: 4 }, (_, i) => '<i class="pip' + (i < n ? " on" : "") + '"></i>').join(""); }
+function hud() {
+  $("score").textContent = S.score;
+  $("speed").textContent = S.speed.toFixed(1) + "x";
+  pips($("lives"), S.lives);
+}
+function mood(el, m) { el.classList.remove("ok", "bad"); if (m) el.classList.add(m); el.classList.remove("bounce"); void el.offsetWidth; el.classList.add("bounce"); }
+
+function start() {
+  Object.assign(S, { running: true, score: 0, lives: 4, round: 0, speed: 1, hist: [], bag: [], last: null, fast: null, killer: null });
+  $("title").hidden = true; $("over").hidden = true;
+  hud();
+  vesta().milestone("started");
+  cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(tick);
+  between(null);
+}
+
+function between(prev) {
+  S.round++;
+  const faster = S.round > 1 && (S.round - 1) % 4 === 0 && S.speed < 2.3;
+  if (faster) S.speed = Math.min(2.3, S.speed + 0.15);
+  hud();
+  mood($("face"), prev === true ? "ok" : prev === false ? "bad" : null);
+  const h = $("interH");
+  h.className = faster ? "fast" : "";
+  h.textContent = faster ? "Faster!" : "Job " + S.round;
+  pips($("interLives"), S.lives);
+  $("inter").hidden = false;
+  if (faster) sfx.faster();
+  setTimeout(() => { if (S.running) { $("inter").hidden = true; begin(); } }, faster ? 1300 : prev === null ? 900 : 760);
+}
+
+function begin() {
+  if (!S.bag.length) S.bag = shuffle(JOBS);
+  let job = S.bag.pop();
+  if (job.id === S.last && S.bag.length) { S.bag.unshift(job); job = S.bag.pop(); }
+  S.last = job.id;
+  const stage = $("stage");
+  stage.innerHTML = ""; stage.className = "stage job-" + job.id;
+  $("stamp").hidden = true;
+  $("wtitle").textContent = job.title;
+  $("fuse").classList.remove("hot"); $("count").classList.remove("hot");
+  const root = document.createElement("div");
+  root.className = "root";
+  stage.appendChild(root);
+  const now = performance.now();
+  const cur = (S.cur = { job, t0: now, last: now, dur: Math.max(job.min, job.time / S.speed) * 1000, timers: [], frames: [], keys: [], done: false, secs: -1 });
+  const c = {
+    root, w: root.clientWidth, h: root.clientHeight, speed: S.speed, dur: cur.dur / 1000, demo: DEMO,
+    get done() { return cur.done; },
+    el(tag, cls, html, parent) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (parent || root).appendChild(e); return e; },
+    at(e, x, y) { e.style.left = x + "px"; e.style.top = y + "px"; return e; },
+    after(ms, fn) { cur.timers.push(setTimeout(() => { if (!cur.done) fn(); }, ms)); },
+    frame(fn) { cur.frames.push(fn); },
+    key(fn) { cur.keys.push(fn); },
+    tap(e, fn) { e.addEventListener("pointerdown", (ev) => { if (cur.done) return; ev.preventDefault(); ev.stopPropagation(); fn(ev); }); },
+    win(msg) { finish(true, msg); },
+    lose(msg) { finish(false, msg); },
+  };
+  try { cur.solve = job.setup(c); } catch (e) { vesta().error(e); cur.solve = null; }
+  const slam = $("slam");
+  slam.textContent = job.verb;
+  slam.classList.remove("on"); void slam.offsetWidth; slam.classList.add("on");
+  sfx.slam();
+  if (DEMO && cur.solve) setTimeout(() => { if (S.cur === cur && !cur.done) cur.solve(); }, cur.dur * rnd(0.3, 0.55));
+}
+
+function tick(now) {
+  S.raf = requestAnimationFrame(tick);
+  const cur = S.cur;
+  if (!cur || cur.done || !S.running) return;
+  const dt = Math.min(0.05, (now - cur.last) / 1000);
+  cur.last = now;
+  const left = Math.max(0, cur.dur - (now - cur.t0));
+  $("fuse").style.transform = "scaleX(" + left / cur.dur + ")";
+  const secs = Math.ceil(left / 1000);
+  if (secs !== cur.secs) {
+    cur.secs = secs;
+    const cnt = $("count");
+    cnt.textContent = secs || "";
+    if (secs && secs <= 3) { cnt.classList.remove("hot"); void cnt.offsetWidth; cnt.classList.add("hot"); $("fuse").classList.add("hot"); sfx.tick(); }
+  }
+  for (const f of cur.frames) { f(dt, (now - cur.t0) / 1000); if (cur.done) return; }
+  if (left <= 0) finish(!!cur.job.survive, cur.job.survive ? cur.job.ok : cur.job.slow || "Too slow.");
+}
+
+function finish(ok, msg) {
+  const cur = S.cur;
+  if (!cur || cur.done) return;
+  cur.done = true;
+  cur.timers.forEach(clearTimeout);
+  const secs = (performance.now() - cur.t0) / 1000;
+  S.hist.push(ok);
+  if (ok) {
+    S.score++;
+    if (!cur.job.survive && (!S.fast || secs < S.fast.t)) S.fast = { name: cur.job.name, t: secs };
+    sfx.win();
+    if ([5, 10, 20, 30, 50].includes(S.score)) vesta().milestone("shipped-" + S.score);
+  } else {
+    S.lives--;
+    S.killer = cur.job;
+    sfx.lose();
+    vesta().milestone("failed-" + cur.job.id);
+    const f = $("flash"); f.classList.remove("on"); void f.offsetWidth; f.classList.add("on");
+    const w = $("win"); w.classList.remove("shake"); void w.offsetWidth; w.classList.add("shake");
+  }
+  hud();
+  const st = $("stamp");
+  st.className = "stamp on " + (ok ? "ok" : "bad");
+  $("stampWord").textContent = ok ? "Shipped!" : "Paged!";
+  $("stampMsg").textContent = msg || "";
+  st.hidden = false;
+  $("count").textContent = "";
+  setTimeout(() => { if (!S.running) return; if (S.lives <= 0) end(); else between(ok); }, ok ? 1050 : 1500);
+}
+
+function grid() {
+  const g = S.hist.map((ok) => (ok ? "\u{1F7E9}" : "\u{1F7E5}"));
+  return g.length > 30 ? g.slice(0, 29).join("") + "…" : g.join("");
+}
+
+async function end() {
+  S.running = false;
+  S.cur = null;
+  cancelAnimationFrame(S.raf);
+  sfx.over();
+  vesta().milestone("game-over");
+  const best = S.score > S.best;
+  if (best) { S.best = S.score; store.set("best", String(S.score)); }
+  $("overWhy").textContent = "Burned out on: " + S.killer.name.toLowerCase() + ".";
+  $("overScore").textContent = S.score;
+  $("overLine").textContent = (S.score === 1 ? "job" : "jobs") + " shipped." + (S.fast ? " Fastest: " + S.fast.name.toLowerCase() + " in " + S.fast.t.toFixed(2) + "s." : "") + (best && S.score ? " New personal best." : " Best: " + S.best + ".");
+  $("overGrid").textContent = grid();
+  $("shareMsg").textContent = "";
+  $("over").hidden = false;
+  if (S.score > 0) await vesta().submitScore(S.score, { label: "Jobs shipped" });
+}
+
+function share() {
+  const url = (window.vesta && window.vesta.shareUrl) || location.href;
+  const text = "Microservices: shipped " + S.score + " " + (S.score === 1 ? "job" : "jobs") + " before burning out." + (S.fast ? " " + S.fast.name + " in " + S.fast.t.toFixed(2) + "s." : "") + "\n" + grid();
+  if (navigator.share && matchMedia("(pointer: coarse)").matches) return navigator.share({ title: "Microservices", text, url }).catch(() => {});
+  (navigator.clipboard ? navigator.clipboard.writeText(text + "\n" + url) : Promise.reject()).then(
+    () => ($("shareMsg").textContent = "Copied. Paste it anywhere."),
+    () => prompt("Copy this:", text + " " + url),
+  );
+}
+
+// ---------- wiring ----------
+$("face").innerHTML = $("titleFace").innerHTML = $("overFace").innerHTML = FACE;
+$("chips").innerHTML = JOBS.map((j) => "<span>" + esc(j.name.toLowerCase()) + "</span>").join("");
+if (S.best) $("best").textContent = "Your best: " + S.best + " jobs";
+$("startBtn").onclick = start;
+$("againBtn").onclick = start;
+$("shareBtn").onclick = share;
+$("soundBtn").onclick = () => { muted = !muted; store.set("muted", muted ? "1" : "0"); soundLabel(); };
+soundLabel();
+hud();
+window.addEventListener("keydown", (e) => {
+  if ((e.key === "m" || e.key === "M") && !(S.cur && !S.cur.done && S.cur.job.id === "vim")) { $("soundBtn").click(); return; }
+  if (!S.running) { if ((e.key === "Enter" || e.key === " ") && (!$("title").hidden || !$("over").hidden)) { e.preventDefault(); start(); } return; }
+  const cur = S.cur;
+  if (cur && !cur.done) for (const f of cur.keys) f(e);
+});
+
+// ?cover freezes the Friday deploy job mid-temptation, for the arcade's cover image.
+if (/[?&]cover/.test(location.search)) {
+  S.running = true;
+  $("title").hidden = true;
+  S.bag = [JOBS.find((j) => j.id === "friday")];
+  begin();
+  S.raf = requestAnimationFrame(tick);
+  $("slam").hidden = true;
+  setTimeout(() => { S.running = false; Object.assign(S, { score: 11, speed: 1.6, lives: 2 }); hud(); $("count").textContent = "1"; }, 2300);
+}
+if (DEMO) start();
+</script>
+</body>
+</html>

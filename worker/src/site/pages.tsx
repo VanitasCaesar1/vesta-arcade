@@ -78,7 +78,7 @@ function Loop({ d, siteUrl }: { d: LoopData; siteUrl: string }) {
             <span class="p">$ </span>npx vesta-cli feedback {g.slug}
             {"\n"}
             <span class="h"># Player feedback: {g.title}</span>
-            {"\n"}- {compactNumber(d.plays)} plays in 14 days, average {duration(d.avgSeconds)} of active play{"\n"}- Errors on v{g.version}: <span class={d.errorKinds.length ? "r" : "g"}>{errors}</span>
+            {"\n"}- {compactNumber(d.plays)} {d.plays === 1 ? "play" : "plays"} in 14 days, average {duration(d.avgSeconds)} of active play{"\n"}- Errors on v{g.version}: <span class={d.errorKinds.length ? "r" : "g"}>{errors}</span>
             {"\n"}
             {d.milestone ? (
               <>
@@ -99,7 +99,7 @@ function Loop({ d, siteUrl }: { d: LoopData; siteUrl: string }) {
         <div class="stat">
           <b>{compactNumber(d.weekPlays)}</b>
           <span>
-            plays this week across {d.weekGames} {d.weekGames === 1 ? "game" : "games"}
+            {d.weekPlays === 1 ? "play" : "plays"} this week across {d.weekGames} {d.weekGames === 1 ? "game" : "games"}
           </span>
         </div>
         <a class="quote" href={d.comment ? `/g/${d.comment.slug}#feedback` : `/g/${g.slug}#feedback`}>
@@ -131,9 +131,9 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
     return s ? `/?${s}#games` : "/#games";
   };
   const featured = p.games[0];
-  const lede = "Every game here was shipped by a coding agent. Play one, then tell its AI what broke.";
+  const lede = "Every game here was built by a coding agent. Play one, break it, say what's wrong. The crash and your comment go back to the agent that made it, as a report it can act on.";
   return (
-    <Layout meta={{ title: `${p.arcade}: games made by AI, judged by you`, description: lede, url: p.siteUrl, arcade: p.arcade }}>
+    <Layout meta={{ title: `${p.arcade}: games made by AI, broken by you`, description: lede, url: p.siteUrl, arcade: p.arcade }}>
       <section class="cab">
         <div class="wrap hero">
           <div class="rise">
@@ -141,7 +141,7 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
               <span class="l">Games made</span>
               <span class="l">by AI.</span>
               <span class="l">
-                <span class="mark">Judged</span> by you.
+                <span class="mark">Broken</span> by you.
               </span>
             </h1>
             <p class="lede">{lede}</p>
@@ -194,11 +194,11 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
         <section class="make" id="publish">
           <div>
             <h2 class="display">
-              Run your own
+              Your agent can build a game.
               <br />
-              arcade.
+              <span class="mark">It can't watch anyone play it.</span>
             </h2>
-            <p>Vesta is open source and runs on your own Cloudflare account, on the free plan. Publish from the terminal, or let Claude Code, Cursor or Codex do it.</p>
+            <p>Vesta can. Publish with one command, or let Claude Code, Cursor or Codex do it with one tool call. Your agent gets back the crashes, where players quit and what they said. Open source, on your own Cloudflare account, on the free plan.</p>
             <a class="btn" href={REPO_URL}>
               <Icon name="github" /> Get Vesta
             </a>

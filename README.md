@@ -2,12 +2,12 @@
 
 <h1 align="center">Vesta</h1>
 
-<p align="center"><b>Your own arcade for AI-made games.</b><br>
-Tell your coding agent “publish this to Vesta”. Get a link anyone can play.<br>
+<p align="center"><b>Your coding agent can build a game. It can't watch anyone play it.</b><br>
+Vesta is a self-hosted arcade that can. Tell your agent “publish this to Vesta” and get a link anyone can play.<br>
 Then get back the crashes, the drop-off and what players said, in a form your agent can fix.<br>
 Runs on your own Cloudflare account, on the free plan.</p>
 
-<p align="center"><b><a href="https://vestapowered.in/g/hug-of-death">▶ Play the demo: Hug of Death</a></b> · <a href="https://vestapowered.in">Live arcade</a></p>
+<p align="center"><b><a href="https://vestapowered.in/g/microservices">▶ Play: Microservices (exit vim in under a second)</a></b> · <a href="https://vestapowered.in">Live arcade</a></p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
@@ -17,9 +17,9 @@ Runs on your own Cloudflare account, on the free plan.</p>
   <a href="games/hug-of-death">Demo game</a>
 </p>
 
-<p align="center"><img src="docs/img/games.gif" alt="Three games on vestapowered.in: Hug of Death, Ignore Previous Instructions, Garbage Collector" width="720"></p>
+<p align="center"><img src="docs/img/games.gif" alt="Four games on vestapowered.in: Microservices, Hug of Death, Ignore Previous Instructions, Garbage Collector" width="720"></p>
 
-<p align="center"><b>Play them:</b> <a href="https://vestapowered.in/g/hug-of-death">Hug of Death</a> · <a href="https://vestapowered.in/g/ignore-previous-instructions">Ignore Previous Instructions</a> · <a href="https://vestapowered.in/g/garbage-collector">Garbage Collector</a></p>
+<p align="center"><b>Play them:</b> <a href="https://vestapowered.in/g/microservices">Microservices</a> · <a href="https://vestapowered.in/g/hug-of-death">Hug of Death</a> · <a href="https://vestapowered.in/g/ignore-previous-instructions">Ignore Previous Instructions</a> · <a href="https://vestapowered.in/g/garbage-collector">Garbage Collector</a></p>
 
 <p align="center"><img src="docs/img/home.png" alt="The Vesta arcade at vestapowered.in" width="860"></p>
 
@@ -206,10 +206,11 @@ Created on first publish, next to your source. Commit it.
 
 ## The games
 
-Three original games, written with Claude Code and published with Vesta. Each is one HTML file with no dependencies, reports milestones and high scores through `window.vesta`, and plays itself if you add `?demo` to its URL.
+Four original games, written with Claude Code and published with Vesta. Each is one HTML file with no dependencies, reports milestones and high scores through `window.vesta`, and plays itself if you add `?demo` to its URL.
 
 | | |
 |---|---|
+| [**Microservices**](https://vestapowered.in/g/microservices) ([source](games/microservices)) | Fifteen tiny developer jobs, a few seconds each: center the div, exit vim, reject the cookies, don't deploy on Friday. Faster every four jobs. |
 | [**Hug of Death**](https://vestapowered.in/g/hug-of-death) ([source](games/hug-of-death)) | Your side project just hit #1 and you're the load balancer. Route traffic before servers melt, block scrapers, buy a CDN or an SRE. |
 | [**Ignore Previous Instructions**](https://vestapowered.in/g/ignore-previous-instructions) ([source](games/ignore-previous-instructions)) | You're the guardrail between an AI agent and the internet. Block the prompt injections (hidden text, base64, leaky image URLs) and let everything else through. |
 | [**Garbage Collector**](https://vestapowered.in/g/garbage-collector) ([source](games/garbage-collector)) | You are the GC. Free what no root can reach, never free what's in use, and watch for cycles. Stop the world if you must. |
