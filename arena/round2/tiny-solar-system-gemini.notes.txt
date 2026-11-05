@@ -1,0 +1,1 @@
+Fixed a ReferenceError where `nebCount` was referenced instead of the declared `nebulaCount` constant when allocating buffer arrays for the background nebula cloud, causing a black screen crash on load. Replaced both references with `nebulaCount` so the scene initializes and renders as expected.
