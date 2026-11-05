@@ -1,1 +1,1239 @@
-<!-- test -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Floating Island at Sunset</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #180d24;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #fff;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+    /* Sleek Floating Glass HUD */
+    .hud-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px;
+    }
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .title-badge {
+      pointer-events: auto;
+      background: rgba(25, 15, 38, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 175, 120, 0.25);
+      border-radius: 12px;
+      padding: 10px 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+    .title-badge h1 {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #ffe6d4;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .title-badge p {
+      font-size: 11px;
+      color: #ffb894;
+      margin-top: 2px;
+      opacity: 0.85;
+    }
+    .controls-pill {
+      pointer-events: auto;
+      display: flex;
+      gap: 6px;
+      background: rgba(25, 15, 38, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 175, 120, 0.25);
+      border-radius: 30px;
+      padding: 5px 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+    .hud-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffe0cc;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .hud-btn:hover {
+      background: rgba(255, 150, 90, 0.3);
+      border-color: rgba(255, 190, 140, 0.4);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .hud-btn.active {
+      background: linear-gradient(135deg, #ff7e47, #e0457b);
+      border-color: rgba(255, 220, 190, 0.6);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(255, 126, 71, 0.5);
+    }
+    /* Bottom bar */
+    .hud-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+    .cam-pills {
+      pointer-events: auto;
+      display: flex;
+      gap: 6px;
+      background: rgba(25, 15, 38, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 175, 120, 0.25);
+      border-radius: 30px;
+      padding: 4px 6px;
+    }
+    /* Hint Banner */
+    .hint-banner {
+      background: rgba(20, 10, 30, 0.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 180, 130, 0.3);
+      border-radius: 24px;
+      padding: 8px 18px;
+      font-size: 13px;
+      color: #fff0e6;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      animation: pulseHint 2.5s infinite ease-in-out;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .hint-banner.fade-out {
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+    }
+    @keyframes pulseHint {
+      0%, 100% { border-color: rgba(255, 180, 130, 0.3); box-shadow: 0 4px 20px rgba(255, 120, 60, 0.15); }
+      50% { border-color: rgba(255, 210, 160, 0.6); box-shadow: 0 4px 26px rgba(255, 120, 60, 0.35); }
+    }
+    /* Interaction toast message */
+    .toast-msg {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(30, 16, 45, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 170, 100, 0.5);
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 12px;
+      color: #ffe8d6;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      z-index: 100;
+    }
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    @media (max-width: 600px) {
+      .hud-top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .controls-pill {
+        justify-content: center;
+      }
+      .title-badge h1 { font-size: 13px; }
+      .hint-banner { font-size: 11px; padding: 6px 14px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div class="hud-layer">
+    <div class="hud-top">
+      <div class="title-badge">
+        <h1>🏝️ Floating Sanctuary</h1>
+        <p>Sunset Cascade & Ancient Torii</p>
+      </div>
+      <div class="controls-pill">
+        <button id="btn-sunset" class="hud-btn active">🌅 Sunset</button>
+        <button id="btn-dusk" class="hud-btn">🌌 Twilight</button>
+        <button id="btn-night" class="hud-btn">✨ Night</button>
+        <button id="btn-audio" class="hud-btn">🔈 Sound</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast-msg">Secret activated!</div>
+
+    <div class="hud-bottom">
+      <div id="hint" class="hint-banner">
+        ✨ Drag to look around • Scroll/pinch to zoom • Click island secrets
+      </div>
+      <div class="cam-pills">
+        <button id="cam-overview" class="hud-btn active">Overview</button>
+        <button id="cam-waterfall" class="hud-btn">Waterfall</button>
+        <button id="cam-shrine" class="hud-btn">Shrine</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "/lib/three/three.module.js";
+    import { OrbitControls } from "/lib/three/OrbitControls.js";
+
+    // --- Procedural Canvas Textures ---
+    function createSkyTexture(mode = 'sunset') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 0, 1024);
+
+      if (mode === 'sunset') {
+        grad.addColorStop(0.0, '#1c1032');
+        grad.addColorStop(0.35, '#421f52');
+        grad.addColorStop(0.55, '#872b52');
+        grad.addColorStop(0.72, '#de4b35');
+        grad.addColorStop(0.85, '#ff893b');
+        grad.addColorStop(0.92, '#ffc259');
+        grad.addColorStop(1.0, '#351728');
+      } else if (mode === 'dusk') {
+        grad.addColorStop(0.0, '#0c0b20');
+        grad.addColorStop(0.35, '#1e163d');
+        grad.addColorStop(0.65, '#402058');
+        grad.addColorStop(0.82, '#662660');
+        grad.addColorStop(0.92, '#a04868');
+        grad.addColorStop(1.0, '#1c1228');
+      } else {
+        grad.addColorStop(0.0, '#04040d');
+        grad.addColorStop(0.4, '#090a1e');
+        grad.addColorStop(0.7, '#131233');
+        grad.addColorStop(0.88, '#1e1c45');
+        grad.addColorStop(1.0, '#080816');
+      }
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // Distant mountain silhouette layers at horizon
+      ctx.fillStyle = mode === 'night' ? 'rgba(7, 7, 20, 0.85)' : 'rgba(40, 15, 35, 0.45)';
+      ctx.beginPath();
+      ctx.moveTo(0, 880);
+      for (let x = 0; x <= 1024; x += 40) {
+        const y = 860 + Math.sin(x * 0.012) * 25 + Math.cos(x * 0.027) * 15;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(1024, 1024);
+      ctx.lineTo(0, 1024);
+      ctx.closePath();
+      ctx.fill();
+
+      // Second closer mountain silhouette
+      ctx.fillStyle = mode === 'night' ? 'rgba(10, 10, 28, 0.95)' : 'rgba(30, 10, 28, 0.7)';
+      ctx.beginPath();
+      ctx.moveTo(0, 910);
+      for (let x = 0; x <= 1024; x += 30) {
+        const y = 890 + Math.sin(x * 0.02 + 1) * 20 + Math.sin(x * 0.05) * 10;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(1024, 1024);
+      ctx.lineTo(0, 1024);
+      ctx.closePath();
+      ctx.fill();
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    }
+
+    function createGrassTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#4f7336';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Mottled patches
+      for (let i = 0; i < 4000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const r = Math.random() * 5 + 1;
+        const tone = Math.random();
+        if (tone < 0.35) ctx.fillStyle = '#3e5d28';
+        else if (tone < 0.7) ctx.fillStyle = '#659142';
+        else if (tone < 0.9) ctx.fillStyle = '#7ba84b';
+        else ctx.fillStyle = '#9e8c45';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(4, 4);
+      return tex;
+    }
+
+    function createRockTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#534741';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Cliff strata
+      for (let y = 0; y < 512; y += 4) {
+        ctx.fillStyle = (y % 16 < 8) ? '#433732' : '#655750';
+        ctx.fillRect(0, y, 512, Math.random() * 6);
+      }
+      // Noise grains
+      for (let i = 0; i < 3000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        ctx.fillStyle = Math.random() > 0.5 ? '#2d2420' : '#776961';
+        ctx.fillRect(x, y, 3, 3);
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2, 4);
+      return tex;
+    }
+
+    function createWaterTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 0, 512);
+      grad.addColorStop(0, '#53c5e8');
+      grad.addColorStop(0.5, '#2e96d1');
+      grad.addColorStop(1, '#6ee7ff');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 512);
+
+      // Foam streaks
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      for (let i = 0; i < 200; i++) {
+        const x = Math.random() * 256;
+        const y = Math.random() * 512;
+        const len = Math.random() * 40 + 20;
+        ctx.fillRect(x, y, 3, len);
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(1, 2);
+      return tex;
+    }
+
+    function createGlowSpriteTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.2, 'rgba(255, 220, 160, 0.8)');
+      grad.addColorStop(0.5, 'rgba(255, 140, 60, 0.3)');
+      grad.addColorStop(1, 'rgba(255, 120, 40, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // --- Web Audio API Synthesizer (Zero network assets) ---
+    class IslandAudio {
+      constructor() {
+        this.ctx = null;
+        this.waterGain = null;
+        this.enabled = false;
+      }
+      init() {
+        if (this.ctx) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        this.ctx = new AudioCtx();
+
+        const bufferSize = this.ctx.sampleRate * 2;
+        const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          output[i] = (lastOut + 0.02 * white) / 1.02;
+          lastOut = output[i];
+          output[i] *= 3.5;
+        }
+
+        const whiteNoise = this.ctx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 650;
+
+        this.waterGain = this.ctx.createGain();
+        this.waterGain.gain.value = 0;
+
+        whiteNoise.connect(filter);
+        filter.connect(this.waterGain);
+        this.waterGain.connect(this.ctx.destination);
+        whiteNoise.start(0);
+      }
+      toggle() {
+        this.init();
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        this.enabled = !this.enabled;
+        if (this.waterGain) {
+          this.waterGain.gain.setTargetAtTime(this.enabled ? 0.08 : 0, this.ctx.currentTime, 0.2);
+        }
+        return this.enabled;
+      }
+      playChime(freq = 587.33, dur = 1.2) {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.5, this.ctx.currentTime + dur);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + dur);
+      }
+      playSplash() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+      }
+    }
+
+    const sound = new IslandAudio();
+
+    // --- Scene Setup ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x351728, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.2, 500);
+    camera.position.set(18, 12, 22);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI * 0.52;
+    controls.minDistance = 6;
+    controls.maxDistance = 55;
+    controls.target.set(0, 1, 0);
+
+    // --- Sky Dome ---
+    let skyTex = createSkyTexture('sunset');
+    const skyGeo = new THREE.SphereGeometry(220, 32, 20);
+    const skyMat = new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, depthWrite: false });
+    const skyDome = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(skyDome);
+
+    // --- Sunset Sun ---
+    const sunGroup = new THREE.Group();
+    const sunGeo = new THREE.SphereGeometry(4, 24, 24);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffe299 });
+    const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    sunGroup.add(sunMesh);
+
+    const coronaGeo = new THREE.PlaneGeometry(28, 28);
+    const coronaMat = new THREE.MeshBasicMaterial({
+      map: createGlowSpriteTexture(),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      opacity: 0.85,
+      depthWrite: false
+    });
+    const coronaMesh = new THREE.Mesh(coronaGeo, coronaMat);
+    sunGroup.add(coronaMesh);
+
+    sunGroup.position.set(-60, 16, -90);
+    scene.add(sunGroup);
+
+    // --- Lighting ---
+    const hemiLight = new THREE.HemisphereLight(0xffaa77, 0x331a3b, 0.7);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xff9944, 1.8);
+    sunLight.position.set(-50, 30, -70);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.camera.near = 10;
+    sunLight.shadow.camera.far = 160;
+    sunLight.shadow.camera.left = -20;
+    sunLight.shadow.camera.right = 20;
+    sunLight.shadow.camera.top = 20;
+    sunLight.shadow.camera.bottom = -20;
+    sunLight.shadow.bias = -0.0005;
+    scene.add(sunLight);
+
+    const fillLight = new THREE.DirectionalLight(0x7a3e7a, 0.6);
+    fillLight.position.set(30, 20, 40);
+    scene.add(fillLight);
+
+    // --- Procedural Island Hierarchy ---
+    const islandRoot = new THREE.Group();
+    scene.add(islandRoot);
+
+    const grassTex = createGrassTexture();
+    const rockTex = createRockTexture();
+    const waterTex = createWaterTexture();
+
+    // 1. Island Body (Sculpted Plateau + Jagged Roots)
+    const islandGeo = new THREE.CylinderGeometry(7.5, 1.2, 9, 32, 10);
+    const pos = islandGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      let x = pos.getX(i);
+      let y = pos.getY(i);
+      let z = pos.getZ(i);
+
+      if (y > 3.5) {
+        if (x > -1 && z < 2 && z > -3.5) {
+          y -= 0.65 * (1 - Math.abs(z + 1) / 3);
+        }
+        y += Math.sin(x * 1.5) * Math.cos(z * 1.5) * 0.35;
+      } else {
+        const angle = Math.atan2(z, x);
+        const radiusNoise = Math.sin(angle * 5) * 0.8 + Math.cos(angle * 8 + y) * 0.5;
+        const taper = (y + 4.5) / 9.0;
+        x += Math.cos(angle) * radiusNoise * taper;
+        z += Math.sin(angle) * radiusNoise * taper;
+        if (y < -3.5) {
+          x *= 0.6;
+          z *= 0.6;
+        }
+      }
+      pos.setXYZ(i, x, y, z);
+    }
+    islandGeo.computeVertexNormals();
+
+    const islandMat = new THREE.MeshStandardMaterial({
+      map: rockTex,
+      roughness: 0.85,
+      metalness: 0.1
+    });
+    const islandMesh = new THREE.Mesh(islandGeo, islandMat);
+    islandMesh.castShadow = true;
+    islandMesh.receiveShadow = true;
+    islandMesh.position.y = 0;
+    islandRoot.add(islandMesh);
+
+    // Lush Grass Top Cap
+    const capGeo = new THREE.CylinderGeometry(7.6, 7.2, 1.2, 32, 2);
+    const capPos = capGeo.attributes.position;
+    for (let i = 0; i < capPos.count; i++) {
+      let x = capPos.getX(i);
+      let y = capPos.getY(i);
+      let z = capPos.getZ(i);
+      if (y > 0.4) {
+        if (x > -1 && z < 2 && z > -3.5) {
+          y -= 0.65 * (1 - Math.abs(z + 1) / 3);
+        }
+        y += Math.sin(x * 1.5) * Math.cos(z * 1.5) * 0.25;
+      }
+      capPos.setXYZ(i, x, y, z);
+    }
+    capGeo.computeVertexNormals();
+    const capMat = new THREE.MeshStandardMaterial({
+      map: grassTex,
+      roughness: 0.7,
+      metalness: 0.05
+    });
+    const capMesh = new THREE.Mesh(capGeo, capMat);
+    capMesh.receiveShadow = true;
+    capMesh.position.y = 4.0;
+    islandRoot.add(capMesh);
+
+    // 2. Mountain Pond & Waterfall
+    const pondGeo = new THREE.CircleGeometry(2.2, 24);
+    const pondMat = new THREE.MeshPhysicalMaterial({
+      color: 0x3ac4e6,
+      transmission: 0.6,
+      opacity: 0.9,
+      transparent: true,
+      roughness: 0.1,
+      metalness: 0.1,
+      ior: 1.33
+    });
+    const pondMesh = new THREE.Mesh(pondGeo, pondMat);
+    pondMesh.rotation.x = -Math.PI / 2;
+    pondMesh.position.set(-1.2, 4.38, -0.6);
+    islandRoot.add(pondMesh);
+
+    // River Stream to edge
+    const riverGeo = new THREE.PlaneGeometry(2.4, 5.5, 8, 16);
+    const riverPos = riverGeo.attributes.position;
+    for (let i = 0; i < riverPos.count; i++) {
+      const v = riverPos.getY(i);
+      riverPos.setZ(i, Math.sin(v * 1.2) * 0.15);
+    }
+    riverGeo.computeVertexNormals();
+    const riverMesh = new THREE.Mesh(riverGeo, pondMat);
+    riverMesh.rotation.x = -Math.PI / 2;
+    riverMesh.rotation.z = -0.35;
+    riverMesh.position.set(2.4, 4.32, -1.8);
+    islandRoot.add(riverMesh);
+
+    // Waterfall Chute Mesh
+    const fallGeo = new THREE.PlaneGeometry(2.2, 14, 12, 32);
+    const fallPos = fallGeo.attributes.position;
+    for (let i = 0; i < fallPos.count; i++) {
+      const y = fallPos.getY(i);
+      if (y > 5.5) {
+        fallPos.setZ(i, Math.cos((y - 5.5) / 1.5 * (Math.PI / 2)) * 1.2 - 1.2);
+      }
+    }
+    fallGeo.computeVertexNormals();
+
+    const fallMat = new THREE.MeshStandardMaterial({
+      map: waterTex,
+      transparent: true,
+      opacity: 0.88,
+      roughness: 0.15,
+      metalness: 0.1,
+      side: THREE.DoubleSide
+    });
+    const waterfallMesh = new THREE.Mesh(fallGeo, fallMat);
+    waterfallMesh.position.set(5.3, -1.8, -2.8);
+    waterfallMesh.rotation.y = 0.55;
+    islandRoot.add(waterfallMesh);
+
+    // Waterfall Droplet Particles
+    const dropletCount = 350;
+    const dropletGeo = new THREE.BufferGeometry();
+    const dropPositions = new Float32Array(dropletCount * 3);
+    const dropVelocities = new Float32Array(dropletCount * 3);
+
+    for (let i = 0; i < dropletCount; i++) {
+      const idx = i * 3;
+      dropPositions[idx] = 4.8 + (Math.random() - 0.5) * 2.2;
+      dropPositions[idx + 1] = 4.2 - Math.random() * 14;
+      dropPositions[idx + 2] = -2.6 + (Math.random() - 0.5) * 1.8;
+
+      dropVelocities[idx] = (Math.random() - 0.5) * 0.05 + 0.02;
+      dropVelocities[idx + 1] = -0.15 - Math.random() * 0.15;
+      dropVelocities[idx + 2] = (Math.random() - 0.5) * 0.05;
+    }
+    dropletGeo.setAttribute('position', new THREE.BufferAttribute(dropPositions, 3));
+
+    const dropletMat = new THREE.PointsMaterial({
+      color: 0xe0f7ff,
+      size: 0.35,
+      map: createGlowSpriteTexture(),
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const dropletParticles = new THREE.Points(dropletGeo, dropletMat);
+    islandRoot.add(dropletParticles);
+
+    // Waterfall Mist at bottom
+    const mistCount = 120;
+    const mistGeo = new THREE.BufferGeometry();
+    const mistPositions = new Float32Array(mistCount * 3);
+
+    for (let i = 0; i < mistCount; i++) {
+      const idx = i * 3;
+      mistPositions[idx] = 5.2 + (Math.random() - 0.5) * 3.5;
+      mistPositions[idx + 1] = -8.5 + (Math.random() - 0.5) * 2.5;
+      mistPositions[idx + 2] = -2.8 + (Math.random() - 0.5) * 3.5;
+    }
+    mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPositions, 3));
+
+    const mistMat = new THREE.PointsMaterial({
+      color: 0xffd9c2,
+      size: 2.2,
+      map: createGlowSpriteTexture(),
+      transparent: true,
+      opacity: 0.38,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const mistParticles = new THREE.Points(mistGeo, mistMat);
+    islandRoot.add(mistParticles);
+
+    // Sunset Rainbow Arc
+    const rainbowGeo = new THREE.TorusGeometry(3.6, 0.28, 8, 32, Math.PI * 0.7);
+    const rainbowMat = new THREE.MeshBasicMaterial({
+      color: 0xffb596,
+      transparent: true,
+      opacity: 0.28,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const rainbow = new THREE.Mesh(rainbowGeo, rainbowMat);
+    rainbow.position.set(6.8, -4.5, -1.8);
+    rainbow.rotation.x = 0.4;
+    rainbow.rotation.y = -0.5;
+    islandRoot.add(rainbow);
+
+    // 3. Foliage: Stylized Trees & Bushes
+    function createTree(scale = 1.0, foliageColor = 0xff7b47) {
+      const tree = new THREE.Group();
+      const trunkGeo = new THREE.CylinderGeometry(0.18 * scale, 0.35 * scale, 2.5 * scale, 7);
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x422a1d, roughness: 0.9 });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = 1.25 * scale;
+      trunk.castShadow = true;
+      tree.add(trunk);
+
+      const foliageMat = new THREE.MeshStandardMaterial({
+        color: foliageColor,
+        roughness: 0.6,
+        metalness: 0.05,
+        flatShading: true
+      });
+
+      const crownClusters = [
+        { x: 0, y: 2.7 * scale, z: 0, r: 1.2 * scale },
+        { x: 0.6 * scale, y: 2.2 * scale, z: 0.4 * scale, r: 0.9 * scale },
+        { x: -0.6 * scale, y: 2.3 * scale, z: -0.3 * scale, r: 0.85 * scale },
+        { x: 0.2 * scale, y: 3.4 * scale, z: -0.2 * scale, r: 0.75 * scale }
+      ];
+
+      crownClusters.forEach(cfg => {
+        const geo = new THREE.DodecahedronGeometry(cfg.r, 1);
+        const puff = new THREE.Mesh(geo, foliageMat);
+        puff.position.set(cfg.x, cfg.y, cfg.z);
+        puff.castShadow = true;
+        tree.add(puff);
+      });
+
+      return tree;
+    }
+
+    const tree1 = createTree(1.2, 0xf7603b);
+    tree1.position.set(-3.5, 4.4, -2.2);
+    tree1.name = 'tree';
+    islandRoot.add(tree1);
+
+    const tree2 = createTree(0.9, 0xffa44a);
+    tree2.position.set(-4.2, 4.3, 1.8);
+    tree2.name = 'tree';
+    islandRoot.add(tree2);
+
+    const tree3 = createTree(1.0, 0xd43f68);
+    tree3.position.set(0.5, 4.4, 4.5);
+    tree3.name = 'tree';
+    islandRoot.add(tree3);
+
+    // Decorative Rocks
+    function createRock(sx, sy, sz) {
+      const geo = new THREE.DodecahedronGeometry(1, 0);
+      const mesh = new THREE.Mesh(geo, islandMat);
+      mesh.scale.set(sx, sy, sz);
+      mesh.castShadow = true;
+      return mesh;
+    }
+    const rock1 = createRock(1.1, 0.7, 0.9);
+    rock1.position.set(-2.8, 4.6, 0.2);
+    islandRoot.add(rock1);
+
+    const rock2 = createRock(0.7, 0.5, 0.8);
+    rock2.position.set(3.8, 4.5, 1.2);
+    islandRoot.add(rock2);
+
+    // 4. Ancient Torii Gate & Interactive Stone Shrine Lantern
+    const toriiGroup = new THREE.Group();
+    const toriiMat = new THREE.MeshStandardMaterial({ color: 0xba3027, roughness: 0.4 });
+    const toriiBlackMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6 });
+
+    const pillarGeo = new THREE.CylinderGeometry(0.12, 0.15, 2.8, 12);
+    const p1 = new THREE.Mesh(pillarGeo, toriiMat);
+    p1.position.set(-1.1, 1.4, 0);
+    p1.castShadow = true;
+    toriiGroup.add(p1);
+
+    const p2 = new THREE.Mesh(pillarGeo, toriiMat);
+    p2.position.set(1.1, 1.4, 0);
+    p2.castShadow = true;
+    toriiGroup.add(p2);
+
+    const lintelGeo1 = new THREE.BoxGeometry(3.0, 0.22, 0.3);
+    const l1 = new THREE.Mesh(lintelGeo1, toriiMat);
+    l1.position.set(0, 2.7, 0);
+    l1.castShadow = true;
+    toriiGroup.add(l1);
+
+    const lintelCapGeo = new THREE.BoxGeometry(3.2, 0.1, 0.36);
+    const lc = new THREE.Mesh(lintelCapGeo, toriiBlackMat);
+    lc.position.set(0, 2.85, 0);
+    toriiGroup.add(lc);
+
+    const lintelGeo2 = new THREE.BoxGeometry(2.5, 0.16, 0.22);
+    const l2 = new THREE.Mesh(lintelGeo2, toriiMat);
+    l2.position.set(0, 2.2, 0);
+    toriiGroup.add(l2);
+
+    toriiGroup.position.set(1.5, 4.4, 3.2);
+    toriiGroup.rotation.y = -0.4;
+    islandRoot.add(toriiGroup);
+
+    // Interactive Shrine Lantern
+    const lanternGroup = new THREE.Group();
+    lanternGroup.name = 'shrine_lantern';
+
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x7a7470, roughness: 0.8 });
+    const lBase = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 0.4, 6), stoneMat);
+    lBase.position.y = 0.2;
+    lanternGroup.add(lBase);
+
+    const lShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.8, 6), stoneMat);
+    lShaft.position.y = 0.8;
+    lanternGroup.add(lShaft);
+
+    const lHouse = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.5, 0.55), stoneMat);
+    lHouse.position.y = 1.35;
+    lanternGroup.add(lHouse);
+
+    const lRoof = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.4, 4), stoneMat);
+    lRoof.position.y = 1.8;
+    lRoof.rotation.y = Math.PI / 4;
+    lanternGroup.add(lRoof);
+
+    const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa33 });
+    const flameMesh = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), flameMat);
+    flameMesh.position.y = 1.35;
+    lanternGroup.add(flameMesh);
+
+    const lanternLight = new THREE.PointLight(0xff9922, 2.5, 12);
+    lanternLight.position.y = 1.35;
+    lanternLight.castShadow = true;
+    lanternGroup.add(lanternLight);
+
+    lanternGroup.position.set(0.2, 4.4, 2.6);
+    islandRoot.add(lanternGroup);
+
+    // 5. Satellite Mini-Island with Floating Ancient Resonance Crystal
+    const satIsland = new THREE.Group();
+    satIsland.position.set(-11, -1.5, 6);
+
+    const satRockGeo = new THREE.ConeGeometry(2.6, 5, 8);
+    const satRockMat = new THREE.MeshStandardMaterial({ map: rockTex, roughness: 0.85 });
+    const satRock = new THREE.Mesh(satRockGeo, satRockMat);
+    satRock.rotation.x = Math.PI;
+    satRock.castShadow = true;
+    satIsland.add(satRock);
+
+    const satCapGeo = new THREE.CylinderGeometry(2.7, 2.5, 0.6, 16);
+    const satCap = new THREE.Mesh(satCapGeo, capMat);
+    satCap.position.y = 0.3;
+    satCap.receiveShadow = true;
+    satIsland.add(satCap);
+
+    const miniTree = createTree(0.65, 0x56a36c);
+    miniTree.position.set(0.8, 0.6, 0.6);
+    satIsland.add(miniTree);
+
+    const crystalGeo = new THREE.OctahedronGeometry(0.9, 0);
+    const crystalMat = new THREE.MeshPhysicalMaterial({
+      color: 0xca62ff,
+      emissive: 0x8a2be2,
+      emissiveIntensity: 0.8,
+      roughness: 0.1,
+      metalness: 0.2,
+      transmission: 0.7,
+      transparent: true,
+      ior: 1.6
+    });
+    const crystalMesh = new THREE.Mesh(crystalGeo, crystalMat);
+    crystalMesh.name = 'ancient_crystal';
+    crystalMesh.position.set(-0.5, 2.0, -0.4);
+    satIsland.add(crystalMesh);
+
+    const crystalLight = new THREE.PointLight(0xcc66ff, 1.8, 8);
+    crystalLight.position.set(-0.5, 2.0, -0.4);
+    satIsland.add(crystalLight);
+
+    scene.add(satIsland);
+
+    const satIsland2 = new THREE.Group();
+    satIsland2.position.set(12, 1.5, -9);
+    const satRock2 = new THREE.Mesh(new THREE.ConeGeometry(1.6, 3.2, 6), satRockMat);
+    satRock2.rotation.x = Math.PI;
+    satIsland2.add(satRock2);
+    const satCap2 = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.5, 0.4, 12), capMat);
+    satCap2.position.y = 0.2;
+    satIsland2.add(satCap2);
+    scene.add(satIsland2);
+
+    // 6. Floating Clouds
+    const clouds = [];
+    function createCloud(scale = 1.0) {
+      const group = new THREE.Group();
+      const cloudMat = new THREE.MeshStandardMaterial({
+        color: 0xffd1ba,
+        roughness: 0.9,
+        flatShading: true,
+        transparent: true,
+        opacity: 0.85
+      });
+      const parts = 5;
+      for (let i = 0; i < parts; i++) {
+        const r = (Math.random() * 1.5 + 1.2) * scale;
+        const geo = new THREE.DodecahedronGeometry(r, 1);
+        const p = new THREE.Mesh(geo, cloudMat);
+        p.position.set(
+          (i - parts / 2) * 1.6 * scale + (Math.random() - 0.5) * 0.8,
+          (Math.random() - 0.5) * 0.6 * scale,
+          (Math.random() - 0.5) * 1.2 * scale
+        );
+        group.add(p);
+      }
+      return group;
+    }
+
+    for (let i = 0; i < 7; i++) {
+      const c = createCloud(Math.random() * 0.8 + 0.8);
+      c.position.set(
+        (Math.random() - 0.5) * 120,
+        Math.random() * 20 + 5,
+        (Math.random() - 0.5) * 100 - 30
+      );
+      c.userData.speed = Math.random() * 0.04 + 0.02;
+      scene.add(c);
+      clouds.push(c);
+    }
+
+    // 7. Ambient Glowing Fireflies
+    const fireflyCount = 70;
+    const fireflyGeo = new THREE.BufferGeometry();
+    const fireflyPos = new Float32Array(fireflyCount * 3);
+    const fireflyOffsets = new Float32Array(fireflyCount);
+
+    for (let i = 0; i < fireflyCount; i++) {
+      fireflyPos[i * 3] = (Math.random() - 0.5) * 16;
+      fireflyPos[i * 3 + 1] = 4.5 + Math.random() * 5;
+      fireflyPos[i * 3 + 2] = (Math.random() - 0.5) * 16;
+      fireflyOffsets[i] = Math.random() * Math.PI * 2;
+    }
+    fireflyGeo.setAttribute('position', new THREE.BufferAttribute(fireflyPos, 3));
+
+    const fireflyMat = new THREE.PointsMaterial({
+      color: 0xffd97d,
+      size: 0.7,
+      map: createGlowSpriteTexture(),
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const fireflies = new THREE.Points(fireflyGeo, fireflyMat);
+    islandRoot.add(fireflies);
+
+    // --- Interaction & Raycasting ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const toast = document.getElementById('toast');
+    function showToast(text) {
+      toast.innerText = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    let lanternLit = true;
+    let crystalTuned = false;
+
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.hud-top') || e.target.closest('.hud-bottom')) return;
+
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length > 0) {
+        let hit = intersects[0].object;
+        let p = hit;
+        while (p.parent && p !== scene) {
+          if (p.name === 'shrine_lantern') {
+            lanternLit = !lanternLit;
+            lanternLight.intensity = lanternLit ? 2.5 : 0;
+            flameMesh.visible = lanternLit;
+            sound.playChime(659.25, 0.8);
+            showToast(lanternLit ? "🔥 Shrine Lantern Ignited!" : "💨 Lantern Flame Extinguished");
+            window.vesta?.milestone("lantern-toggled");
+            return;
+          }
+          if (p.name === 'ancient_crystal') {
+            crystalTuned = !crystalTuned;
+            crystalMesh.scale.multiplyScalar(1.25);
+            setTimeout(() => crystalMesh.scale.set(1, 1, 1), 300);
+            crystalLight.color.setHex(crystalTuned ? 0x00ffff : 0xcc66ff);
+            crystalMat.emissive.setHex(crystalTuned ? 0x0088ff : 0x8a2be2);
+            sound.playChime(880, 1.4);
+            showToast("✨ Ancient Crystal Resonates with Harmony!");
+            window.vesta?.milestone("crystal-resonated");
+            window.vesta?.achievement("island-explorer", "Discovered Floating Crystal");
+            return;
+          }
+          if (p.name === 'tree') {
+            sound.playChime(440, 0.4);
+            p.rotation.z += 0.1;
+            setTimeout(() => p.rotation.z -= 0.1, 200);
+            showToast("🍃 The sunset breeze rustles the leaves");
+            return;
+          }
+          p = p.parent;
+        }
+
+        if (hit === pondMesh || hit === riverMesh || hit === waterfallMesh) {
+          sound.playSplash();
+          showToast("💦 Cool mountain spring water ripples");
+          window.vesta?.milestone("waterfall-rippled");
+        }
+      }
+    });
+
+    // --- HUD Controls & Modes ---
+    const btnSunset = document.getElementById('btn-sunset');
+    const btnDusk = document.getElementById('btn-dusk');
+    const btnNight = document.getElementById('btn-night');
+    const btnAudio = document.getElementById('btn-audio');
+
+    function setLightingMode(mode) {
+      [btnSunset, btnDusk, btnNight].forEach(b => b.classList.remove('active'));
+      skyMat.map = createSkyTexture(mode);
+      skyMat.needsUpdate = true;
+
+      if (mode === 'sunset') {
+        btnSunset.classList.add('active');
+        scene.fog.color.setHex(0x351728);
+        hemiLight.color.setHex(0xffaa77);
+        hemiLight.groundColor.setHex(0x331a3b);
+        hemiLight.intensity = 0.7;
+        sunLight.color.setHex(0xff9944);
+        sunLight.intensity = 1.8;
+        sunMesh.material.color.setHex(0xffe299);
+        sunGroup.visible = true;
+      } else if (mode === 'dusk') {
+        btnDusk.classList.add('active');
+        scene.fog.color.setHex(0x1c1228);
+        hemiLight.color.setHex(0xa06599);
+        hemiLight.groundColor.setHex(0x1c112b);
+        hemiLight.intensity = 0.55;
+        sunLight.color.setHex(0xde5b6f);
+        sunLight.intensity = 1.1;
+        sunMesh.material.color.setHex(0xff7066);
+        sunGroup.visible = true;
+      } else {
+        btnNight.classList.add('active');
+        scene.fog.color.setHex(0x080816);
+        hemiLight.color.setHex(0x404488);
+        hemiLight.groundColor.setHex(0x0a0a18);
+        hemiLight.intensity = 0.35;
+        sunLight.color.setHex(0x6070cc);
+        sunLight.intensity = 0.4;
+        sunGroup.visible = false;
+        showToast("🌌 Bioluminescent Night Unveiled");
+      }
+      window.vesta?.milestone("time-shifted");
+    }
+
+    btnSunset.addEventListener('click', () => setLightingMode('sunset'));
+    btnDusk.addEventListener('click', () => setLightingMode('dusk'));
+    btnNight.addEventListener('click', () => setLightingMode('night'));
+
+    btnAudio.addEventListener('click', () => {
+      const on = sound.toggle();
+      btnAudio.textContent = on ? "🔊 Sound" : "🔈 Sound";
+      btnAudio.classList.toggle('active', on);
+      if (on) showToast("🌊 Waterfall ambient sound started");
+    });
+
+    const camOverview = document.getElementById('cam-overview');
+    const camWaterfall = document.getElementById('cam-waterfall');
+    const camShrine = document.getElementById('cam-shrine');
+
+    let targetCamPos = camera.position.clone();
+    let targetLookAt = controls.target.clone();
+    let isTransitioningCam = false;
+
+    function transitionTo(pos, lookAt, activeBtn) {
+      [camOverview, camWaterfall, camShrine].forEach(b => b.classList.remove('active'));
+      activeBtn.classList.add('active');
+      targetCamPos.copy(pos);
+      targetLookAt.copy(lookAt);
+      isTransitioningCam = true;
+    }
+
+    camOverview.addEventListener('click', () => {
+      transitionTo(new THREE.Vector3(18, 12, 22), new THREE.Vector3(0, 1, 0), camOverview);
+    });
+    camWaterfall.addEventListener('click', () => {
+      transitionTo(new THREE.Vector3(12, 1, -1), new THREE.Vector3(4.5, -1, -2.5), camWaterfall);
+    });
+    camShrine.addEventListener('click', () => {
+      transitionTo(new THREE.Vector3(2, 6, 7), new THREE.Vector3(1, 4.8, 3), camShrine);
+    });
+
+    const hint = document.getElementById('hint');
+    setTimeout(() => {
+      hint.classList.add('fade-out');
+    }, 4500);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    let isTabVisible = true;
+    document.addEventListener('visibilitychange', () => {
+      isTabVisible = !document.hidden;
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (!isTabVisible) return;
+
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      islandRoot.position.y = Math.sin(time * 0.8) * 0.25;
+      islandRoot.rotation.y = Math.sin(time * 0.15) * 0.02;
+
+      satIsland.position.y = -1.5 + Math.sin(time * 1.1 + 1.5) * 0.35;
+      satIsland.rotation.y = time * 0.08;
+
+      satIsland2.position.y = 1.5 + Math.cos(time * 0.9 + 2.0) * 0.3;
+      satIsland2.rotation.y = -time * 0.05;
+
+      crystalMesh.rotation.y = time * 1.2;
+      crystalMesh.rotation.x = Math.sin(time * 0.8) * 0.2;
+      crystalMesh.position.y = 2.0 + Math.sin(time * 2.0) * 0.15;
+
+      if (waterfallMesh.material.map) {
+        waterfallMesh.material.map.offset.y -= delta * 1.6;
+      }
+
+      const dPos = dropletParticles.geometry.attributes.position.array;
+      for (let i = 0; i < dropletCount; i++) {
+        const idx = i * 3;
+        dPos[idx] += dropVelocities[idx];
+        dPos[idx + 1] += dropVelocities[idx + 1];
+        dPos[idx + 2] += dropVelocities[idx + 2];
+
+        if (dPos[idx + 1] < -10) {
+          dPos[idx] = 4.8 + (Math.random() - 0.5) * 2.0;
+          dPos[idx + 1] = 4.0;
+          dPos[idx + 2] = -2.6 + (Math.random() - 0.5) * 1.5;
+        }
+      }
+      dropletParticles.geometry.attributes.position.needsUpdate = true;
+
+      mistParticles.rotation.y = time * 0.06;
+
+      clouds.forEach((cloud) => {
+        cloud.position.x += cloud.userData.speed;
+        if (cloud.position.x > 80) cloud.position.x = -80;
+      });
+
+      const fPos = fireflies.geometry.attributes.position.array;
+      for (let i = 0; i < fireflyCount; i++) {
+        const idx = i * 3;
+        const off = fireflyOffsets[i];
+        fPos[idx + 1] += Math.sin(time * 2.0 + off) * 0.012;
+        fPos[idx] += Math.cos(time * 0.8 + off) * 0.008;
+      }
+      fireflies.geometry.attributes.position.needsUpdate = true;
+
+      if (isTransitioningCam) {
+        camera.position.lerp(targetCamPos, 0.05);
+        controls.target.lerp(targetLookAt, 0.05);
+        if (camera.position.distanceTo(targetCamPos) < 0.1 && controls.target.distanceTo(targetLookAt) < 0.1) {
+          isTransitioningCam = false;
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

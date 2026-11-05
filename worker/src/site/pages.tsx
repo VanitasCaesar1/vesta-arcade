@@ -37,7 +37,7 @@ function GameCard({ g, i }: { g: Game; i: number }) {
         </span>
         {g.madeWith[0] ? <span>{g.madeWith.join(" + ")}</span> : null}
         {g.author ? <span>{g.author}</span> : null}
-        {g.keyboardRequired ? null : <span title="Plays on phones and tablets">📱</span>}
+        {g.keyboardRequired ? null : <span title="Plays on phones and tablets">phone-ready</span>}
       </div>
     </a>
   );
