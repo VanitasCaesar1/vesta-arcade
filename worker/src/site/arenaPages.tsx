@@ -63,6 +63,7 @@ export function ArenaPage(p: {
   submitted?: string;
   promptId?: string;
   counts?: Record<string, number>;
+  hot?: number;
 }) {
   const m = p.m;
   const isSvg = p.kind === "svg";
@@ -89,6 +90,7 @@ export function ArenaPage(p: {
               : "Same prompt, one attempt each, no human edits. Play both, vote for the more fun one, then see which model made it."}
           </p>
           <Tabs kind={p.kind} />
+          {(p.hot ?? 0) >= 5 ? <p class="hot">🔥 {p.hot} votes in the last hour</p> : null}
         </header>
         {m ? (
           <>
@@ -439,9 +441,9 @@ export function PromptGalleryPage(p: {
             const n = e.wins + e.losses + e.ties;
             return (
               <figure class="gallery-item">
-                <div class="arena-svg">
+                <a class="arena-svg" href={`/arena/e/${e.slug}`}>
                   <img src={`${p.playOrigin}/${e.file_key}`} alt={`${e.model}'s drawing`} loading="lazy" width={800} height={600} />
-                </div>
+                </a>
                 <figcaption>
                   <b>
                     #{i + 1} {e.model}
@@ -456,6 +458,53 @@ export function PromptGalleryPage(p: {
               </figure>
             );
           })}
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
+export function EntryPage(p: { arcade: string; siteUrl: string; playOrigin: string; entry: ArenaEntry; prompt: ArenaPrompt; rank: number; total: number; submitted?: string }) {
+  const e = p.entry;
+  const url = `${p.siteUrl}/arena/e/${e.slug}`;
+  const n = e.wins + e.losses + e.ties;
+  const by = e.community ? `${e.model}${e.author ? `, entered by ${e.author}` : ""}` : `${e.model} (${e.lab}), one attempt`;
+  const shareText = `${e.model} drew this for "${p.prompt.prompt}" and it's ranked #${p.rank} of ${p.total} in blind votes. Think yours can beat it?`;
+  return (
+    <Layout
+      meta={{
+        title: `${e.model}: "${p.prompt.prompt}" (#${p.rank} of ${p.total}) | ${p.arcade}`,
+        description: `Ranked #${p.rank} of ${p.total} drawings in blind votes. Judge the rest, or add your own model's drawing.`,
+        url,
+        image: `${p.siteUrl}/arena/svg/og.jpg`,
+        arcade: p.arcade,
+      }}
+    >
+      <div class="wrap arena">
+        <header class="arena-head">
+          <span class="k">#{p.rank} of {p.total}</span>
+          <h1 class="display gallery-q">"{p.prompt.prompt}"</h1>
+          <p class="sub">
+            By {by}. {n ? `Won ${Math.round(((e.wins + e.ties / 2) / n) * 100)}% of ${n} blind votes.` : "No votes yet: it's waiting for its first matchup."}
+          </p>
+          {p.submitted ? <div class="notice">{p.submitted}</div> : null}
+        </header>
+        <div class="entry-big arena-svg">
+          <img src={`${p.playOrigin}/${e.file_key}`} alt={`${e.model}'s drawing`} width={800} height={600} />
+        </div>
+        <div class="row gallery-actions">
+          <button class="btn pop" data-share={url} data-share-text={shareText} type="button">
+            <Icon name="share" /> Share it
+          </button>
+          <a class="btn" href={`/arena/svg?p=${p.prompt.id}`}>
+            Judge this challenge
+          </a>
+          <a class="btn" href={`/arena/svg/p/${p.prompt.id}`}>
+            See all {p.total}
+          </a>
+          <a class="btn" href={`/arena/svg?p=${p.prompt.id}#submit`}>
+            Add your model's
+          </a>
         </div>
       </div>
     </Layout>

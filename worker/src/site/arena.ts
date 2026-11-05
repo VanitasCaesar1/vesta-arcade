@@ -245,3 +245,40 @@ export async function promptGallery(env: Env, id: string) {
   const { results } = await env.DB.prepare("SELECT * FROM arena_entries WHERE prompt = ? AND hidden = 0 ORDER BY rating DESC, created_at ASC LIMIT 200").bind(id).all<ArenaEntry>();
   return { prompt, entries: results };
 }
+
+/** The SVG challenge to feature on the home page: most new drawings this week, else the first one. With its two best drawings. */
+export async function featuredChallenge(env: Env) {
+  const row = await env.DB.prepare(
+    `SELECT p.id, p.prompt, p.community, p.author,
+            (SELECT COUNT(*) FROM arena_entries e WHERE e.prompt = p.id AND e.hidden = 0) AS n,
+            (SELECT COUNT(*) FROM arena_entries e WHERE e.prompt = p.id AND e.hidden = 0 AND e.created_at > ?) AS recent
+     FROM arena_prompts p WHERE p.kind = 'svg' AND p.hidden = 0
+     ORDER BY recent DESC, n DESC, p.created_at ASC LIMIT 1`,
+  )
+    .bind(now() - 7 * 86_400)
+    .first<{ id: string; prompt: string; community: number; author: string; n: number }>();
+  if (!row || row.n < 2) return null;
+  const { results } = await env.DB.prepare("SELECT slug, model, file_key FROM arena_entries WHERE prompt = ? AND hidden = 0 AND file_key IS NOT NULL ORDER BY rating DESC LIMIT 2")
+    .bind(row.id)
+    .all<{ slug: string; model: string; file_key: string }>();
+  return { ...row, top: results };
+}
+
+/** Votes in the last hour, for "14 votes in the last hour" on arena pages. */
+export async function votesLastHour(env: Env): Promise<number> {
+  const r = await env.DB.prepare("SELECT COUNT(*) AS n FROM arena_votes WHERE created_at > ?").bind(now() - 3600).first<{ n: number }>();
+  return r?.n ?? 0;
+}
+
+/** One entry with its prompt and its rank among the prompt's visible entries. */
+export async function entryPage(env: Env, slug: string) {
+  const e = await env.DB.prepare("SELECT * FROM arena_entries WHERE slug = ? AND hidden = 0").bind(slug).first<ArenaEntry>();
+  if (!e) return null;
+  const [prompt, rank, total] = await Promise.all([
+    env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0").bind(e.prompt).first<ArenaPrompt>(),
+    env.DB.prepare("SELECT COUNT(*) + 1 AS n FROM arena_entries WHERE prompt = ? AND hidden = 0 AND rating > ?").bind(e.prompt, e.rating).first<{ n: number }>(),
+    env.DB.prepare("SELECT COUNT(*) AS n FROM arena_entries WHERE prompt = ? AND hidden = 0").bind(e.prompt).first<{ n: number }>(),
+  ]);
+  if (!prompt) return null;
+  return { entry: e, prompt, rank: rank?.n ?? 1, total: total?.n ?? 1 };
+}

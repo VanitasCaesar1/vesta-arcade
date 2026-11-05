@@ -122,7 +122,7 @@ function Loop({ d, siteUrl }: { d: LoopData; siteUrl: string }) {
   );
 }
 
-export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null; open?: boolean; arena?: string }) {
+export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null; open?: boolean; arena?: string; featured?: { id: string; prompt: string; n: number; community: number; author: string; top: { slug: string; model: string; file_key: string }[] } | null; playOrigin?: string }) {
   const qs = (sort: Sort, tool?: string) => {
     const q = new URLSearchParams();
     if (sort !== "trending") q.set("sort", sort);
@@ -165,6 +165,35 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
         </div>
       </section>
 
+      {p.featured ? (
+        <div class="wrap">
+          <section class="featured">
+            <div class="featured-text">
+              <span class="k">Challenge of the week</span>
+              <h2 class="display">"{p.featured.prompt}"</h2>
+              <p class="sub">
+                {p.featured.n} AI drawings so far{p.featured.community ? `, started by ${p.featured.author || "the community"}` : ""}. Which one's best? Judge them blind, or add your model's.
+              </p>
+              <div class="row">
+                <a class="btn pop" href={`/arena/svg?p=${p.featured.id}`}>
+                  Judge them
+                </a>
+                <a class="btn" href={`/arena/svg/p/${p.featured.id}`}>
+                  See all {p.featured.n}
+                </a>
+              </div>
+            </div>
+            <a class="featured-pics" href={`/arena/svg?p=${p.featured.id}`} aria-label="Judge this challenge">
+              {p.featured.top.map((e, i) => (
+                <span class="arena-svg">
+                  <img src={`${p.playOrigin}/${e.file_key}`} alt={`Drawing ${i === 0 ? "A" : "B"}`} loading="lazy" width={800} height={600} />
+                  <i>{i === 0 ? "A" : "B"}</i>
+                </span>
+              ))}
+            </a>
+          </section>
+        </div>
+      ) : null}
       {p.arena ? (
         <div class="wrap">
           <a class="arena-strip" href="/arena">

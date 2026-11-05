@@ -19,6 +19,7 @@ ${c.bold("Usage")}
                               --name "My Arcade"  --domain games.example.com  --subdomain <workers.dev name>
   vesta publish [dir]         Publish the game in dir (or ./dist, ./build, ./) and print its link
   vesta feedback [slug]       Errors, session lengths and comments, as Markdown for your agent
+  vesta alerts <webhook>      Post new comments and crashes to a Discord or Slack webhook ("off" to stop)
   vesta list                  Your games
   vesta open [slug]           Open a game (or the arcade) in your browser
   vesta cover [slug]          Regenerate a game's key art (--image <file>, --query demo, --raw)
@@ -181,6 +182,17 @@ ${r.public ? `
       const days = Number(v.days ?? 14);
       if (v.json) return console.log(JSON.stringify(await client.request("GET", `/api/games/${slug}/feedback?days=${days}`), null, 2));
       console.log(await client.feedback(slug, days));
+      return;
+    }
+
+    case "alerts": {
+      const target = args[0];
+      if (!target) throw new Error("Usage: vesta alerts <discord-or-slack-webhook-url> [slug]   (or: vesta alerts off [slug])");
+      const slug = args[1] ?? (await loadProject(findProjectRoot(process.cwd()))).config.slug;
+      if (!slug) throw new Error("Which game? Run this in the game's folder, or pass its slug as the second argument.");
+      const client = new Client(await configFor(slug));
+      const r = await client.request<{ alerts: boolean }>("PUT", `/api/games/${slug}/webhook`, { url: target === "off" ? "" : target });
+      out.log(r.alerts ? `${c.green("✓")} Alerts on for ${slug}: new comments and new crashes will be posted there. (A test message was just sent.)` : `${c.green("✓")} Alerts off for ${slug}.`);
       return;
     }
 

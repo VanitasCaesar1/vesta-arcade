@@ -1,5 +1,6 @@
 // Turns beacons from the injected script into daily totals and grouped errors.
 import type { Env } from "../lib/env.ts";
+import { notify } from "../lib/notify.ts";
 import { validateSlug } from "../lib/manifest.ts";
 import { now, sessionBucket, sha256, today } from "../lib/util.ts";
 
@@ -66,6 +67,7 @@ export async function ingest(req: Request, env: Env, ctx: ExecutionContext): Pro
   const t = now();
   const ua = (req.headers.get("user-agent") ?? "").slice(0, 200);
   const stmts: D1PreparedStatement[] = [];
+  const errorStmts: { index: number; message: string; source: string; line: number }[] = [];
   const upsertDay = (column: "plays" | "sessions" | "seconds" | "errors", by: number) =>
     env.DB.prepare(
       `INSERT INTO daily_stats (slug, day, ${column}) VALUES (?, ?, ?)
@@ -114,9 +116,11 @@ export async function ingest(req: Request, env: Env, ctx: ExecutionContext): Pro
             `INSERT INTO errors (slug, version, fingerprint, kind, message, source, line, col, stack, user_agent, count, first_seen, last_seen)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
              ON CONFLICT (slug, version, fingerprint) DO UPDATE SET count = count + 1, last_seen = excluded.last_seen,
-               stack = excluded.stack, user_agent = excluded.user_agent`,
+               stack = excluded.stack, user_agent = excluded.user_agent
+             RETURNING count`,
           ).bind(slug, version, fingerprint, kind, message, source, line, col, str(raw.st, 4000), ua, t, t),
         );
+        errorStmts.push({ index: stmts.length - 1, message, source, line });
         stmts.push(upsertDay("errors", 1));
         break;
       }
@@ -133,8 +137,32 @@ export async function ingest(req: Request, env: Env, ctx: ExecutionContext): Pro
       }
     }
   }
-  if (stmts.length) ctx.waitUntil(env.DB.batch(stmts).then(() => undefined, (e) => console.error("telemetry write failed", e)));
+  if (stmts.length) {
+    ctx.waitUntil(
+      env.DB.batch(stmts).then(
+        (results) => {
+          // count === 1 means this error was seen for the first time: tell the creator, if they asked to be told.
+          const fresh = errorStmts.filter((e) => (results[e.index]?.results?.[0] as { count?: number } | undefined)?.count === 1);
+          if (fresh.length) return alertNewErrors(env, slug, version, fresh);
+        },
+        (e) => console.error("telemetry write failed", e),
+      ),
+    );
+  }
   return ok();
+}
+
+async function alertNewErrors(env: Env, slug: string, version: number, fresh: { message: string; source: string; line: number }[]) {
+  const row = await env.DB.prepare(
+    "SELECT g.title, g.webhook_url, (SELECT COUNT(*) FROM errors e WHERE e.slug = g.slug AND e.version = ?) AS n FROM games g WHERE g.slug = ?",
+  )
+    .bind(version, slug)
+    .first<{ title: string; webhook_url: string | null; n: number }>();
+  // At most 10 alerts per version, so one broken build can't flood a channel.
+  if (!row?.webhook_url || row.n > 10) return;
+  const site = (env.SITE_URL ?? "").replace(/\/$/, "");
+  const lines = fresh.slice(0, 3).map((e) => `• \`${e.message.slice(0, 180)}\`${e.source ? ` at ${e.source}:${e.line}` : ""}`);
+  await notify(row.webhook_url, `🐛 New crash in **${row.title}** v${version}\n${lines.join("\n")}\nFix it: \`npx vesta-arcade feedback ${slug}\`${site ? `\n${site}/g/${slug}` : ""}`);
 }
 
 function clampInt(v: unknown, min: number, max: number): number {

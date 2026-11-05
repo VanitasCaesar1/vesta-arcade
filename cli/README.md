@@ -5,6 +5,8 @@ Publish AI-made web games from the terminal or any MCP client and get a public l
 ```sh
 npx vesta-arcade publish    # in any folder with an index.html, or a built dist/
 npx vesta-arcade feedback   # errors with stack traces, session lengths, milestones, comments
+npx vesta-arcade alerts <discord-or-slack-webhook>   # get pinged on new comments and new crashes
+npx vesta-arcade publish --arena packet-runner --model "GPT-6"   # enter the AI Arena (vestapowered.in/arena)
 ```
 
 No account needed: with no arcade configured, `publish` puts the game on the public arcade at [vestapowered.in](https://vestapowered.in) and saves a key for that game in `~/.config/vesta/keys.json`, so the next publish updates it.

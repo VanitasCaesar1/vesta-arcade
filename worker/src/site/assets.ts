@@ -220,6 +220,16 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .gallery-item figcaption span { opacity: .75; }
 .gallery-item .linkbtn { justify-self: start; font-size: 11px; opacity: .5; }
 .challenges { margin: 40px 0 10px; }
+.hot { margin: 10px 0 0; font-weight: 800; }
+.entry-big { max-width: 900px; margin: 10px 0 16px; }
+.featured { display: grid; grid-template-columns: 1fr 1.1fr; gap: 24px; align-items: center; margin: 22px 0 0; padding: 20px; border: 2px solid var(--line); box-shadow: 6px 6px 0 var(--pop); }
+@media (max-width: 800px) { .featured { grid-template-columns: 1fr; } }
+.featured .k { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; background: var(--pop); color: var(--pop-ink); padding: 3px 7px; }
+.featured h2 { margin: 10px 0 6px; font-size: clamp(22px, 3vw, 34px); line-height: 1.05; }
+.featured .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.featured-pics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-decoration: none; }
+.featured-pics .arena-svg { position: relative; }
+.featured-pics i { position: absolute; top: 0; left: 0; background: var(--pop); color: var(--pop-ink); font: 900 16px var(--display); font-style: normal; padding: 4px 10px; }
 .enter-list { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 6px; }
 .enter-list li { display: grid; grid-template-columns: 140px 1fr; gap: 12px; }
 .enter-list b { font-family: var(--mono); font-size: 13px; }

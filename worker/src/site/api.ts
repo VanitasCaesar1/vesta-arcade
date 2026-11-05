@@ -4,6 +4,7 @@ import type { AppEnv, Env } from "../lib/env.ts";
 import { ManifestError, validateManifest, validatePath, validateSlug, type ManifestFile } from "../lib/manifest.ts";
 import { contentType, COVER_TYPES } from "../lib/mime.ts";
 import { cleanList, cleanText, ipHash, now, safeEqual, sha256 } from "../lib/util.ts";
+import { notify, validWebhook } from "../lib/notify.ts";
 import type { MiddlewareHandler } from "hono";
 import { bearer, endSession, isAdmin, requireAdmin, startSession, tokenConfigured } from "./auth.ts";
 import { ARENA_KINDS, checkSvg, crowd, recordVote, revealOnly, svgSlug, verifyMatchup, type ArenaKind } from "./arena.ts";
@@ -201,10 +202,12 @@ api.post("/arena/submit", async (c) => {
   )
     .bind(slug, prompt, model, key, author, ip, t)
     .run();
-  const msg = newPrompt
-    ? "Your challenge is live. Share it: once someone adds a second drawing, it shows up in blind matchups."
-    : "Your drawing is in the arena. Here's how it ranks against the rest.";
-  return c.redirect(`/arena/svg/p/${prompt}?submitted=${encodeURIComponent(msg)}`, 303);
+  if (newPrompt) {
+    const msg = "Your challenge is live. Share it: once someone adds a second drawing, it shows up in blind matchups.";
+    return c.redirect(`/arena/svg/p/${prompt}?submitted=${encodeURIComponent(msg)}`, 303);
+  }
+  const msg = "Your drawing is in the arena. It joins blind matchups now. Share it and see how it ranks.";
+  return c.redirect(`/arena/e/${slug}?submitted=${encodeURIComponent(msg)}`, 303);
 });
 
 // Anyone can report an arena entry. Three distinct reports hide a community entry until the owner looks.
@@ -272,6 +275,12 @@ api.post("/games/:slug/comments", async (c) => {
   )
     .bind(slug, game.version, name, body, hash, now())
     .first();
+  const hook = await c.env.DB.prepare("SELECT webhook_url FROM games WHERE slug = ?").bind(slug).first<{ webhook_url: string | null }>();
+  if (hook?.webhook_url) {
+    c.executionCtx.waitUntil(
+      notify(hook.webhook_url, `💬 New comment on **${game.title}** v${game.version}${name ? ` from ${name}` : ""}:\n> ${body.slice(0, 600).replace(/\n/g, "\n> ")}\n${siteUrl(c)}/g/${slug}#feedback`),
+    );
+  }
   return isForm ? c.redirect(`/g/${slug}?feedback=sent#feedback`, 303) : c.json({ comment: row });
 });
 
@@ -460,6 +469,21 @@ admin.post("/comments/:id/hide", requireAdmin, async (c) => {
 
 // Enter a game into a game-arena prompt. Community games (published with a game key) enter as community
 // entries with a self-reported model; they get their own rating and never move the model leaderboard.
+// Creator alerts: new comments and new crashes go to this Discord or Slack webhook. An empty url turns them off.
+admin.put("/games/:slug/webhook", requireGameAccess, async (c) => {
+  const slug = slugParam(c);
+  const { url } = await c.req.json<{ url?: unknown }>().catch(() => ({}) as { url?: unknown });
+  const u = typeof url === "string" ? url.trim() : "";
+  if (u && !validWebhook(u)) return c.json({ error: "use a Discord webhook (https://discord.com/api/webhooks/…) or a Slack one (https://hooks.slack.com/services/…)" }, 400);
+  if (!(await getGameRow(c.env, slug))) return c.json({ error: "not found" }, 404);
+  await c.env.DB.prepare("UPDATE games SET webhook_url = ? WHERE slug = ?").bind(u || null, slug).run();
+  if (u) {
+    const g = await getGameRow(c.env, slug);
+    c.executionCtx.waitUntil(notify(u, `✅ Vesta alerts are on for **${g?.title ?? slug}**. New player comments and new crashes will show up here.`));
+  }
+  return c.json({ slug, alerts: !!u });
+});
+
 admin.post("/games/:slug/arena", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   const input = await c.req.json<{ prompt?: unknown; model?: unknown }>().catch(() => ({}) as Record<string, unknown>);

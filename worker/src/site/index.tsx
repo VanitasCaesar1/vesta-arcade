@@ -16,8 +16,8 @@ import { isAdmin, tokenConfigured } from "./auth.ts";
 import { feedbackReport, getChallenge, getGame, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
 import { EmbedPage, GamePage, HomePage, NotFoundPage } from "./pages.tsx";
-import { ArenaBoardPage, ArenaPage, PromptGalleryPage } from "./arenaPages.tsx";
-import { arenaNames, arenaPrompts, isArenaEntry, leaderboard, promptGallery, randomMatchup, type ArenaKind } from "./arena.ts";
+import { ArenaBoardPage, ArenaPage, EntryPage, PromptGalleryPage } from "./arenaPages.tsx";
+import { arenaNames, arenaPrompts, entryPage, featuredChallenge, isArenaEntry, leaderboard, promptGallery, randomMatchup, votesLastHour, type ArenaKind } from "./arena.ts";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
 import { REPO_URL } from "./layout.tsx";
 
@@ -88,14 +88,15 @@ site.get("/", async (c) => {
   const sortQ = c.req.query("sort");
   const sort: Sort = sortQ === "new" || sortQ === "top" ? sortQ : "trending";
   const tool = c.req.query("made_with")?.slice(0, 32) || undefined;
-  const [games, tools, loop, arenaRow] = await Promise.all([
+  const [games, tools, loop, arenaRow, featured] = await Promise.all([
     listGames(c.env, { sort, tool }),
     madeWithCounts(c.env),
     loopData(c.env),
     arenaNames(c.env),
+    featuredChallenge(c.env),
   ]);
   c.header("cache-control", "public, max-age=30");
-  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} open={c.env.OPEN_PUBLISHING === "1"} arena={arenaRow || undefined} />);
+  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} open={c.env.OPEN_PUBLISHING === "1"} arena={arenaRow || undefined} featured={featured} playOrigin={playOrigin(c)} />);
 });
 
 async function loadGame(c: Context<AppEnv>) {
@@ -147,12 +148,13 @@ site.get("/arena/og.jpg", (c) =>
 
 async function arenaRoute(c: Context<AppEnv>, kind: ArenaKind) {
   const promptId = c.req.query("p")?.slice(0, 60);
-  const [m, votes, names, prompts, countRows] = await Promise.all([
+  const [m, votes, names, prompts, countRows, hot] = await Promise.all([
     randomMatchup(c.env, kind, promptId),
     c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_votes").first<{ n: number }>(),
     arenaNames(c.env),
     arenaPrompts(c.env, kind),
     c.env.DB.prepare("SELECT prompt, COUNT(*) AS n FROM arena_entries WHERE hidden = 0 GROUP BY prompt").all<{ prompt: string; n: number }>(),
+    votesLastHour(c.env),
   ]);
   const counts = Object.fromEntries(countRows.results.map((r) => [r.prompt, r.n]));
   c.header("cache-control", "no-store");
@@ -167,6 +169,7 @@ async function arenaRoute(c: Context<AppEnv>, kind: ArenaKind) {
       prompts={prompts}
       promptId={promptId}
       counts={counts}
+      hot={hot}
       submitted={c.req.query("submitted")?.slice(0, 200)}
       playOrigin={playOrigin(c)}
       playSrc={(g) => playSrc(c, g.slug, g.version!)}
@@ -187,6 +190,16 @@ site.get("/arena/svg/p/:id", async (c) => {
   if (!g) return notFound(c);
   c.header("cache-control", "public, max-age=30");
   return c.html(<PromptGalleryPage arcade={arcade(c)} siteUrl={origin(c)} playOrigin={playOrigin(c)} prompt={g.prompt} entries={g.entries} submitted={c.req.query("submitted")?.slice(0, 200)} />);
+});
+
+site.get("/arena/e/:slug", async (c) => {
+  const slug = c.req.param("slug");
+  if (!/^[a-z0-9-]{3,60}$/.test(slug)) return notFound(c);
+  const d = await entryPage(c.env, slug);
+  if (!d) return notFound(c);
+  if (d.entry.kind === "game") return c.redirect(`/g/${slug}`, 302);
+  c.header("cache-control", "public, max-age=30");
+  return c.html(<EntryPage arcade={arcade(c)} siteUrl={origin(c)} playOrigin={playOrigin(c)} {...d} submitted={c.req.query("submitted")?.slice(0, 200)} />);
 });
 
 site.get("/arena/leaderboard", async (c) => {
