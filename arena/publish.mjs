@@ -48,6 +48,7 @@ for (const [id, p] of Object.entries(PROMPTS)) {
       env: process.env,
     });
     await api("PUT", `/api/arena/entries/${slug}`, { prompt: id, model: m.model, lab: m.lab });
+    if (kind === "3d") await api("PUT", `/api/games/${slug}`, { tags: ["3d", "three.js", "arena"] });
     await api("POST", `/api/games/${slug}/hide`, { hidden: true });
     console.log(`${id} / ${m.model} → ${url}/g/${slug}`);
   }

@@ -763,3 +763,71 @@ export function UpdatesPage(p: { arcade: string; siteUrl: string; updates: Updat
     </Layout>
   );
 }
+
+export function ThreeDPage(p: { arcade: string; siteUrl: string; games: Game[]; arenaIds: Set<string> }) {
+  const snippet = `<script type="module">
+  import * as THREE from "/lib/three/three.module.js";
+  import { OrbitControls } from "/lib/three/OrbitControls.js";
+  // …your scene. Then: npx vesta-arcade publish
+</script>`;
+  return (
+    <Layout
+      meta={{
+        title: `3D games and worlds made by AI | ${p.arcade}`,
+        description: "Interactive 3D scenes and games built by AI models with three.js. Explore them, judge them blind in the 3D Arena, or publish your own with one command.",
+        url: `${p.siteUrl}/3d`,
+        image: `${p.siteUrl}/arena/og.jpg`,
+        arcade: p.arcade,
+      }}
+    >
+      <div class="wrap">
+        <section class="dev-head">
+          <span class="k">3D</span>
+          <h1 class="display">3D worlds made by AI</h1>
+          <p class="sub">Interactive three.js scenes and games, built by models from a single prompt. Drag to look around, find what they hid.</p>
+          <div class="row gallery-actions">
+            <a class="btn pop" href="/arena/3d">
+              Judge them blind in the 3D Arena
+            </a>
+            <a class="btn" href="#make">
+              Make a 3D game
+            </a>
+          </div>
+        </section>
+        <div class="grid">
+          {p.games.map((g, i) => (
+            <a class="card rise" style={`--i:${i}`} href={`/g/${g.slug}`}>
+              <div class="art art-3d">
+                <span>3D</span>
+              </div>
+              <h3>{p.arenaIds.has(g.slug) ? `${g.title} (arena scene)` : g.title}</h3>
+              <div class="meta">
+                <span>
+                  <b>{compactNumber(g.plays)}</b> {g.plays === 1 ? "play" : "plays"}
+                </span>
+                {p.arenaIds.has(g.slug) ? <span>model hidden until you judge</span> : g.author ? <span>{g.author}</span> : null}
+              </div>
+            </a>
+          ))}
+        </div>
+        {p.games.length ? null : <p class="sub">The first 3D scenes are on their way.</p>}
+        <section class="arena-submit" id="make">
+          <h2 class="display">Make a 3D game</h2>
+          <p class="sub">
+            three.js r187 is served by the arcade itself, so your game needs no CDN and loads fast. Import it like this, build your scene, add <code>"tags": ["3d"]</code> to
+            vesta.json, and publish. No account needed.
+          </p>
+          <textarea class="code" id="three-snippet" rows={5} readonly aria-label="three.js import">
+            {snippet}
+          </textarea>
+          <button class="btn sm" data-copy="#three-snippet" data-msg="Copied" type="button">
+            Copy
+          </button>
+          <p class="sub">
+            Want it in the arena? <code>npx vesta-arcade publish --arena floating-island --model "Your model"</code>
+          </p>
+        </section>
+      </div>
+    </Layout>
+  );
+}

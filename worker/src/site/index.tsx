@@ -13,9 +13,9 @@ let ogBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaOgBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaSvgOgBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
-import { type Game, feedbackReport, getChallenge, getGame, listAchievements, listComments, listUpdates, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
+import { type Game, feedbackReport, getChallenge, getGame, list3d, listAchievements, listComments, listUpdates, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
-import { DeveloperPage, EmbedPage, GamePage, HomePage, LibraryPage, NotFoundPage, UpdatesPage } from "./pages.tsx";
+import { DeveloperPage, EmbedPage, GamePage, HomePage, LibraryPage, NotFoundPage, ThreeDPage, UpdatesPage } from "./pages.tsx";
 import { ArenaBoardPage, ArenaEmbedPage, ArenaPage, EntryPage, PromptGalleryPage } from "./arenaPages.tsx";
 import { arenaNames, arenaPrompts, daily, entryPage, featuredChallenge, isArenaEntry, leaderboard, promptGallery, randomMatchup, votesLastHour, type ArenaKind } from "./arena.ts";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
@@ -254,6 +254,15 @@ site.get("/shot/:slug/:i", async (c) => {
   return c.body(obj.body, 200, { "content-type": obj.httpMetadata?.contentType ?? "image/png", "cache-control": "public, max-age=3600" });
 });
 
+site.get("/3d", async (c) => {
+  const [games, arena] = await Promise.all([
+    list3d(c.env),
+    c.env.DB.prepare("SELECT slug FROM arena_entries WHERE kind = '3d' AND hidden = 0").all<{ slug: string }>(),
+  ]);
+  c.header("cache-control", "public, max-age=60");
+  return c.html(<ThreeDPage arcade={arcade(c)} siteUrl={origin(c)} games={games} arenaIds={new Set(arena.results.map((r) => r.slug))} />);
+});
+
 site.get("/library", (c) => c.html(<LibraryPage arcade={arcade(c)} siteUrl={origin(c)} />));
 
 site.get("/dev/:name", async (c) => {
@@ -436,7 +445,7 @@ site.get("/__version", (c) => c.json({ vesta: VERSION }));
 // When the arcade takes over a domain that already had a site (ORIGIN_FALLBACK=1),
 // anything the arcade doesn't serve is passed through to that site, so old
 // links like /download keep working.
-const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/", "/dev/", "/arena", "/library", "/updates", "/shot/"];
+const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/", "/dev/", "/arena", "/library", "/updates", "/shot/", "/3d"];
 site.notFound(async (c) => {
   const path = new URL(c.req.url).pathname;
   if (c.env.ORIGIN_FALLBACK === "1" && (c.req.method === "GET" || c.req.method === "HEAD") && !OWN_PREFIXES.some((p) => path.startsWith(p))) {

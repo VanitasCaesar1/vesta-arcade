@@ -462,3 +462,15 @@ export async function listUpdates(env: Env, limit = 60): Promise<UpdateRow[]> {
     .all<UpdateRow>();
   return results;
 }
+
+/** Every live game tagged "3d", including arena scenes (shown without their model, so judging stays blind). */
+export async function list3d(env: Env): Promise<Game[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT g.*, 0 AS recent_plays FROM games g
+     WHERE g.current_version IS NOT NULL
+       AND EXISTS (SELECT 1 FROM json_each(g.tags) WHERE lower(value) = '3d')
+       AND (g.hidden = 0 OR EXISTS (SELECT 1 FROM arena_entries e WHERE e.slug = g.slug AND e.hidden = 0))
+     ORDER BY g.plays DESC, g.updated_at DESC LIMIT 60`,
+  ).all<GameRow & { recent_plays: number }>();
+  return results.map(toGame);
+}
