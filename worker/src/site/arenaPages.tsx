@@ -3,7 +3,7 @@ import type { ArenaEntry, ArenaKind, ArenaModel, ArenaPrompt, Matchup, Side } fr
 import type { Game } from "./db.ts";
 
 const cover = (g: Game) => `/cover/${g.slug}?v=${g.updatedAt}`;
-const KIND_LABEL: Record<ArenaKind, string> = { game: "Games", svg: "SVG drawings" };
+const KIND_LABEL: Record<ArenaKind, string> = { game: "Games", svg: "SVG drawings", "3d": "3D scenes" };
 
 function Tabs({ kind }: { kind: ArenaKind | "board" | "daily" }) {
   return (
@@ -16,6 +16,9 @@ function Tabs({ kind }: { kind: ArenaKind | "board" | "daily" }) {
       </a>
       <a class={kind === "svg" ? "on" : ""} href="/arena/svg">
         SVG drawings
+      </a>
+      <a class={kind === "3d" ? "on" : ""} href="/arena/3d">
+        3D
       </a>
       <a class={kind === "board" ? "on" : ""} href="/arena/leaderboard">
         Leaderboard
@@ -71,14 +74,17 @@ export function ArenaPage(p: {
 }) {
   const m = p.m;
   const isSvg = p.kind === "svg";
-  const url = `${p.siteUrl}/arena${isSvg ? "/svg" : ""}`;
+  const is3d = p.kind === "3d";
+  const path = isSvg ? "/arena/svg" : is3d ? "/arena/3d" : "/arena";
+  const url = `${p.siteUrl}${path}`;
+  const thing = is3d ? "3D scene" : "game";
   return (
     <Layout
       meta={{
-        title: isSvg ? `SVG Arena: which AI draws better? | ${p.arcade}` : `AI Arena: which AI makes better games? | ${p.arcade}`,
+        title: isSvg ? `SVG Arena: which AI draws better? | ${p.arcade}` : is3d ? `3D Arena: which AI builds the better 3D world? | ${p.arcade}` : `AI Arena: which AI makes better games? | ${p.arcade}`,
         description: isSvg
           ? "Same drawing prompt, different AIs. Pick the better SVG blind, then see which model drew it. Add your own model's drawing."
-          : `${p.names || "AI models"} each built a game from the same prompt, in one attempt. Play two blind, vote for the more fun one, then see who made which.`,
+          : `${p.names || "AI models"} each built a ${thing} from the same prompt, in one attempt. Try two blind, vote for the better one, then see who made which.`,
         url,
         image: `${p.siteUrl}/arena${isSvg ? "/svg" : ""}/og.jpg`,
         arcade: p.arcade,
@@ -87,7 +93,7 @@ export function ArenaPage(p: {
       <div class="wrap arena">
         <header class="arena-head">
           <span class="k">AI Arena</span>
-          <h1 class="display">{isSvg ? "Which AI draws it better?" : "Which AI makes the better game?"}</h1>
+          <h1 class="display">{isSvg ? "Which AI draws it better?" : is3d ? "Which AI builds the better 3D world?" : "Which AI makes the better game?"}</h1>
           <p class="sub">
             {isSvg
               ? "Same prompt, different models. Pick the better drawing, then see who made it. Anyone can add their model's drawing."
@@ -117,8 +123,8 @@ export function ArenaPage(p: {
                 </>
               ) : (
                 <>
-                  <GameStage g={m.a.game!} label="Game A" playSrc={p.playSrc(m.a.game!)} />
-                  <GameStage g={m.b.game!} label="Game B" playSrc={p.playSrc(m.b.game!)} />
+                  <GameStage g={m.a.game!} label={is3d ? "Scene A" : "Game A"} playSrc={p.playSrc(m.a.game!)} />
+                  <GameStage g={m.b.game!} label={is3d ? "Scene B" : "Game B"} playSrc={p.playSrc(m.b.game!)} />
                 </>
               )}
             </div>
@@ -174,7 +180,7 @@ export function ArenaPage(p: {
                   <div class="badge" data-badge hidden />
                 </div>
                 <div class="row">
-                  <a class="btn pop" href={isSvg ? "/arena/svg" : "/arena"} data-next>
+                  <a class="btn pop" href={path} data-next>
                     Next matchup
                   </a>
                   <button class="btn" data-share={`${p.siteUrl}/arena${isSvg ? "/svg" : ""}`} data-taste-share type="button">
@@ -196,10 +202,10 @@ export function ArenaPage(p: {
 
         {!isSvg && p.prompts.length ? (
           <section class="arena-submit" id="enter">
-            <h2 class="display">Enter your model's game</h2>
+            <h2 class="display">Enter your model's {thing}</h2>
             <p class="sub">
               Give your agent one of these prompts and{" "}
-              <a href="https://github.com/VanitasCaesar1/vesta-arcade/blob/main/arena/PROMPTS.md">the rules</a> (one HTML file, works on phones, a score at the end), then publish it into the
+              <a href={`https://github.com/VanitasCaesar1/vesta-arcade/blob/main/arena/${is3d ? "3D_PROMPTS" : "PROMPTS"}.md`}>the rules</a> ({is3d ? "one HTML file using three.js from /lib/three/, interactive, works on phones" : "one HTML file, works on phones, a score at the end"}), then publish it into the
               arena. No account needed. Community games get their own rating; the model leaderboard only counts the arena's own entries.
             </p>
             <ul class="enter-list">
@@ -288,7 +294,7 @@ export function ArenaPage(p: {
         <p class="arena-foot">
           <a href="/arena/leaderboard">Leaderboard</a>
           {p.votes >= 10 ? ` · ${p.votes.toLocaleString("en-US")} votes so far` : ""} · The arena's own entries come from{" "}
-          <a href={`https://github.com/VanitasCaesar1/vesta-arcade/blob/main/arena/${isSvg ? "SVG_PROMPTS" : "PROMPTS"}.md`}>this prompt file</a>, one attempt each.
+          <a href={`https://github.com/VanitasCaesar1/vesta-arcade/blob/main/arena/${isSvg ? "SVG_PROMPTS" : is3d ? "3D_PROMPTS" : "PROMPTS"}.md`}>this prompt file</a>, one attempt each.
         </p>
       </div>
     </Layout>
@@ -326,7 +332,7 @@ export function ArenaBoardPage(p: {
           <p class="sub">{p.votes >= 10 ? `${p.votes.toLocaleString("en-US")} blind votes. ` : "Blind votes from players. "}Elo ratings, updated on every vote. Model ratings count only the arena's own entries.</p>
           <Tabs kind="board" />
         </header>
-        {(["game", "svg"] as ArenaKind[]).map((kind) => {
+        {(["game", "svg", "3d"] as ArenaKind[]).map((kind) => {
           const models = p.models.filter((m) => m.kind === kind);
           return (
             <section class="board-kind">
@@ -361,7 +367,7 @@ export function ArenaBoardPage(p: {
                 </table>
               ) : (
                 <p class="sub">
-                  No votes yet. <a href={kind === "svg" ? "/arena/svg" : "/arena"}>Be the first.</a>
+                  No votes yet. <a href={kind === "svg" ? "/arena/svg" : kind === "3d" ? "/arena/3d" : "/arena"}>Be the first.</a>
                 </p>
               )}
             </section>

@@ -192,6 +192,7 @@ site.get("/arena/svg/og.jpg", (c) =>
 );
 site.get("/arena", (c) => arenaRoute(c, "game"));
 site.get("/arena/svg", (c) => arenaRoute(c, "svg"));
+site.get("/arena/3d", (c) => arenaRoute(c, "3d"));
 site.get("/arena/today", async (c) => {
   const d = await daily(c.env);
   if (!d.today) return c.redirect("/arena/svg", 302);

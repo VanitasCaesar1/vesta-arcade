@@ -6,8 +6,8 @@ import type { Env } from "../lib/env.ts";
 import { hmac, now, safeEqual } from "../lib/util.ts";
 import { getGame, type Game } from "./db.ts";
 
-export type ArenaKind = "game" | "svg";
-export const ARENA_KINDS: ArenaKind[] = ["game", "svg"];
+export type ArenaKind = "game" | "svg" | "3d";
+export const ARENA_KINDS: ArenaKind[] = ["game", "svg", "3d"];
 
 export interface ArenaPrompt {
   id: string;
@@ -72,11 +72,13 @@ export async function arenaPrompts(env: Env, kind?: ArenaKind): Promise<ArenaPro
 /** A random prompt of this kind with two visible entries, preferring two different models, in random order. */
 export async function randomMatchup(env: Env, kind: ArenaKind, promptId?: string): Promise<Matchup | null> {
   const { results } =
-    kind === "game"
+    kind !== "svg"
       ? await env.DB.prepare(
           `SELECT e.slug, e.prompt, e.model, e.file_key FROM arena_entries e JOIN games g ON g.slug = e.slug
-           WHERE e.kind = 'game' AND e.hidden = 0 AND g.current_version IS NOT NULL AND (e.community = 0 OR g.hidden = 0)`,
-        ).all<{ slug: string; prompt: string; model: string; file_key: string | null }>()
+           WHERE e.kind = ? AND e.hidden = 0 AND g.current_version IS NOT NULL AND (e.community = 0 OR g.hidden = 0)`,
+        )
+          .bind(kind)
+          .all<{ slug: string; prompt: string; model: string; file_key: string | null }>()
       : await env.DB.prepare("SELECT slug, prompt, model, file_key FROM arena_entries WHERE kind = 'svg' AND hidden = 0 AND file_key IS NOT NULL").all<{
           slug: string;
           prompt: string;

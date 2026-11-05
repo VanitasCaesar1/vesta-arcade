@@ -516,10 +516,10 @@ admin.post("/games/:slug/arena", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   const input = await c.req.json<{ prompt?: unknown; model?: unknown }>().catch(() => ({}) as Record<string, unknown>);
   const promptId = typeof input.prompt === "string" ? input.prompt : "";
-  const prompt = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'game' AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").bind(promptId).first();
+  const prompt = await c.env.DB.prepare("SELECT id, kind FROM arena_prompts WHERE id = ? AND kind IN ('game', '3d') AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").bind(promptId).first<{ id: string; kind: string }>();
   if (!prompt) {
-    const { results } = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE kind = 'game' AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").all<{ id: string }>();
-    return c.json({ error: `unknown arena prompt "${promptId}". Game prompts: ${results.map((r) => r.id).join(", ")}` }, 400);
+    const { results } = await c.env.DB.prepare("SELECT id, kind FROM arena_prompts WHERE kind IN ('game', '3d') AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").all<{ id: string; kind: string }>();
+    return c.json({ error: `unknown arena prompt "${promptId}". Prompts: ${results.map((r) => `${r.id}${r.kind === "3d" ? " (3D)" : ""}`).join(", ")}` }, 400);
   }
   const model = cleanText(input.model, 60);
   if (!model) return c.json({ error: "say which model made the game, e.g. --model \"GPT-6 Luna\"" }, 400);
@@ -528,12 +528,12 @@ admin.post("/games/:slug/arena", requireGameAccess, async (c) => {
   const existing = await c.env.DB.prepare("SELECT community FROM arena_entries WHERE slug = ?").bind(slug).first<{ community: number }>();
   if (existing && !existing.community) return c.json({ error: "this game is one of the arena's own entries" }, 409);
   await c.env.DB.prepare(
-    `INSERT INTO arena_entries (slug, prompt, model, lab, kind, community, author, created_at) VALUES (?, ?, ?, '', 'game', 1, ?, ?)
-     ON CONFLICT (slug) DO UPDATE SET prompt = excluded.prompt, model = excluded.model, author = excluded.author`,
+    `INSERT INTO arena_entries (slug, prompt, model, lab, kind, community, author, created_at) VALUES (?, ?, ?, '', ?, 1, ?, ?)
+     ON CONFLICT (slug) DO UPDATE SET prompt = excluded.prompt, model = excluded.model, author = excluded.author, kind = excluded.kind`,
   )
-    .bind(slug, promptId, model, game.author ?? "", now())
+    .bind(slug, promptId, model, prompt.kind, game.author ?? "", now())
     .run();
-  return c.json({ slug, prompt: promptId, model, arena: `${siteUrl(c)}/arena?p=${promptId}` });
+  return c.json({ slug, prompt: promptId, model, arena: `${siteUrl(c)}/arena${prompt.kind === "3d" ? "/3d" : ""}?p=${promptId}` });
 });
 
 admin.put("/arena/prompts/:id", requireAdmin, async (c) => {
@@ -557,11 +557,12 @@ admin.put("/arena/entries/:slug", requireAdmin, async (c) => {
   const model = cleanText(input.model, 60);
   if (!model) return c.json({ error: "model is required" }, 400);
   if (!(await getGameRow(c.env, slug))) return c.json({ error: "publish the game first" }, 404);
+  const pk = await c.env.DB.prepare("SELECT kind FROM arena_prompts WHERE id = ?").bind(prompt).first<{ kind: string }>();
   await c.env.DB.prepare(
-    `INSERT INTO arena_entries (slug, prompt, model, lab, created_at) VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT (slug) DO UPDATE SET prompt = excluded.prompt, model = excluded.model, lab = excluded.lab`,
+    `INSERT INTO arena_entries (slug, prompt, model, lab, kind, created_at) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT (slug) DO UPDATE SET prompt = excluded.prompt, model = excluded.model, lab = excluded.lab, kind = excluded.kind`,
   )
-    .bind(slug, prompt, model, cleanText(input.lab, 40), now())
+    .bind(slug, prompt, model, cleanText(input.lab, 40), pk?.kind === "3d" ? "3d" : "game", now())
     .run();
   return c.json({ slug, prompt, model });
 });

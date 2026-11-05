@@ -7,6 +7,9 @@ import { CLIENT_SCRIPT } from "./client.ts";
 import { ingest } from "./telemetry.ts";
 import { submitScore } from "./scores.ts";
 
+/** three.js release served at /lib/three/ (files live in R2 under lib/three/<version>/). */
+const THREE_VERSION = "0.187.0";
+
 const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",
   "referrer-policy": "no-referrer",
@@ -31,6 +34,18 @@ export async function handlePlay(req: Request, env: Env, ctx: ExecutionContext):
     return ingest(req, env, ctx);
   }
   if (req.method !== "GET" && req.method !== "HEAD") return new Response("method not allowed", { status: 405 });
+
+  // three.js for 3D games and scenes, served from this origin so games need no CDN:
+  //   import * as THREE from "/lib/three/three.module.js";
+  //   import { OrbitControls } from "/lib/three/OrbitControls.js";
+  const lib = url.pathname.match(/^\/lib\/three\/(three\.module\.js|three\.core\.js|OrbitControls\.js)$/);
+  if (lib) {
+    const obj = await env.FILES.get(`lib/three/${THREE_VERSION}/${lib[1]}`);
+    if (!obj) return notFound();
+    return new Response(req.method === "HEAD" ? null : obj.body, {
+      headers: { ...SECURITY_HEADERS, "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=86400", "access-control-allow-origin": "*" },
+    });
+  }
 
   // AI Arena drawings: /svg/svg-1a2b3c4d5e.svg. Shown through <img>; opened directly, the CSP keeps them inert.
   const svgMatch = url.pathname.match(/^\/svg\/(svg-[a-f0-9]{10})\.svg$/);
