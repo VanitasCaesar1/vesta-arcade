@@ -334,7 +334,7 @@ admin.delete("/games/:slug", requireGameAccess, async (c) => {
   await deletePrefix(c.env, `g/${slug}/`);
   await deletePrefix(c.env, `c/${slug}/`);
   await c.env.DB.batch(
-    ["comments", "likes", "scores", "best_scores", "reports", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
+    ["comments", "likes", "scores", "best_scores", "reports", "arena_entries", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
       c.env.DB.prepare(`DELETE FROM ${t} WHERE slug = ?`).bind(slug),
     ),
   );
@@ -456,6 +456,32 @@ admin.post("/comments/:id/hide", requireAdmin, async (c) => {
   const { hidden } = await c.req.json<{ hidden?: boolean }>().catch(() => ({ hidden: true }));
   await c.env.DB.prepare("UPDATE comments SET hidden = ? WHERE id = ?").bind(hidden ? 1 : 0, Number(c.req.param("id"))).run();
   return c.json({ id: Number(c.req.param("id")), hidden: !!hidden });
+});
+
+// Enter a game into a game-arena prompt. Community games (published with a game key) enter as community
+// entries with a self-reported model; they get their own rating and never move the model leaderboard.
+admin.post("/games/:slug/arena", requireGameAccess, async (c) => {
+  const slug = slugParam(c);
+  const input = await c.req.json<{ prompt?: unknown; model?: unknown }>().catch(() => ({}) as Record<string, unknown>);
+  const promptId = typeof input.prompt === "string" ? input.prompt : "";
+  const prompt = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'game' AND hidden = 0").bind(promptId).first();
+  if (!prompt) {
+    const { results } = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE kind = 'game' AND hidden = 0").all<{ id: string }>();
+    return c.json({ error: `unknown arena prompt "${promptId}". Game prompts: ${results.map((r) => r.id).join(", ")}` }, 400);
+  }
+  const model = cleanText(input.model, 60);
+  if (!model) return c.json({ error: "say which model made the game, e.g. --model \"GPT-6 Luna\"" }, 400);
+  const game = await getGameRow(c.env, slug);
+  if (!game?.current_version) return c.json({ error: "publish the game first" }, 404);
+  const existing = await c.env.DB.prepare("SELECT community FROM arena_entries WHERE slug = ?").bind(slug).first<{ community: number }>();
+  if (existing && !existing.community) return c.json({ error: "this game is one of the arena's own entries" }, 409);
+  await c.env.DB.prepare(
+    `INSERT INTO arena_entries (slug, prompt, model, lab, kind, community, author, created_at) VALUES (?, ?, ?, '', 'game', 1, ?, ?)
+     ON CONFLICT (slug) DO UPDATE SET prompt = excluded.prompt, model = excluded.model, author = excluded.author`,
+  )
+    .bind(slug, promptId, model, game.author ?? "", now())
+    .run();
+  return c.json({ slug, prompt: promptId, model, arena: `${siteUrl(c)}/arena?p=${promptId}` });
 });
 
 admin.put("/arena/prompts/:id", requireAdmin, async (c) => {

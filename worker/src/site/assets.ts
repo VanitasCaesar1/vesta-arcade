@@ -220,6 +220,10 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .gallery-item figcaption span { opacity: .75; }
 .gallery-item .linkbtn { justify-self: start; font-size: 11px; opacity: .5; }
 .challenges { margin: 40px 0 10px; }
+.enter-list { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 6px; }
+.enter-list li { display: grid; grid-template-columns: 140px 1fr; gap: 12px; }
+.enter-list b { font-family: var(--mono); font-size: 13px; }
+#enter-cmd { width: 100%; margin: 6px 0; }
 .challenge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
 .challenge-card { display: grid; gap: 8px; padding: 14px; border: 2px solid var(--line); text-decoration: none; color: inherit; }
 .challenge-card:hover { box-shadow: 4px 4px 0 var(--pop); transform: translate(-1px, -1px); }

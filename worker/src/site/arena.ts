@@ -75,7 +75,7 @@ export async function randomMatchup(env: Env, kind: ArenaKind, promptId?: string
     kind === "game"
       ? await env.DB.prepare(
           `SELECT e.slug, e.prompt, e.model, e.file_key FROM arena_entries e JOIN games g ON g.slug = e.slug
-           WHERE e.kind = 'game' AND e.hidden = 0 AND g.current_version IS NOT NULL`,
+           WHERE e.kind = 'game' AND e.hidden = 0 AND g.current_version IS NOT NULL AND (e.community = 0 OR g.hidden = 0)`,
         ).all<{ slug: string; prompt: string; model: string; file_key: string | null }>()
       : await env.DB.prepare("SELECT slug, prompt, model, file_key FROM arena_entries WHERE kind = 'svg' AND hidden = 0 AND file_key IS NOT NULL").all<{
           slug: string;

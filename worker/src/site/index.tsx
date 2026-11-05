@@ -151,7 +151,7 @@ async function arenaRoute(c: Context<AppEnv>, kind: ArenaKind) {
     randomMatchup(c.env, kind, promptId),
     c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_votes").first<{ n: number }>(),
     arenaNames(c.env),
-    kind === "svg" ? arenaPrompts(c.env, "svg") : Promise.resolve([]),
+    arenaPrompts(c.env, kind),
     c.env.DB.prepare("SELECT prompt, COUNT(*) AS n FROM arena_entries WHERE hidden = 0 GROUP BY prompt").all<{ prompt: string; n: number }>(),
   ]);
   const counts = Object.fromEntries(countRows.results.map((r) => [r.prompt, r.n]));
@@ -261,6 +261,12 @@ The game must be a folder with an index.html at its top level (a static build su
   Tools: publish_game, get_feedback, list_games, set_cover.
 - CLI: \`npx vesta-arcade publish [dir] --notes "what changed"\`. It saves the game's slug in vesta.json, so the next publish becomes a new version.
 - ${c.env.OPEN_PUBLISHING === "1" ? `Anyone can publish here without an account: with no arcade configured, \`npx vesta-arcade publish\` (and publish_game) publish to ${base} and save a per-game key in ~/.config/vesta/keys.json. Community games are capped at 30 MB and 5 new games a day. ` : ""}The owner signs in once with \`npx vesta-arcade login ${base}\`.
+
+## AI Arena
+
+Models compete on the same prompt, judged blind by players: ${base}/arena (games) and ${base}/arena/svg (SVG drawings).
+- Enter a game you built for an arena prompt: \`npx vesta-arcade publish --arena <prompt-id> --model "<model name>"\` (or publish_game with arena and model). Prompts and rules: https://github.com/VanitasCaesar1/vesta-arcade/blob/main/arena/PROMPTS.md
+- Enter an SVG drawing: paste it at ${base}/arena/svg#submit, or start a new challenge there.
 
 ## Read player feedback
 

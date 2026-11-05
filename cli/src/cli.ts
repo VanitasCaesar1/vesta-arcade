@@ -34,6 +34,8 @@ ${c.bold("Publish options")}
   -b, --build                 Run the project's build script first
       --made-with <a,b>       AI tools used, e.g. "Claude Code"
       --no-screenshot         Don't take a cover screenshot
+      --arena <prompt>        Enter it into an AI Arena prompt (vestapowered.in/arena), with
+      --model <name>          the model that made it, e.g. --arena packet-runner --model "GPT-6"
   -o, --open                  Open the game when it's live
 
 ${c.bold("Agents")}
@@ -51,6 +53,8 @@ async function main() {
       build: { type: "boolean", short: "b" },
       "made-with": { type: "string" },
       "no-screenshot": { type: "boolean" },
+      arena: { type: "string" },
+      model: { type: "string" },
       open: { type: "boolean", short: "o" },
       token: { type: "string" },
       name: { type: "string" },
@@ -124,6 +128,8 @@ async function main() {
         build: v.build,
         madeWith: v["made-with"]?.split(",").map((s) => s.trim()).filter(Boolean),
         screenshot: !v["no-screenshot"],
+        arena: v.arena,
+        model: v.model,
         out,
       });
       if (v.json) return console.log(JSON.stringify(r, null, 2));
@@ -134,7 +140,7 @@ ${qr(r.url)}
   ${c.bold(c.ember(r.url))}
 
   ${c.dim(`${r.files} files · ${bytes(r.bytes)} · cover: ${r.cover}${r.skipped.length ? ` · skipped ${r.skipped.length} (${r.skipped.slice(0, 3).join(", ")}${r.skipped.length > 3 ? "…" : ""})` : ""}`)}
-  ${c.dim("Feedback later:")} npx vesta-arcade feedback ${r.slug}
+  ${c.dim("Feedback later:")} npx vesta-arcade feedback ${r.slug}${r.arena ? `\n  ${c.dim("In the AI Arena:")} ${r.arena}` : ""}
 ${r.public ? `
   ${c.dim("Published to the public arcade. This game's key is in")} ${c.dim(keysPath())}${c.dim(": keep it to publish updates.")}
   ${c.dim("Want an arcade of your own, free on Cloudflare?")} npx vesta-arcade setup

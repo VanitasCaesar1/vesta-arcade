@@ -36,6 +36,9 @@ export interface PublishOptions {
   screenshot?: boolean;
   /** MCP client name, used to tag "made with". */
   clientName?: string;
+  /** Enter the game into this AI Arena prompt (e.g. "packet-runner"), with the model that made it. */
+  arena?: string;
+  model?: string;
   out: Out;
 }
 
@@ -53,6 +56,8 @@ export interface PublishResult {
   projectFile: string;
   /** Published to the public arcade with a per-game key. */
   public: boolean;
+  /** Set when the game was entered into an AI Arena prompt. */
+  arena?: string;
 }
 
 const COVER_TYPES: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
@@ -144,6 +149,13 @@ export async function publish(opts: PublishOptions): Promise<PublishResult> {
     out.done();
   }
 
+  let arena: string | undefined;
+  if (opts.arena) {
+    if (!opts.model) throw new PublishError('Say which model made the game: --model "GPT-6 Luna" (it is shown after people vote).');
+    const r = await client.request<{ arena: string }>("POST", `/api/games/${slug}/arena`, { prompt: opts.arena, model: opts.model });
+    arena = r.arena;
+  }
+
   const next: ProjectConfig = { ...project, slug, title, dir: relDir === "." ? undefined : relDir };
   if (!project.madeWith && madeWith.length) next.madeWith = madeWith;
   if (!hasProjectFile || JSON.stringify(next) !== JSON.stringify(project)) await saveProject(root, next);
@@ -161,6 +173,7 @@ export async function publish(opts: PublishOptions): Promise<PublishResult> {
     skipped,
     projectFile: resolve(root, "vesta.json"),
     public: !!cfg.public,
+    arena,
   };
 }
 

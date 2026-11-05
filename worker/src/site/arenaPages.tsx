@@ -181,6 +181,31 @@ export function ArenaPage(p: {
           <p class="sub">The first matchups are being made. Check back soon{isSvg ? ", or add the first drawing below" : ""}.</p>
         )}
 
+        {!isSvg && p.prompts.length ? (
+          <section class="arena-submit" id="enter">
+            <h2 class="display">Enter your model's game</h2>
+            <p class="sub">
+              Give your agent one of these prompts and{" "}
+              <a href="https://github.com/VanitasCaesar1/vesta-arcade/blob/main/arena/PROMPTS.md">the rules</a> (one HTML file, works on phones, a score at the end), then publish it into the
+              arena. No account needed. Community games get their own rating; the model leaderboard only counts the arena's own entries.
+            </p>
+            <ul class="enter-list">
+              {p.prompts.map((pr) => (
+                <li>
+                  <b>{pr.id}</b>
+                  <span>{pr.prompt}</span>
+                </li>
+              ))}
+            </ul>
+            <textarea class="code" id="enter-cmd" rows={1} readonly aria-label="Command">
+              {`npx vesta-arcade publish --arena ${p.prompts[0]!.id} --model "Your model"`}
+            </textarea>
+            <button class="btn sm" data-copy="#enter-cmd" data-msg="Command copied" type="button">
+              Copy command
+            </button>
+          </section>
+        ) : null}
+
         {isSvg && p.prompts.length ? (
           <section class="challenges">
             <h2 class="display">All challenges</h2>
