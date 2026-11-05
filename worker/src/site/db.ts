@@ -23,6 +23,7 @@ export interface GameRow {
   owner_key_hash?: string | null;
   reviews_up?: number;
   reviews_total?: number;
+  screenshots?: string;
 }
 
 export interface Game {
@@ -44,6 +45,8 @@ export interface Game {
   community: boolean;
   reviewsUp: number;
   reviewsTotal: number;
+  /** How many store-page screenshots the game has (served at /shot/<slug>/<i>). */
+  screenshots: number;
   createdAt: number;
   updatedAt: number;
   recentPlays?: number;
@@ -68,6 +71,7 @@ export function toGame(r: GameRow & { recent_plays?: number }): Game {
     community: !!r.owner_key_hash,
     reviewsUp: r.reviews_up ?? 0,
     reviewsTotal: r.reviews_total ?? 0,
+    screenshots: parseJSONArray(r.screenshots).length,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     recentPlays: r.recent_plays,

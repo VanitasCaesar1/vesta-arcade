@@ -19,5 +19,5 @@ without accounts (players are anonymous; creators hold per-game keys) and on Clo
 | Developer tools (SDK, analytics, crash reports) | CLI + MCP, telemetry, feedback report, alerts | done |
 | 3D content | three.js r187 served from the play origin (`/lib/three/`), 3D arena `/arena/3d`, 3D entries via `--arena` | building |
 | Model / AI comparisons (Vesta-only) | blind arenas for games, SVG, 3D; daily challenge | done (3D planned) |
-| Media gallery on store pages | `screenshots` in vesta.json, shown as a strip on the game page | building |
-| Tags / genres | `tags` in vesta.json, chips on game pages that search the store | building |
+| Media gallery on store pages | `screenshots` in vesta.json (up to 6), strip on the game page | done |
+| Tags / genres | `tags` in vesta.json, chips on game pages that search the store | done |

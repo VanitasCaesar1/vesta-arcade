@@ -3,7 +3,7 @@ import type { Context } from "hono";
 import type { AppEnv, Env } from "../lib/env.ts";
 import { ManifestError, validateManifest, validatePath, validateSlug, type ManifestFile } from "../lib/manifest.ts";
 import { contentType, COVER_TYPES } from "../lib/mime.ts";
-import { cleanList, cleanText, ipHash, now, safeEqual, sha256 } from "../lib/util.ts";
+import { cleanList, cleanText, ipHash, now, parseJSONArray, safeEqual, sha256 } from "../lib/util.ts";
 import { notify, validWebhook } from "../lib/notify.ts";
 import { recount } from "./reviews.ts";
 import type { MiddlewareHandler } from "hono";
@@ -370,6 +370,7 @@ admin.delete("/games/:slug", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   await deletePrefix(c.env, `g/${slug}/`);
   await deletePrefix(c.env, `c/${slug}/`);
+  await deletePrefix(c.env, `s/${slug}/`);
   await c.env.DB.batch(
     ["comments", "likes", "scores", "best_scores", "reports", "arena_entries", "reviews", "achievements", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
       c.env.DB.prepare(`DELETE FROM ${t} WHERE slug = ?`).bind(slug),
@@ -479,6 +480,36 @@ admin.put("/games/:slug/cover", requireGameAccess, async (c) => {
   if (row.cover_key) await c.env.FILES.delete(row.cover_key);
   await c.env.DB.prepare("UPDATE games SET cover_key = ?, updated_at = ? WHERE slug = ?").bind(key, now(), slug).run();
   return c.json({ cover: `${siteUrl(c)}/cover/${slug}` });
+});
+
+// Store-page screenshots, up to 6. PUT /screenshots/<i> with an image body; DELETE /screenshots clears them.
+const MAX_SHOTS = 6;
+admin.put("/games/:slug/screenshots/:i", requireGameAccess, async (c) => {
+  const slug = slugParam(c);
+  const i = Number(c.req.param("i"));
+  if (!Number.isInteger(i) || i < 0 || i >= MAX_SHOTS) return c.json({ error: `screenshot index must be 0-${MAX_SHOTS - 1}` }, 400);
+  const row = await getGameRow(c.env, slug);
+  if (!row) return c.json({ error: "not found" }, 404);
+  const type = (c.req.header("content-type") ?? "").split(";")[0]!.trim();
+  const ext = COVER_TYPES[type];
+  if (!ext) return c.json({ error: "screenshots must be PNG, JPEG, WebP or GIF" }, 415);
+  const body = await c.req.arrayBuffer();
+  if (body.byteLength === 0 || body.byteLength > MAX_COVER_BYTES) return c.json({ error: "screenshots must be under 2 MB" }, 413);
+  const key = `s/${slug}/${i}-${now()}.${ext}`;
+  await c.env.FILES.put(key, body, { httpMetadata: { contentType: type } });
+  const shots = parseJSONArray(row.screenshots);
+  if (shots[i]) await c.env.FILES.delete(shots[i]!);
+  while (shots.length < i) shots.push("");
+  shots[i] = key;
+  await c.env.DB.prepare("UPDATE games SET screenshots = ?, updated_at = ? WHERE slug = ?").bind(JSON.stringify(shots.filter(Boolean)), now(), slug).run();
+  return c.json({ screenshot: `${siteUrl(c)}/shot/${slug}/${shots.filter(Boolean).indexOf(key)}` });
+});
+
+admin.delete("/games/:slug/screenshots", requireGameAccess, async (c) => {
+  const slug = slugParam(c);
+  await deletePrefix(c.env, `s/${slug}/`);
+  await c.env.DB.prepare("UPDATE games SET screenshots = '[]' WHERE slug = ?").bind(slug).run();
+  return c.json({ slug, screenshots: 0 });
 });
 
 admin.get("/games/:slug/feedback", requireGameAccess, async (c) => {

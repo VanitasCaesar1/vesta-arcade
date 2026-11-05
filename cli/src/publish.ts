@@ -149,6 +149,17 @@ export async function publish(opts: PublishOptions): Promise<PublishResult> {
     out.done();
   }
 
+  // Store-page screenshots: replaced as a set on every publish that lists them.
+  if (Array.isArray(project.screenshots)) {
+    const shots = project.screenshots.slice(0, 6).map((f) => resolve(root, f));
+    const bad = shots.filter((f) => !existsSync(f) || !COVER_TYPES[extname(f).toLowerCase()]);
+    if (bad.length) throw new PublishError(`Screenshots must be existing .png, .jpg, .webp or .gif files: ${bad.map((f) => relative(root, f)).join(", ")}`);
+    await client.request("DELETE", `/api/games/${slug}/screenshots`);
+    for (const [i, f] of shots.entries()) {
+      await client.request("PUT", `/api/games/${slug}/screenshots/${i}`, new Uint8Array(await readFile(f)), { "content-type": COVER_TYPES[extname(f).toLowerCase()]! });
+    }
+  }
+
   let arena: string | undefined;
   if (opts.arena) {
     if (!opts.model) throw new PublishError('Say which model made the game: --model "GPT-6 Luna" (it is shown after people vote).');

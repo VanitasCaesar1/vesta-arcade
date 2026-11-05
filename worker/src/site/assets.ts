@@ -222,6 +222,12 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .challenges { margin: 40px 0 10px; }
 .hot { margin: 10px 0 0; font-weight: 800; }
 .lib { margin: 10px 0 36px; }
+.shots { display: flex; gap: 10px; overflow-x: auto; margin: 10px 0 0; padding-bottom: 6px; }
+.shots a { flex: 0 0 auto; }
+.shots img { height: 120px; width: auto; display: block; border: 2px solid var(--line); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.tag { font: 600 12px var(--mono); padding: 3px 9px; border: 1px solid var(--line); text-decoration: none; color: inherit; text-transform: lowercase; }
+.tag:hover { background: var(--pop); color: var(--pop-ink); }
 .updates { list-style: none; padding: 0; margin: 0 0 40px; display: grid; gap: 4px; }
 .updates li { padding: 14px 0; border-top: 1px solid var(--hair); }
 .updates .u-game { text-decoration: none; color: inherit; font-family: var(--mono); font-size: 13px; }

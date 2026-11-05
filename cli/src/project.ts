@@ -19,6 +19,8 @@ export interface ProjectConfig {
   dir?: string;
   /** Cover image, relative to vesta.json. PNG, JPEG, WebP or GIF, under 2 MB. */
   cover?: string;
+  /** Up to 6 store-page screenshots, relative to vesta.json. Same formats and size limit as the cover. */
+  screenshots?: string[];
   sourceUrl?: string;
   keyboardRequired?: boolean;
   /** Width/height of the player, e.g. "16/9" or "9/16" for a phone game. */

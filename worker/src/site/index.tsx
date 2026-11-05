@@ -229,6 +229,20 @@ site.get("/updates", async (c) => {
   return c.html(<UpdatesPage arcade={arcade(c)} siteUrl={origin(c)} updates={await listUpdates(c.env)} />);
 });
 
+site.get("/shot/:slug/:i", async (c) => {
+  let slug: string;
+  try {
+    slug = validateSlug(c.req.param("slug"));
+  } catch {
+    return c.notFound();
+  }
+  const row = await c.env.DB.prepare("SELECT screenshots FROM games WHERE slug = ? AND hidden = 0").bind(slug).first<{ screenshots: string }>();
+  const key = row ? (JSON.parse(row.screenshots || "[]") as string[])[Number(c.req.param("i"))] : undefined;
+  const obj = key ? await c.env.FILES.get(key) : null;
+  if (!obj) return c.notFound();
+  return c.body(obj.body, 200, { "content-type": obj.httpMetadata?.contentType ?? "image/png", "cache-control": "public, max-age=3600" });
+});
+
 site.get("/library", (c) => c.html(<LibraryPage arcade={arcade(c)} siteUrl={origin(c)} />));
 
 site.get("/dev/:name", async (c) => {
@@ -391,7 +405,7 @@ site.get("/__version", (c) => c.json({ vesta: VERSION }));
 // When the arcade takes over a domain that already had a site (ORIGIN_FALLBACK=1),
 // anything the arcade doesn't serve is passed through to that site, so old
 // links like /download keep working.
-const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/", "/dev/", "/arena", "/library", "/updates"];
+const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/", "/dev/", "/arena", "/library", "/updates", "/shot/"];
 site.notFound(async (c) => {
   const path = new URL(c.req.url).pathname;
   if (c.env.ORIGIN_FALLBACK === "1" && (c.req.method === "GET" || c.req.method === "HEAD") && !OWN_PREFIXES.some((p) => path.startsWith(p))) {

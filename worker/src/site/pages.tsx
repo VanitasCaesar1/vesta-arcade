@@ -419,6 +419,15 @@ export function GamePage(p: {
           </button>
         </div>
 
+        {g.screenshots ? (
+          <div class="shots">
+            {Array.from({ length: g.screenshots }, (_, i) => (
+              <a href={`/shot/${g.slug}/${i}?v=${g.updatedAt}`} target="_blank" rel="noopener">
+                <img src={`/shot/${g.slug}/${i}?v=${g.updatedAt}`} alt={`${g.title} screenshot ${i + 1}`} loading="lazy" />
+              </a>
+            ))}
+          </div>
+        ) : null}
         <div class="game">
           <div>
             <h1 class="display">{g.title}</h1>
@@ -449,6 +458,15 @@ export function GamePage(p: {
                 {g.madeWith.map((t) => (
                   <a class="tool" href={`/?made_with=${encodeURIComponent(t)}#games`}>
                     Made with {t}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+            {g.tags.length ? (
+              <div class="tags">
+                {g.tags.map((t) => (
+                  <a class="tag" href={`/?q=${encodeURIComponent(t)}#games`}>
+                    {t}
                   </a>
                 ))}
               </div>
