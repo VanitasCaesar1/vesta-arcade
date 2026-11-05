@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Packet Runner: Cyber Pipeline</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background-color: #030712;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", monospace, sans-serif;
+    color: #e0f2fe;
+    touch-action: none;
+  }
+  #game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #020617;
+  }
+  .ui-layer {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+  }
+  .hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .stat-box {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    border-radius: 8px;
+    padding: 8px 14px;
+    backdrop-filter: blur(4px);
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #38bdf8;
+    margin-bottom: 2px;
+  }
+  .stat-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f0fdf4;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+    font-family: monospace;
+  }
+  .ttl-gauge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .ttl-bar-container {
+    width: 120px;
+    height: 10px;
+    background: #090d16;
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 3px;
+  }
+  .ttl-bar-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444, #eab308, #22c55e);
+    transition: width 0.1s linear;
+  }
+  .btn-audio {
+    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .btn-audio:active { transform: scale(0.95); }
+
+  .overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(2, 6, 23, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    pointer-events: auto;
+    z-index: 20;
+  }
+  .overlay.hidden { display: none; }
+
+  .game-title {
+    font-size: clamp(32px, 7vw, 56px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #00f0ff, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.5));
+  }
+  .tagline {
+    font-size: clamp(14px, 3.5vw, 17px);
+    color: #94a3b8;
+    max-width: 500px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .instructions-box {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 26px;
+    max-width: 420px;
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .key-badge {
+    background: #1e293b;
+    border: 1px solid rgba(56, 189, 248, 0.6);
+    color: #38bdf8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: 700;
+    display: inline-block;
+  }
+
+  .btn-play {
+    background: linear-gradient(135deg, #00f0ff, #0284c7);
+    border: none;
+    color: #020617;
+    font-weight: 800;
+    font-size: clamp(16px, 4vw, 20px);
+    padding: 14px 40px;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-play:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.9);
+  }
+  .btn-play:active {
+    transform: scale(0.98);
+  }
+
+  .game-over-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .game-over-stat {
+    background: #0b1329;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 12px;
+    border-radius: 10px;
+  }
+  .submitting-msg {
+    font-size: 13px;
+    color: #38bdf8;
+    margin-top: 12px;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+<div id="game-container">
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="ui-layer">
+    <div class="hud-top">
+      <div class="stat-box">
+        <div class="stat-label">Delivered</div>
+        <div class="stat-value" id="hudScore">0 KB</div>
+      </div>
+      <div class="stat-box ttl-gauge">
+        <div class="stat-label">TTL (Time to Live)</div>
+        <div class="ttl-bar-container">
+          <div class="ttl-bar-fill" id="ttlFill"></div>
+        </div>
+      </div>
+      <button class="btn-audio" id="audioToggle" aria-label="Toggle Sound">
+        <span id="audioIcon">🔊</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Start Screen -->
+  <div class="overlay" id="startScreen">
+    <h1 class="game-title">PACKET RUNNER</h1>
+    <p class="tagline">You are a TCP data packet racing through fiber backbones before your TTL runs out!</p>
+    <div class="instructions-box">
+      <strong>ONE BUTTON CONTROLS:</strong><br>
+      • <span class="key-badge">Tap / Space</span> to Jump.<br>
+      • <span class="key-badge">Tap in Air</span> to <strong>Phase Dash</strong> through Firewalls!
+    </div>
+    <button class="btn-play" id="btnStart">CONNECT & RUN</button>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div class="overlay hidden" id="gameOverScreen">
+    <h1 class="game-title" style="background: linear-gradient(135deg, #f43f5e, #fb7185); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">PACKET LOSS</h1>
+    <p class="tagline" id="deathReason">Connection Timed Out</p>
+    <div class="game-over-stats">
+      <div class="game-over-stat">
+        <div class="stat-label">Data Delivered</div>
+        <div class="stat-value" id="finalScore">0 KB</div>
+      </div>
+      <div class="game-over-stat">
+        <div class="stat-label">Bandwidth</div>
+        <div class="stat-value" id="finalSpeed">0 Gbps</div>
+      </div>
+    </div>
+    <button class="btn-play" id="btnRestart">PLAY AGAIN</button>
+    <div class="submitting-msg" id="submitStatus"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // --- AUDIO SYNTHESIZER (Web Audio API) ---
+  class SoundFX {
+    constructor() {
+      this.ctx = null;
+      this.muted = false;
+      this.step = 0;
+      this.bgTimer = null;
+    }
+    init() {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+          this.startMusic();
+        }
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    }
+    toggleMute() {
+      this.muted = !this.muted;
+      return this.muted;
+    }
+    playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.15, slideTo = null) {
+      if (this.muted || !this.ctx) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), this.ctx.currentTime + duration);
+        }
+        gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      } catch (e) {}
+    }
+    jump() {
+      this.playTone(240, 'square', 0.14, 0.12, 600);
+    }
+    dash() {
+      this.playTone(700, 'sawtooth', 0.22, 0.15, 180);
+    }
+    pickup() {
+      this.playTone(880, 'sine', 0.08, 0.14, 1760);
+    }
+    overdrive() {
+      this.playTone(440, 'triangle', 0.35, 0.2, 1100);
+    }
+    hit() {
+      this.playTone(140, 'sawtooth', 0.3, 0.25, 40);
+    }
+    startMusic() {
+      if (!this.ctx || this.bgTimer) return;
+      const notes = [130.81, 146.83, 164.81, 196.00, 220.00, 196.00, 164.81, 146.83];
+      this.bgTimer = setInterval(() => {
+        if (this.muted || !this.ctx || this.ctx.state !== 'running') return;
+        const f = notes[this.step % notes.length];
+        this.step++;
+        try {
+          const osc = this.ctx.createOscillator();
+          const g = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, this.ctx.currentTime);
+          g.gain.setValueAtTime(0.02, this.ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.16);
+          osc.connect(g);
+          g.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.18);
+        } catch (e) {}
+      }, 190);
+    }
+  }
+
+  const sfx = new SoundFX();
+
+  // --- CANVAS & RESIZE ---
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // --- GAME STATE ---
+  let state = 'start'; // start, playing, gameover
+  let score = 0; // Bytes delivered
+  let ttl = 64; // Time to live (health/timer)
+  let speed = 400; // px/sec
+  const baseSpeed = 400;
+  let distance = 0;
+  let feverMode = false;
+  let feverTimer = 0;
+  let screenShake = 0;
+  let lastTime = performance.now();
+  let paused = false;
+
+  const milestonesReached = {
+    m1: false, // 10k
+    m2: false, // 50k
+    m3: false, // 150k
+    m4: false  // 300k
+  };
+
+  // --- PLAYER (DATA PACKET) ---
+  const player = {
+    x: 120,
+    y: 200,
+    w: 34,
+    h: 22,
+    vx: 0,
+    vy: 0,
+    grounded: false,
+    canDash: true,
+    isDashing: false,
+    dashTimer: 0,
+    trail: [],
+    jumpForce: -580,
+    gravity: 1450,
+    reset() {
+      this.x = Math.max(90, W * 0.15);
+      this.y = H * 0.5;
+      this.vx = 0;
+      this.vy = 0;
+      this.grounded = false;
+      this.canDash = true;
+      this.isDashing = false;
+      this.dashTimer = 0;
+      this.trail = [];
+    }
+  };
+
+  // --- WORLD CHUNKS ---
+  let platforms = [];
+  let bits = [];
+  let hazards = [];
+  let floatingTexts = [];
+  let particles = [];
+  let nextSpawnX = 0;
+
+  function initWorld() {
+    platforms = [
+      { x: 0, y: H * 0.72, w: W + 400, h: 40, type: 'fiber' }
+    ];
+    bits = [];
+    hazards = [];
+    floatingTexts = [];
+    particles = [];
+    nextSpawnX = W + 200;
+  }
+
+  function spawnChunk(startX) {
+    const groundY = H * (0.64 + Math.random() * 0.16);
+    const platLen = 320 + Math.random() * 420;
+
+    platforms.push({
+      x: startX,
+      y: groundY,
+      w: platLen,
+      h: 40,
+      type: Math.random() > 0.3 ? 'fiber' : 'copper'
+    });
+
+    // Elevated bypass rail
+    if (Math.random() > 0.45) {
+      platforms.push({
+        x: startX + 90,
+        y: groundY - 110,
+        w: 200 + Math.random() * 180,
+        h: 18,
+        type: 'rail'
+      });
+      for (let i = 0; i < 4; i++) {
+        bits.push({
+          x: startX + 120 + i * 40,
+          y: groundY - 140,
+          type: 'ack',
+          r: 9,
+          collected: false
+        });
+      }
+    }
+
+    // Bits on ground platform
+    const numBits = 3 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < numBits; i++) {
+      bits.push({
+        x: startX + 50 + i * 45,
+        y: groundY - 26,
+        type: Math.random() > 0.88 ? 'fever' : (Math.random() > 0.65 ? 'ack' : 'bit'),
+        r: 8,
+        collected: false
+      });
+    }
+
+    // Hazards
+    if (Math.random() > 0.3) {
+      const hzType = Math.random() > 0.55 ? 'firewall' : 'malware';
+      hazards.push({
+        x: startX + platLen * 0.65,
+        y: hzType === 'firewall' ? groundY - 80 : groundY - 26,
+        w: hzType === 'firewall' ? 18 : 26,
+        h: hzType === 'firewall' ? 80 : 26,
+        type: hzType,
+        active: true
+      });
+    }
+
+    const gap = 110 + Math.random() * 140;
+    return startX + platLen + gap;
+  }
+
+  // --- INPUT: ONE BUTTON ---
+  function handleOneButtonInput() {
+    sfx.init();
+    if (state !== 'playing') return;
+
+    if (player.grounded) {
+      player.vy = player.jumpForce;
+      player.grounded = false;
+      sfx.jump();
+      addDust(player.x, player.y + player.h, '#00f0ff');
+    } else if (player.canDash && !player.isDashing) {
+      player.isDashing = true;
+      player.dashTimer = 0.22;
+      player.canDash = false;
+      player.vy = 0;
+      sfx.dash();
+      screenShake = 6;
+      floatingTexts.push({
+        text: 'PHASE DASH!',
+        x: player.x + 20,
+        y: player.y - 20,
+        vy: -40,
+        color: '#00ffff',
+        life: 0.6
+      });
+      for (let i = 0; i < 12; i++) {
+        particles.push({
+          x: player.x,
+          y: player.y + player.h / 2,
+          vx: -speed * 0.8 - Math.random() * 250,
+          vy: (Math.random() - 0.5) * 140,
+          life: 0.35,
+          color: '#00f0ff',
+          size: 3
+        });
+      }
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.key === ' ') {
+      e.preventDefault();
+      handleOneButtonInput();
+    }
+  });
+
+  window.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;
+    handleOneButtonInput();
+  });
+
+  function addDust(x, y, color) {
+    for (let i = 0; i < 6; i++) {
+      particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 100 - speed * 0.2,
+        vy: -Math.random() * 80,
+        life: 0.3,
+        color,
+        size: 3
+      });
+    }
+  }
+
+  function checkMilestones() {
+    if (!milestonesReached.m1 && score >= 10000) {
+      milestonesReached.m1 = true;
+      window.vesta?.milestone?.('lan-escaped');
+    }
+    if (!milestonesReached.m2 && score >= 50000) {
+      milestonesReached.m2 = true;
+      window.vesta?.milestone?.('router-hop-5');
+    }
+    if (!milestonesReached.m3 && score >= 150000) {
+      milestonesReached.m3 = true;
+      window.vesta?.milestone?.('fiber-backbone');
+    }
+    if (!milestonesReached.m4 && score >= 300000) {
+      milestonesReached.m4 = true;
+      window.vesta?.milestone?.('datacenter-reached');
+    }
+  }
+
+  async function triggerGameOver(reason) {
+    if (state === 'gameover') return;
+    state = 'gameover';
+    sfx.hit();
+    screenShake = 14;
+
+    const finalScoreKb = Math.floor(score / 1024);
+    document.getElementById('deathReason').textContent = reason || 'Connection Dropped';
+    document.getElementById('finalScore').textContent = `${finalScoreKb.toLocaleString()} KB`;
+    document.getElementById('finalSpeed').textContent = `${(speed / 100).toFixed(1)} Gbps`;
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+
+    const submitStatus = document.getElementById('submitStatus');
+    submitStatus.textContent = 'Submitting score...';
+
+    if (window.vesta?.submitScore) {
+      try {
+        await window.vesta.submitScore(finalScoreKb, { label: 'Kilobytes Delivered' });
+        submitStatus.textContent = 'Score submitted!';
+      } catch (e) {
+        submitStatus.textContent = '';
+      }
+    } else {
+      submitStatus.textContent = '';
+    }
+
+    document.getElementById('btnRestart').focus();
+  }
+
+  function startGame() {
+    sfx.init();
+    state = 'playing';
+    score = 0;
+    ttl = 64;
+    speed = baseSpeed;
+    distance = 0;
+    feverMode = false;
+    feverTimer = 0;
+    screenShake = 0;
+    player.reset();
+    initWorld();
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('gameOverScreen').classList.add('hidden');
+  }
+
+  document.getElementById('btnStart').addEventListener('click', startGame);
+  document.getElementById('btnRestart').addEventListener('click', startGame);
+
+  const audioBtn = document.getElementById('audioToggle');
+  const audioIcon = document.getElementById('audioIcon');
+  audioBtn.addEventListener('click', () => {
+    sfx.init();
+    const isMuted = sfx.toggleMute();
+    audioIcon.textContent = isMuted ? '🔇' : '🔊';
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    paused = document.hidden;
+    if (!paused) lastTime = performance.now();
+  });
+
+  // --- UPDATE ---
+  function update(dt) {
+    if (state !== 'playing' || paused) return;
+
+    speed = baseSpeed + Math.min(distance * 0.06, 500);
+    const currentSpeed = feverMode ? speed * 1.5 : (player.isDashing ? speed * 2.2 : speed);
+    const dx = currentSpeed * dt;
+    distance += dx;
+
+    score += Math.floor(dx * 4.5);
+    checkMilestones();
+
+    if (feverMode) {
+      feverTimer -= dt;
+      if (feverTimer <= 0) feverMode = false;
+    }
+
+    // TTL decays over time; collecting packets recharges it!
+    ttl -= dt * 1.8;
+    if (ttl <= 0) {
+      triggerGameOver('TTL Expired (Hop Limit Reached)');
+      return;
+    }
+
+    if (player.isDashing) {
+      player.dashTimer -= dt;
+      if (player.dashTimer <= 0) player.isDashing = false;
+    } else {
+      player.vy += player.gravity * dt;
+    }
+
+    player.y += player.vy * dt;
+    player.x = Math.max(90, W * 0.15);
+
+    while (nextSpawnX < distance + W + 600) {
+      nextSpawnX = spawnChunk(nextSpawnX);
+    }
+
+    // Collision with platforms
+    player.grounded = false;
+    for (const plat of platforms) {
+      const screenX = plat.x - distance;
+      if (
+        player.x + player.w > screenX &&
+        player.x < screenX + plat.w &&
+        player.y + player.h >= plat.y &&
+        player.y + player.h - player.vy * dt <= plat.y + 16 &&
+        player.vy >= 0
+      ) {
+        player.y = plat.y - player.h;
+        player.vy = 0;
+        player.grounded = true;
+        player.canDash = true;
+      }
+    }
+
+    if (player.y > H + 100) {
+      triggerGameOver('Packet Dropped into the Void');
+      return;
+    }
+
+    // Bits
+    for (const bit of bits) {
+      if (bit.collected) continue;
+      const bitScreenX = bit.x - distance;
+
+      if (feverMode) {
+        const bdx = player.x - bitScreenX;
+        const bdy = player.y - bit.y;
+        const dist = Math.hypot(bdx, bdy);
+        if (dist < 260) {
+          bit.x += (bdx / dist) * 450 * dt;
+          bit.y += (bdy / dist) * 450 * dt;
+        }
+      }
+
+      if (
+        player.x + player.w > bitScreenX - bit.r &&
+        player.x < bitScreenX + bit.r &&
+        player.y + player.h > bit.y - bit.r &&
+        player.y < bit.y + bit.r
+      ) {
+        bit.collected = true;
+        if (bit.type === 'fever') {
+          feverMode = true;
+          feverTimer = 5.0;
+          sfx.overdrive();
+          ttl = Math.min(64, ttl + 20);
+          floatingTexts.push({ text: '10G OVERDRIVE!', x: player.x, y: player.y - 20, vy: -50, color: '#fbbf24', life: 1 });
+        } else if (bit.type === 'ack') {
+          score += 1500;
+          ttl = Math.min(64, ttl + 6);
+          player.canDash = true;
+          sfx.pickup();
+          floatingTexts.push({ text: '+ACK', x: player.x, y: player.y - 15, vy: -35, color: '#4ade80', life: 0.6 });
+        } else {
+          score += 500;
+          ttl = Math.min(64, ttl + 2.5);
+          sfx.pickup();
+        }
+      }
+    }
+
+    // Hazards
+    for (const h of hazards) {
+      if (!h.active) continue;
+      const hScreenX = h.x - distance;
+      if (
+        player.x + player.w > hScreenX &&
+        player.x < hScreenX + h.w &&
+        player.y + player.h > h.y &&
+        player.y < h.y + h.h
+      ) {
+        if (player.isDashing || feverMode) {
+          h.active = false;
+          sfx.hit();
+          screenShake = 8;
+          score += 2000;
+          floatingTexts.push({ text: 'BYPASS!', x: hScreenX, y: h.y - 10, vy: -40, color: '#38bdf8', life: 0.7 });
+          for (let p = 0; p < 10; p++) {
+            particles.push({
+              x: hScreenX + h.w / 2,
+              y: h.y + h.h / 2,
+              vx: (Math.random() - 0.5) * 260,
+              vy: (Math.random() - 0.5) * 260,
+              life: 0.45,
+              color: '#ef4444',
+              size: 4
+            });
+          }
+        } else {
+          h.active = false;
+          ttl -= 24;
+          sfx.hit();
+          screenShake = 12;
+          floatingTexts.push({ text: '-24 TTL!', x: player.x, y: player.y - 20, vy: -40, color: '#f43f5e', life: 0.8 });
+          if (ttl <= 0) {
+            triggerGameOver('Firewall Packet Inspection Drop');
+            return;
+          }
+        }
+      }
+    }
+
+    // Trail
+    player.trail.unshift({ x: player.x, y: player.y, isDashing: player.isDashing, fever: feverMode });
+    if (player.trail.length > 10) player.trail.pop();
+
+    // Floating text
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+      const ft = floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.life -= dt;
+      if (ft.life <= 0) floatingTexts.splice(i, 1);
+    }
+
+    // Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const pt = particles[i];
+      pt.x += pt.vx * dt;
+      pt.y += pt.vy * dt;
+      pt.life -= dt;
+      if (pt.life <= 0) particles.splice(i, 1);
+    }
+
+    // Cleanup offscreen
+    platforms = platforms.filter(p => p.x - distance + p.w > -200);
+    bits = bits.filter(b => b.x - distance > -200 && !b.collected);
+    hazards = hazards.filter(h => h.x - distance + h.w > -200 && h.active);
+
+    // Update HUD
+    const kb = Math.floor(score / 1024);
+    document.getElementById('hudScore').textContent = `${kb.toLocaleString()} KB`;
+    const ttlPercent = Math.max(0, Math.min(100, (ttl / 64) * 100));
+    document.getElementById('ttlFill').style.width = `${ttlPercent}%`;
+  }
+
+  // --- DRAW ---
+  function draw() {
+    ctx.save();
+
+    if (screenShake > 0) {
+      const sx = (Math.random() - 0.5) * screenShake;
+      const sy = (Math.random() - 0.5) * screenShake;
+      ctx.translate(sx, sy);
+      screenShake = Math.max(0, screenShake - 0.5);
+    }
+
+    ctx.fillStyle = feverMode ? '#0f0524' : '#030712';
+    ctx.fillRect(0, 0, W, H);
+
+    // Background grid
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = feverMode ? 'rgba(236, 72, 153, 0.12)' : 'rgba(0, 240, 255, 0.07)';
+    const gridOffset = (distance * 0.3) % 40;
+    for (let x = -gridOffset; x < W; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    // Platforms
+    for (const plat of platforms) {
+      const sx = plat.x - distance;
+      if (sx + plat.w < 0 || sx > W) continue;
+
+      if (plat.type === 'fiber') {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(sx, plat.y, plat.w, plat.h);
+
+        const grad = ctx.createLinearGradient(0, plat.y, 0, plat.y + 6);
+        grad.addColorStop(0, '#38bdf8');
+        grad.addColorStop(1, '#0284c7');
+        ctx.fillStyle = grad;
+        ctx.fillRect(sx, plat.y, plat.w, 4);
+
+        ctx.fillStyle = '#ffffff';
+        const pulseX = sx + ((plat.x + distance * 1.5) % Math.max(10, plat.w));
+        ctx.fillRect(pulseX - 12, plat.y - 1, 24, 6);
+      } else if (plat.type === 'rail') {
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillRect(sx, plat.y, plat.w, 4);
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+        ctx.fillRect(sx, plat.y + 4, plat.w, plat.h - 4);
+      } else {
+        ctx.fillStyle = '#1e1b4b';
+        ctx.fillRect(sx, plat.y, plat.w, plat.h);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(sx, plat.y, plat.w, 3);
+      }
+    }
+
+    // Collectibles
+    for (const bit of bits) {
+      const sx = bit.x - distance;
+      if (sx < -20 || sx > W + 20) continue;
+
+      ctx.save();
+      ctx.translate(sx, bit.y);
+
+      if (bit.type === 'fever') {
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowColor = '#fbbf24';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(0, 0, bit.r + 2 + Math.sin(distance * 0.02) * 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('10G', 0, 0);
+      } else if (bit.type === 'ack') {
+        ctx.fillStyle = '#4ade80';
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(-bit.r, -bit.r, bit.r * 2, bit.r * 2);
+        ctx.fillStyle = '#052e16';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('ACK', 0, 0);
+      } else {
+        ctx.fillStyle = '#38bdf8';
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(0, 0, bit.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Hazards
+    for (const h of hazards) {
+      const sx = h.x - distance;
+      if (sx < -50 || sx > W + 50) continue;
+
+      ctx.save();
+      if (h.type === 'firewall') {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.fillRect(sx, h.y, h.w, h.h);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 10;
+        ctx.strokeRect(sx, h.y, h.w, h.h);
+
+        ctx.fillStyle = '#f87171';
+        const scanY = h.y + ((distance * 0.8) % h.h);
+        ctx.fillRect(sx, scanY, h.w, 4);
+
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = '#fee2e2';
+        ctx.save();
+        ctx.translate(sx + h.w / 2, h.y + h.h / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText('FIREWALL', 0, 3);
+        ctx.restore();
+      } else {
+        ctx.translate(sx + h.w / 2, h.y + h.h / 2);
+        ctx.rotate(distance * 0.05);
+        ctx.fillStyle = '#f43f5e';
+        ctx.shadowColor = '#f43f5e';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        const spikes = 6;
+        for (let i = 0; i < spikes * 2; i++) {
+          const r = i % 2 === 0 ? h.w / 2 : h.w / 4;
+          const a = (i / (spikes * 2)) * Math.PI * 2;
+          ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Trail
+    for (let i = 0; i < player.trail.length; i++) {
+      const t = player.trail[i];
+      const alpha = (1 - i / player.trail.length) * 0.5;
+      ctx.fillStyle = t.fever ? `rgba(251, 191, 36, ${alpha})` : (t.isDashing ? `rgba(0, 240, 255, ${alpha})` : `rgba(59, 130, 246, ${alpha})`);
+      ctx.fillRect(t.x - i * 2, t.y, player.w * (1 - i * 0.05), player.h * (1 - i * 0.05));
+    }
+
+    // Player Data Packet
+    ctx.save();
+    ctx.translate(player.x, player.y);
+
+    ctx.fillStyle = feverMode ? '#fbbf24' : (player.isDashing ? '#ffffff' : '#00f0ff');
+    ctx.shadowColor = feverMode ? '#fbbf24' : (player.isDashing ? '#00f0ff' : '#38bdf8');
+    ctx.shadowBlur = player.isDashing ? 22 : 12;
+
+    ctx.fillRect(0, 0, player.w, player.h);
+
+    ctx.fillStyle = '#030712';
+    ctx.fillRect(3, 3, player.w - 6, 4);
+    ctx.fillStyle = feverMode ? '#f59e0b' : '#0284c7';
+    ctx.fillRect(3, 9, 8, 8);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 8px monospace';
+    ctx.fillText('TCP', 14, 16);
+
+    ctx.restore();
+
+    // Particles
+    for (const pt of particles) {
+      ctx.fillStyle = pt.color;
+      ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+    }
+
+    // Floating text
+    for (const ft of floatingTexts) {
+      ctx.save();
+      ctx.font = 'bold 14px monospace';
+      ctx.fillStyle = ft.color;
+      ctx.shadowColor = ft.color;
+      ctx.shadowBlur = 8;
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = Math.max(0, ft.life);
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  // --- LOOP ---
+  function loop(currentTime) {
+    let dt = (currentTime - lastTime) / 1000;
+    lastTime = currentTime;
+
+    if (dt > 0.1) dt = 0.1;
+
+    update(dt);
+    draw();
+
+    requestAnimationFrame(loop);
+  }
+
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

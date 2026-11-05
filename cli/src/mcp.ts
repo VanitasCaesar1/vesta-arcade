@@ -7,7 +7,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { Client } from "./client.ts";
-import { loadConfig, NotConfiguredError, requireConfig } from "./config.ts";
+import { configFor, loadConfig, NotConfiguredError, PUBLIC_ARCADE, requireConfig } from "./config.ts";
 import { findProjectRoot, loadProject } from "./project.ts";
 import { publish } from "./publish.ts";
 import { stderrOut } from "./ui.ts";
@@ -101,8 +101,9 @@ export async function runMcp(): Promise<void> {
     },
     async (args) => {
       try {
-        const client = new Client(await requireConfig());
-        return text(await client.feedback(await slugFor(args.slug, args.dir), args.days ?? 14));
+        const slug = await slugFor(args.slug, args.dir);
+        const client = new Client(await configFor(slug));
+        return text(await client.feedback(slug, args.days ?? 14));
       } catch (e) {
         return fail(e);
       }
@@ -147,8 +148,8 @@ export async function runMcp(): Promise<void> {
         const type = types[extname(args.image).toLowerCase()];
         if (!type) throw new Error("Cover must be a .png, .jpg, .webp or .gif file.");
         if (!existsSync(args.image)) throw new Error(`${args.image} does not exist.`);
-        const client = new Client(await requireConfig());
         const slug = await slugFor(args.slug, args.dir);
+        const client = new Client(await configFor(slug));
         const r = await client.request<{ cover: string }>("PUT", `/api/games/${slug}/cover`, new Uint8Array(await readFile(args.image)), { "content-type": type });
         return text(`Cover updated: ${r.cover}`);
       } catch (e) {
@@ -167,7 +168,7 @@ export async function runMcp(): Promise<void> {
     },
     async () => {
       const cfg = await loadConfig();
-      if (!cfg) return text(new NotConfiguredError().message + "\nThese need the user's terminal (setup opens a browser to sign in to Cloudflare).");
+      if (!cfg) return text(`No arcade of the user's own is configured. publish_game still works: it publishes to the public arcade at ${PUBLIC_ARCADE} with no account, and saves a per-game key so later publishes update the same game.\n` + new NotConfiguredError().message + "\nSetup needs the user's terminal (it opens a browser to sign in to Cloudflare).");
       try {
         const me = await new Client(cfg).me();
         return text(`Connected to ${me.arcade} at ${me.siteUrl} (Vesta ${me.version}). Games are served from ${me.playUrl}.`);

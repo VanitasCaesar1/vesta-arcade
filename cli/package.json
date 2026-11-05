@@ -1,12 +1,12 @@
 {
-  "name": "vesta-cli",
-  "version": "0.1.0",
-  "description": "Publish AI-made web games to your own Vesta arcade from the terminal or any MCP client. Free on Cloudflare.",
+  "name": "vesta-arcade",
+  "version": "0.1.1",
+  "description": "Publish AI-made web games in one command and get a public link, no account. Players' crashes and comments come back to your coding agent. MCP server included.",
   "license": "MIT",
   "type": "module",
   "bin": {
     "vesta": "dist/cli.js",
-    "vesta-cli": "dist/cli.js"
+    "vesta-arcade": "dist/cli.js"
   },
   "files": [
     "dist",

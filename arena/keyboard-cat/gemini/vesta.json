@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
+  "slug": "arena-2d85a9f3",
+  "title": "Keyboard Cat",
+  "madeWith": [
+    "Gemini 3.8 Flash"
+  ]
+}

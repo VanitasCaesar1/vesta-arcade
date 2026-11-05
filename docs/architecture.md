@@ -98,4 +98,4 @@ Pages are rendered on the server with Hono's JSX: no client framework, no build 
 
 ## Deploying
 
-`npx vesta-cli setup` ships the Worker pre-bundled inside the npm package (`cli/dist/worker`). It runs wrangler to: sign in, create the R2 bucket and D1 database, deploy the play Worker, apply migrations, deploy the site Worker with the play Worker's URL, and set a random 256-bit `ADMIN_TOKEN` secret. Running it again upgrades the same Workers in place and keeps the token unless `--rotate-token` is passed.
+`npx vesta-arcade setup` ships the Worker pre-bundled inside the npm package (`cli/dist/worker`). It runs wrangler to: sign in, create the R2 bucket and D1 database, deploy the play Worker, apply migrations, deploy the site Worker with the play Worker's URL, and set a random 256-bit `ADMIN_TOKEN` secret. Running it again upgrades the same Workers in place and keeps the token unless `--rotate-token` is passed.

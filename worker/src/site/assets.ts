@@ -203,6 +203,46 @@ textarea:focus, input:focus { outline: none; box-shadow: 4px 4px 0 var(--pop); }
 form.fb { display: grid; gap: 14px; }
 form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.more { margin: 56px 0 24px; }
+.arena-strip { display: grid; grid-template-columns: auto auto 1fr auto; gap: 14px; align-items: center; margin: 22px 0 0; padding: 14px 18px; border: 2px solid var(--line); box-shadow: 5px 5px 0 var(--pop); text-decoration: none; color: inherit; }
+.arena-strip:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--pop); }
+.arena-strip .k { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; background: var(--pop); color: var(--pop-ink); padding: 3px 7px; }
+.arena-strip b { font-size: 24px; }
+.arena-strip .go { font-weight: 700; text-decoration: underline; }
+@media (max-width: 700px) { .arena-strip { grid-template-columns: auto 1fr; } .arena-strip span:nth-of-type(2) { grid-column: 1 / -1; } }
+.arena-head { margin: 24px 0 18px; }
+.arena-head .k, .arena-prompt .k, .arena-reveal .k { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; background: var(--pop); color: var(--pop-ink); padding: 3px 7px; display: inline-block; }
+.arena-head h1 { margin: 10px 0 8px; font-size: clamp(32px, 5vw, 60px); line-height: 1; }
+.arena-prompt { margin: 0 0 18px; padding: 14px 16px; border: 2px solid var(--line); display: grid; gap: 8px; font-size: 18px; }
+.arena-prompt .k { justify-self: start; }
+.arena-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 800px) { .arena-pair { grid-template-columns: 1fr; } }
+.arena-side .stage { margin: 0; max-height: 62vh; }
+.arena-label { font-size: 22px; margin: 0 0 8px; }
+.arena-vote { margin: 22px 0; padding: 18px; border: 2px solid var(--line); display: grid; gap: 12px; text-align: center; }
+.arena-vote .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.arena-vote .btn[disabled] { opacity: .45; cursor: not-allowed; }
+.arena-reveal { display: grid; gap: 16px; }
+.arena-reveal .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.arena-reveal .pair > div { display: grid; gap: 6px; justify-items: center; padding: 12px; border: 2px solid var(--pop); }
+.arena-reveal b { font-family: var(--display); font-stretch: 112%; font-weight: 900; font-size: 22px; }
+.arena-foot { font-size: 13px; opacity: .75; margin: 24px 0; }
+.board { width: 100%; border-collapse: collapse; margin: 8px 0 28px; font-size: 16px; }
+.board th, .board td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hair); }
+.board th { font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
+.board tr.top td { background: var(--pop); color: var(--pop-ink); }
+.board small { opacity: .7; }
+.board-prompt { margin: 28px 0; }
+.board-prompt ul { list-style: none; padding: 0; margin: 10px 0 0; border: 2px solid var(--line); }
+.board-prompt li { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; padding: 10px 12px; border-top: 1px solid var(--hair); align-items: center; }
+.board-prompt li:first-child { border-top: 0; }
+.byline .community { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; border: 1px solid currentColor; padding: 2px 6px; }
+.report .linkbtn { font-size: 12px; opacity: .6; }
+.more h2 { margin: 0 0 18px; }
+.challenge { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 14px; padding: 12px 16px; border: 2px solid var(--pop); font-size: 17px; }
+.challenge .k { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; background: var(--pop); color: var(--pop-ink); padding: 3px 7px; }
+.challenge b { font-family: var(--display); font-stretch: 125%; font-weight: 900; letter-spacing: .04em; }
+.challenge .btn { margin-left: auto; }
 .notice { padding: 10px 14px; border: 2px solid var(--ok); color: var(--ok); font-size: 14px; }
 .notice.err { border-color: var(--bad); color: var(--bad); }
 .comments { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 20px; }
@@ -320,31 +360,77 @@ export const APP_JS = String.raw`(function () {
 
   // Load the game only when someone presses play: no autoplay surprises, and
   // a play is counted only when a person asked for one.
-  var stage = $(".stage");
-  function start() {
-    if (!stage || $("iframe", stage)) return;
+  var stages = $$(".stage");
+  var stage = stages[0] || null;
+  function start(target) {
+    var st = target && target.nodeType === 1 ? target : stage;
+    if (!st || $("iframe", st)) return;
     var f = document.createElement("iframe");
-    var share = stage.getAttribute("data-share-url");
-    f.src = stage.getAttribute("data-src") + (share ? "#vesta-share=" + encodeURIComponent(share) : "");
-    f.title = stage.getAttribute("data-title") || "Game";
-    f.allow = "autoplay; fullscreen; gamepad; accelerometer; gyroscope; clipboard-write; xr-spatial-tracking";
+    var share = st.getAttribute("data-share-url");
+    var challenge = st.getAttribute("data-challenge");
+    var hash = [];
+    if (share) hash.push("vesta-share=" + encodeURIComponent(share));
+    if (challenge) hash.push("vesta-c=" + encodeURIComponent(challenge));
+    if (st.getAttribute("data-title") && !st.hasAttribute("data-arena")) hash.push("vesta-t=" + encodeURIComponent(st.getAttribute("data-title")));
+    f.src = st.getAttribute("data-src") + (hash.length ? "#" + hash.join("&") : "");
+    f.title = st.getAttribute("data-title") || "Game";
+    f.allow = "autoplay; fullscreen; gamepad; accelerometer; gyroscope; clipboard-write; web-share; xr-spatial-tracking";
     f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-downloads");
-    stage.innerHTML = "";
-    stage.appendChild(f);
+    st.innerHTML = "";
+    st.appendChild(f);
+    st.setAttribute("data-started", "1");
     f.addEventListener("load", function () { try { f.focus(); } catch (e) {} });
     setTimeout(function () { try { f.focus(); } catch (e) {} }, 300);
-    if (window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 700) fullscreen();
+    if (!st.hasAttribute("data-arena") && window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 700) fullscreen();
+    arenaReady();
   }
   function fullscreen() {
     if (!stage) return;
-    start();
+    start(stage);
     var el = stage, fn = el.requestFullscreen || el.webkitRequestFullscreen;
     var p = fn && fn.call(el);
     if (p && p.catch) p.catch(function () {});
   }
-  $$("[data-start]").forEach(function (b) { b.addEventListener("click", start); });
+  stages.forEach(function (st) {
+    $$("[data-start]", st).forEach(function (b) { b.addEventListener("click", function () { start(st); }); });
+  });
+  $$("[data-start]").forEach(function (b) { if (!b.closest(".stage")) b.addEventListener("click", function () { start(stage); }); });
   $$("[data-fullscreen]").forEach(function (b) { b.addEventListener("click", fullscreen); });
-  if (stage && /[?&]play=1/.test(location.search)) start();
+  if (stage && /[?&]play=1/.test(location.search)) start(stage);
+
+  // AI Arena: voting unlocks once both games have been started; the vote reveals the models.
+  var vote = $(".arena-vote");
+  function arenaReady() {
+    if (!vote) return;
+    var all = $$(".stage[data-arena]");
+    var played = all.filter(function (x) { return x.hasAttribute("data-started"); }).length;
+    var ready = played === all.length;
+    $$("[data-vote]", vote).forEach(function (b) { b.disabled = !ready; });
+    var hint = $("[data-vote-hint]", vote);
+    if (hint) hint.textContent = ready ? "Which one was more fun?" : played ? "Now play the other one." : "Play both, then vote.";
+  }
+  if (vote) {
+    arenaReady();
+    $$("[data-vote]", vote).forEach(function (b) {
+      b.addEventListener("click", function () {
+        $$("[data-vote]", vote).forEach(function (x) { x.disabled = true; });
+        fetch("/api/arena/vote", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ m: vote.getAttribute("data-matchup"), winner: b.getAttribute("data-vote") }) })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (!j.a || !j.b) throw new Error(j.error || "failed");
+            ["a", "b"].forEach(function (k) {
+              var who = $("[data-reveal=" + k + "]", vote); who.textContent = j[k].model + (j[k].lab ? " (" + j[k].lab + ")" : "");
+              var link = $("[data-link=" + k + "]", vote); link.href = "/g/" + j[k].slug;
+            });
+            var row = b.parentNode; if (row) row.hidden = true;
+            var hint = $("[data-vote-hint]", vote);
+            if (hint) hint.textContent = (j.winner === "tie" ? "You called it a tie." : "You picked " + j[j.winner].model + ".") + (j.counted ? "" : " (You already voted on this pair today, so this one wasn't counted.)");
+            $(".arena-reveal", vote).hidden = false;
+          })
+          .catch(function (e) { toast(e.message || "Vote failed"); arenaReady(); });
+      });
+    });
+  }
 
   $$("[data-like]").forEach(function (b) {
     var key = "liked:" + b.getAttribute("data-like");

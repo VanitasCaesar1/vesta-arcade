@@ -3,13 +3,59 @@ import type { Context } from "hono";
 import type { AppEnv, Env } from "../lib/env.ts";
 import { ManifestError, validateManifest, validatePath, validateSlug, type ManifestFile } from "../lib/manifest.ts";
 import { contentType, COVER_TYPES } from "../lib/mime.ts";
-import { cleanList, cleanText, ipHash, now, safeEqual } from "../lib/util.ts";
-import { endSession, isAdmin, requireAdmin, startSession, tokenConfigured } from "./auth.ts";
+import { cleanList, cleanText, ipHash, now, safeEqual, sha256 } from "../lib/util.ts";
+import type { MiddlewareHandler } from "hono";
+import { bearer, endSession, isAdmin, requireAdmin, startSession, tokenConfigured } from "./auth.ts";
+import { recordVote, verifyMatchup } from "./arena.ts";
 import { feedbackReport, getGame, getGameRow, listGames, reportMarkdown, topScores, type Sort } from "./db.ts";
 
 export const VERSION = "0.1.0";
 const KEEP_VERSIONS = 3;
 const MAX_COVER_BYTES = 2 * 1024 * 1024;
+/** Limits for community games (open publishing). The owner's own games use the manifest limits. */
+const COMMUNITY_MAX_BYTES = 30 * 1024 * 1024;
+const COMMUNITY_NEW_GAMES_PER_DAY = 5;
+const COMMUNITY_VERSIONS_PER_HOUR = 12;
+const REPORTS_TO_HIDE = 3;
+
+const keyHash = (key: string) => sha256(`vesta-game-key:${key}`);
+
+function slugify(s: string): string {
+  return (
+    s
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40)
+      .replace(/-+$/, "") || "game"
+  );
+}
+
+/**
+ * Admin, or the holder of a community game's key acting on that game only.
+ * Keys are random 32-byte secrets handed out once by POST /api/claim; only their hash is stored.
+ */
+const requireGameAccess: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const token = bearer(c);
+  if (token && !(tokenConfigured(c) && safeEqual(token, c.env.ADMIN_TOKEN))) {
+    let slug: string;
+    try {
+      slug = validateSlug(c.req.param("slug"));
+    } catch {
+      return c.json({ error: "bad slug" }, 400);
+    }
+    const row = await c.env.DB.prepare("SELECT owner_key_hash FROM games WHERE slug = ?").bind(slug).first<{ owner_key_hash: string | null }>();
+    if (row?.owner_key_hash && safeEqual(row.owner_key_hash, await keyHash(token))) {
+      c.set("gameKey" as never, true as never);
+      return next();
+    }
+    return c.json({ error: "this key can't change that game" }, 401);
+  }
+  return requireAdmin(c, next);
+};
+const viaGameKey = (c: Context<AppEnv>) => !!c.get("gameKey" as never);
 
 export const api = new Hono<AppEnv>();
 
@@ -35,6 +81,78 @@ api.get("/games", async (c) => {
   const sort = (["trending", "new", "top"].includes(c.req.query("sort") ?? "") ? c.req.query("sort") : "trending") as Sort;
   const games = await listGames(c.env, { sort, tool: c.req.query("made_with") || undefined, includeHidden: await isAdmin(c) });
   return c.json({ games: games.map((g) => ({ ...g, url: `${siteUrl(c)}/g/${g.slug}` })) });
+});
+
+// Open publishing: reserve a slug and get the key that publishes to it.
+api.post("/claim", async (c) => {
+  if (c.env.OPEN_PUBLISHING !== "1") {
+    return c.json({ error: "This arcade only publishes its owner's games. Run your own, free: npx vesta-arcade setup" }, 403);
+  }
+  const input = await c.req.json<{ title?: unknown }>().catch(() => ({}) as { title?: unknown });
+  const title = cleanText(input.title, 80) || "Untitled game";
+  const ip = await ipHash(c.req.raw, c.env.ADMIN_TOKEN ?? "vesta");
+  const t = now();
+  const recent = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM games WHERE creator_ip_hash = ? AND created_at > ?").bind(ip, t - 86_400).first<{ n: number }>();
+  if ((recent?.n ?? 0) >= COMMUNITY_NEW_GAMES_PER_DAY) {
+    return c.json({ error: `You've published ${COMMUNITY_NEW_GAMES_PER_DAY} new games today. Update one of them, or try again tomorrow.` }, 429);
+  }
+  const base = slugify(title);
+  const random = () => {
+    const b = crypto.getRandomValues(new Uint8Array(3));
+    return Array.from(b, (x) => x.toString(36).padStart(2, "0")).join("").slice(0, 4);
+  };
+  const keyBytes = crypto.getRandomValues(new Uint8Array(32));
+  const key = btoa(String.fromCharCode(...keyBytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const hash = await keyHash(key);
+  for (let i = 0; i < 6; i++) {
+    const slug = i === 0 ? base : `${base.slice(0, 35)}-${random()}`;
+    const res = await c.env.DB.prepare(
+      `INSERT OR IGNORE INTO games (slug, title, owner_key_hash, creator_ip_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(slug, title, hash, ip, t, t)
+      .run();
+    if (res.meta.changes) return c.json({ slug, key, url: `${siteUrl(c)}/g/${slug}` }, 201);
+  }
+  return c.json({ error: "couldn't find a free name for this game; try another title" }, 409);
+});
+
+// Anyone can report a game. Enough distinct reports hide a community game until the owner reviews it.
+api.post("/games/:slug/report", async (c) => {
+  const slug = slugParam(c);
+  const isForm = (c.req.header("content-type") ?? "").includes("form");
+  const input = isForm ? Object.fromEntries((await c.req.formData().catch(() => new FormData())).entries()) : await c.req.json<Record<string, unknown>>().catch(() => ({}));
+  const row = await getGameRow(c.env, slug);
+  if (!row) return c.json({ error: "not found" }, 404);
+  const ip = await ipHash(c.req.raw, c.env.ADMIN_TOKEN ?? "vesta");
+  await c.env.DB.prepare("INSERT OR IGNORE INTO reports (slug, ip_hash, reason, created_at) VALUES (?, ?, ?, ?)")
+    .bind(slug, ip, cleanText((input as Record<string, unknown>).reason, 300), now())
+    .run();
+  const n = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM reports WHERE slug = ?").bind(slug).first<{ n: number }>();
+  if (row.owner_key_hash && (n?.n ?? 0) >= REPORTS_TO_HIDE) await c.env.DB.prepare("UPDATE games SET hidden = 1 WHERE slug = ?").bind(slug).run();
+  return isForm ? c.redirect(`/g/${slug}?feedback=${encodeURIComponent("Reported. Thanks, the arcade's owner will take a look.")}#feedback`, 303) : c.json({ ok: true });
+});
+
+// AI Arena: a vote on a matchup the server handed out (signed), at most a few per minute per visitor.
+api.post("/arena/vote", async (c) => {
+  const input = await c.req.json<{ m?: unknown; winner?: unknown }>().catch(() => ({}) as { m?: unknown; winner?: unknown });
+  const m = await verifyMatchup(c.env, input.m);
+  const winner = input.winner === "a" || input.winner === "b" || input.winner === "tie" ? input.winner : null;
+  if (!m || !winner) return c.json({ error: "this matchup expired; load a new one" }, 400);
+  const ip = await ipHash(c.req.raw, c.env.ADMIN_TOKEN ?? "vesta");
+  const t = now();
+  const [hour, same] = await c.env.DB.batch<{ n: number }>([
+    c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_votes WHERE ip_hash = ? AND created_at > ?").bind(ip, t - 3600),
+    c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_votes WHERE ip_hash = ? AND created_at > ? AND ((a = ? AND b = ?) OR (a = ? AND b = ?))").bind(ip, t - 86_400, m.a, m.b, m.b, m.a),
+  ]);
+  const counted = (hour?.results[0]?.n ?? 0) < 40 && (same?.results[0]?.n ?? 0) === 0;
+  if (counted) {
+    const reveal = await recordVote(c.env, m, winner, ip);
+    if (!reveal) return c.json({ error: "not found" }, 404);
+    return c.json({ ...reveal, counted: true });
+  }
+  const { results } = await c.env.DB.prepare("SELECT slug, model, lab FROM arena_entries WHERE slug IN (?, ?)").bind(m.a, m.b).all<{ slug: string; model: string; lab: string }>();
+  const find = (slug: string) => results.find((r) => r.slug === slug);
+  return c.json({ a: find(m.a), b: find(m.b), winner, counted: false });
 });
 
 api.get("/games/:slug", async (c) => {
@@ -110,10 +228,11 @@ const admin = new Hono<AppEnv>();
 
 admin.get("/me", requireAdmin, (c) => c.json({ ok: true, arcade: c.env.ARCADE_NAME, siteUrl: siteUrl(c), playUrl: c.env.PLAY_URL, version: VERSION }));
 
-admin.put("/games/:slug", requireAdmin, async (c) => {
+admin.put("/games/:slug", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   const input = await c.req.json<Record<string, unknown>>().catch(() => ({}) as Record<string, unknown>);
   const existing = await getGameRow(c.env, slug);
+  if (!existing && viaGameKey(c)) return c.json({ error: "not found" }, 404);
   const pick = <T,>(key: string, clean: (v: unknown) => T, fallback: T): T => (key in input ? clean(input[key]) : fallback);
 
   const title = pick("title", (v) => cleanText(v, 80), existing?.title ?? "") || slug;
@@ -141,12 +260,12 @@ admin.put("/games/:slug", requireAdmin, async (c) => {
   return c.json({ game: await getGame(c.env, slug), created: !existing });
 });
 
-admin.delete("/games/:slug", requireAdmin, async (c) => {
+admin.delete("/games/:slug", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   await deletePrefix(c.env, `g/${slug}/`);
   await deletePrefix(c.env, `c/${slug}/`);
   await c.env.DB.batch(
-    ["comments", "likes", "scores", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
+    ["comments", "likes", "scores", "best_scores", "reports", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
       c.env.DB.prepare(`DELETE FROM ${t} WHERE slug = ?`).bind(slug),
     ),
   );
@@ -160,11 +279,16 @@ admin.post("/games/:slug/hide", requireAdmin, async (c) => {
   return c.json({ slug, hidden: !!hidden });
 });
 
-admin.post("/games/:slug/versions", requireAdmin, async (c) => {
+admin.post("/games/:slug/versions", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   if (!(await getGameRow(c.env, slug))) return c.json({ error: "create the game first with PUT /api/games/:slug" }, 404);
   const input = await c.req.json<{ files?: unknown; notes?: unknown }>().catch(() => ({}) as { files?: unknown; notes?: unknown });
   const { files, totalBytes } = validateManifest(input.files);
+  if (viaGameKey(c)) {
+    if (totalBytes > COMMUNITY_MAX_BYTES) return c.json({ error: `community games can be up to ${COMMUNITY_MAX_BYTES >> 20} MB` }, 413);
+    const recent = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM versions WHERE slug = ? AND created_at > ?").bind(slug, now() - 3600).first<{ n: number }>();
+    if ((recent?.n ?? 0) >= COMMUNITY_VERSIONS_PER_HOUR) return c.json({ error: "too many versions this hour; try again later" }, 429);
+  }
   await cleanupStaleUploads(c.env, slug);
 
   const last = await c.env.DB.prepare("SELECT MAX(n) AS n FROM versions WHERE slug = ?").bind(slug).first<{ n: number | null }>();
@@ -182,7 +306,7 @@ async function uploadingVersion(env: Env, slug: string, n: number): Promise<Mani
   return row ? (JSON.parse(row.manifest) as ManifestFile[]) : null;
 }
 
-admin.put("/games/:slug/versions/:n/files/*", requireAdmin, async (c) => {
+admin.put("/games/:slug/versions/:n/files/*", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   const n = Number(c.req.param("n"));
   const marker = `/versions/${n}/files/`;
@@ -200,7 +324,7 @@ admin.put("/games/:slug/versions/:n/files/*", requireAdmin, async (c) => {
   return c.json({ path, size: body.byteLength });
 });
 
-admin.post("/games/:slug/versions/:n/finalize", requireAdmin, async (c) => {
+admin.post("/games/:slug/versions/:n/finalize", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   const n = Number(c.req.param("n"));
   const manifest = await uploadingVersion(c.env, slug, n);
@@ -234,7 +358,7 @@ admin.post("/games/:slug/versions/:n/finalize", requireAdmin, async (c) => {
   return c.json({ version: n, url: `${siteUrl(c)}/g/${slug}`, playUrl: playBase(c.env, slug, n), pruned: old.map((o) => o.n) });
 });
 
-admin.put("/games/:slug/cover", requireAdmin, async (c) => {
+admin.put("/games/:slug/cover", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   const row = await getGameRow(c.env, slug);
   if (!row) return c.json({ error: "not found" }, 404);
@@ -251,7 +375,7 @@ admin.put("/games/:slug/cover", requireAdmin, async (c) => {
   return c.json({ cover: `${siteUrl(c)}/cover/${slug}` });
 });
 
-admin.get("/games/:slug/feedback", requireAdmin, async (c) => {
+admin.get("/games/:slug/feedback", requireGameAccess, async (c) => {
   const days = Math.min(90, Math.max(1, Number(c.req.query("days")) || 14));
   const report = await feedbackReport(c.env, slugParam(c), days);
   if (!report) return c.json({ error: "not found" }, 404);
@@ -263,6 +387,33 @@ admin.post("/comments/:id/hide", requireAdmin, async (c) => {
   const { hidden } = await c.req.json<{ hidden?: boolean }>().catch(() => ({ hidden: true }));
   await c.env.DB.prepare("UPDATE comments SET hidden = ? WHERE id = ?").bind(hidden ? 1 : 0, Number(c.req.param("id"))).run();
   return c.json({ id: Number(c.req.param("id")), hidden: !!hidden });
+});
+
+admin.put("/arena/prompts/:id", requireAdmin, async (c) => {
+  const id = validateSlug(c.req.param("id"));
+  const input = await c.req.json<{ title?: unknown; prompt?: unknown }>().catch(() => ({}) as { title?: unknown; prompt?: unknown });
+  await c.env.DB.prepare(
+    "INSERT INTO arena_prompts (id, title, prompt, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET title = excluded.title, prompt = excluded.prompt",
+  )
+    .bind(id, cleanText(input.title, 80) || id, cleanText(input.prompt, 2000), now())
+    .run();
+  return c.json({ id });
+});
+
+admin.put("/arena/entries/:slug", requireAdmin, async (c) => {
+  const slug = slugParam(c);
+  const input = await c.req.json<{ prompt?: unknown; model?: unknown; lab?: unknown }>().catch(() => ({}) as Record<string, unknown>);
+  const prompt = validateSlug(input.prompt);
+  const model = cleanText(input.model, 60);
+  if (!model) return c.json({ error: "model is required" }, 400);
+  if (!(await getGameRow(c.env, slug))) return c.json({ error: "publish the game first" }, 404);
+  await c.env.DB.prepare(
+    `INSERT INTO arena_entries (slug, prompt, model, lab, created_at) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (slug) DO UPDATE SET prompt = excluded.prompt, model = excluded.model, lab = excluded.lab`,
+  )
+    .bind(slug, prompt, model, cleanText(input.lab, 40), now())
+    .run();
+  return c.json({ slug, prompt, model });
 });
 
 api.route("/", admin);

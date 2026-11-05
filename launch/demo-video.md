@@ -10,7 +10,7 @@ One continuous story: prompt → live link → a phone → a crash → the agent
 | 22–30s | Phone: scan the QR code from the terminal, play for a few seconds | "It works on phones." |
 | 30–40s | Gameplay at #1 on HN, servers melting (`?demo=fast` makes this easy) | (the game is the hook, so let it breathe) |
 | 40–52s | Claude Code: "check the Vesta feedback and fix the top error". The report scrolls, the agent edits the file, publishes v2 | "Every crash players hit comes back to the agent. It fixes it and ships v2." |
-| 52–60s | Game page changelog shows "v2: Fixed …"; end card: `npx vesta-cli setup` · github.com/VanitasCaesar1/vesta-arcade | "Vesta. Your own arcade for AI-made games. Open source." |
+| 52–60s | Game page changelog shows "v2: Fixed …"; end card: `npx vesta-arcade setup` · github.com/VanitasCaesar1/vesta-arcade | "Vesta. Your own arcade for AI-made games. Open source." |
 
 Tips:
 - Plant a real bug for the fix scene (e.g. an undefined property on a rare path), play until it fires, then show the report.

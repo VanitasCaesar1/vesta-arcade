@@ -3,7 +3,7 @@ import { exec } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
 import { Client } from "./client.ts";
-import { configPath, loadConfig, requireConfig, saveConfig } from "./config.ts";
+import { configFor, configPath, keysPath, loadConfig, requireConfig, saveConfig } from "./config.ts";
 import { findProjectRoot, loadProject } from "./project.ts";
 import { publish } from "./publish.ts";
 import { bytes, c, qr, terminalOut } from "./ui.ts";
@@ -37,7 +37,7 @@ ${c.bold("Publish options")}
   -o, --open                  Open the game when it's live
 
 ${c.bold("Agents")}
-  claude mcp add vesta -- npx -y vesta-cli mcp
+  claude mcp add vesta -- npx -y vesta-arcade mcp
 `;
 
 async function main() {
@@ -56,6 +56,7 @@ async function main() {
       name: { type: "string" },
       subdomain: { type: "string" },
       domain: { type: "string" },
+      "open-publishing": { type: "boolean" },
       prefix: { type: "string" },
       "rotate-token": { type: "boolean" },
       days: { type: "string" },
@@ -85,7 +86,7 @@ async function main() {
     case "deploy":
     case "upgrade": {
       const { setup } = await import("./setup.ts");
-      await setup({ name: v.name, subdomain: v.subdomain, domain: v.domain, prefix: v.prefix, rotateToken: v["rotate-token"], out });
+      await setup({ name: v.name, subdomain: v.subdomain, domain: v.domain, prefix: v.prefix, rotateToken: v["rotate-token"], openPublishing: v["open-publishing"], out });
       return;
     }
 
@@ -133,8 +134,11 @@ ${qr(r.url)}
   ${c.bold(c.ember(r.url))}
 
   ${c.dim(`${r.files} files · ${bytes(r.bytes)} · cover: ${r.cover}${r.skipped.length ? ` · skipped ${r.skipped.length} (${r.skipped.slice(0, 3).join(", ")}${r.skipped.length > 3 ? "…" : ""})` : ""}`)}
-  ${c.dim("Feedback later:")} vesta feedback ${r.slug}
-`);
+  ${c.dim("Feedback later:")} npx vesta-arcade feedback ${r.slug}
+${r.public ? `
+  ${c.dim("Published to the public arcade. This game's key is in")} ${c.dim(keysPath())}${c.dim(": keep it to publish updates.")}
+  ${c.dim("Want an arcade of your own, free on Cloudflare?")} npx vesta-arcade setup
+` : ""}`);
       if (v.open) openUrl(r.url);
       return;
     }
@@ -165,9 +169,9 @@ ${qr(r.url)}
 
     case "feedback":
     case "fb": {
-      const client = new Client(await requireConfig());
       const slug = args[0] ?? (await loadProject(findProjectRoot(process.cwd()))).config.slug;
       if (!slug) throw new Error("Which game? Run this in the game's folder, or pass its slug: vesta feedback <slug>");
+      const client = new Client(await configFor(slug));
       const days = Number(v.days ?? 14);
       if (v.json) return console.log(JSON.stringify(await client.request("GET", `/api/games/${slug}/feedback?days=${days}`), null, 2));
       console.log(await client.feedback(slug, days));
@@ -188,8 +192,8 @@ ${qr(r.url)}
     }
 
     case "open": {
-      const cfg = await requireConfig();
       const slug = args[0] ?? (await loadProject(findProjectRoot(process.cwd()))).config.slug;
+      const cfg = await configFor(slug);
       openUrl(slug ? `${cfg.url}/g/${slug}` : cfg.url);
       return;
     }
@@ -198,7 +202,7 @@ ${qr(r.url)}
     case "rm": {
       const slug = args[0];
       if (!slug) throw new Error("Usage: vesta delete <slug>");
-      const client = new Client(await requireConfig());
+      const client = new Client(await configFor(slug));
       if (!v.yes) {
         const rl = createInterface({ input: process.stdin, output: process.stdout });
         const answer = await rl.question(`Delete ${c.bold(slug)}, every version, its stats and comments? Type the slug to confirm: `);

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/vesta-cli/vesta.schema.json",
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
   "title": "Hug of Death",
   "description": "Your side project just hit #1 on the front page, and you are the load balancer. Route traffic to servers before they melt, block scraper bots, and spend what you earn on servers, a CDN, a rate limiter or an SRE. Keep uptime above 90% until the post falls off the front page.\n\nControls: tap or click a server (or press 1–6) to route traffic there. Tap red bots to block them. Q/W/E/R/T buy upgrades. P pauses, M mutes.",
   "author": "Chakravarthi",

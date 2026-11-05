@@ -1,4 +1,4 @@
-// Bundles the arcade Worker into the CLI package, so `npx vesta-cli setup`
+// Bundles the arcade Worker into the CLI package, so `npx vesta-arcade setup`
 // can deploy it without cloning the repo.
 import { build } from "esbuild";
 import { chmod, cp, mkdir, rm } from "node:fs/promises";

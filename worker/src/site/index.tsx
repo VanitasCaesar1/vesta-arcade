@@ -10,9 +10,11 @@ import { OG_PNG } from "./og.ts";
 
 let ogBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
-import { feedbackReport, getGame, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
+import { feedbackReport, getChallenge, getGame, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
 import { EmbedPage, GamePage, HomePage, NotFoundPage } from "./pages.tsx";
+import { ArenaBoardPage, ArenaPage } from "./arenaPages.tsx";
+import { arenaNames, isArenaEntry, leaderboard, randomMatchup } from "./arena.ts";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
 import { REPO_URL } from "./layout.tsx";
 
@@ -83,9 +85,14 @@ site.get("/", async (c) => {
   const sortQ = c.req.query("sort");
   const sort: Sort = sortQ === "new" || sortQ === "top" ? sortQ : "trending";
   const tool = c.req.query("made_with")?.slice(0, 32) || undefined;
-  const [games, tools, loop] = await Promise.all([listGames(c.env, { sort, tool }), madeWithCounts(c.env), loopData(c.env)]);
+  const [games, tools, loop, arenaRow] = await Promise.all([
+    listGames(c.env, { sort, tool }),
+    madeWithCounts(c.env),
+    loopData(c.env),
+    arenaNames(c.env),
+  ]);
   c.header("cache-control", "public, max-age=30");
-  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} />);
+  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} open={c.env.OPEN_PUBLISHING === "1"} arena={arenaRow || undefined} />);
 });
 
 async function loadGame(c: Context<AppEnv>) {
@@ -97,7 +104,8 @@ async function loadGame(c: Context<AppEnv>) {
   }
   const game = await getGame(c.env, slug);
   if (!game || !game.version) return null;
-  if (game.hidden && !(await isAdmin(c))) return null;
+  // Arena entries stay off the home page (they'd give the blind matchups away) but are playable by link.
+  if (game.hidden && !(await isAdmin(c)) && !(await isArenaEntry(c.env, slug))) return null;
   return game;
 }
 
@@ -107,10 +115,12 @@ const playSrc = (c: Context<AppEnv>, slug: string, n: number) => `${c.env.PLAY_U
 site.get("/g/:slug", async (c) => {
   const game = await loadGame(c);
   if (!game) return notFound(c);
-  const [versions, comments, scores] = await Promise.all([
+  const [versions, comments, scores, challenge, others] = await Promise.all([
     listVersions(c.env, game.slug, 12),
     listComments(c.env, game.slug, { limit: 30 }),
     topScores(c.env, game.slug, 10),
+    getChallenge(c.env, game.slug, c.req.query("c")),
+    listGames(c.env, { limit: 4 }),
   ]);
   return c.html(
     <GamePage
@@ -121,9 +131,27 @@ site.get("/g/:slug", async (c) => {
       versions={versions}
       comments={comments}
       scores={scores}
+      challenge={challenge}
+      more={others.filter((o) => o.slug !== game.slug).slice(0, 3)}
       feedback={c.req.query("feedback")?.slice(0, 120)}
     />,
   );
+});
+
+site.get("/arena", async (c) => {
+  const [m, votes, names] = await Promise.all([
+    randomMatchup(c.env, c.req.query("p")),
+    c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_votes").first<{ n: number }>(),
+    arenaNames(c.env),
+  ]);
+  c.header("cache-control", "no-store");
+  return c.html(<ArenaPage arcade={arcade(c)} siteUrl={origin(c)} m={m} votes={votes?.n ?? 0} names={names} playSrc={(g) => playSrc(c, g.slug, g.version!)} />);
+});
+
+site.get("/arena/leaderboard", async (c) => {
+  const [board, names] = await Promise.all([leaderboard(c.env), arenaNames(c.env)]);
+  c.header("cache-control", "public, max-age=30");
+  return c.html(<ArenaBoardPage arcade={arcade(c)} siteUrl={origin(c)} names={names} {...board} />);
 });
 
 site.get("/embed/:slug", async (c) => {
@@ -188,18 +216,18 @@ site.get("/llms.txt", (c) => {
 
 The game must be a folder with an index.html at its top level (a static build such as dist/ or build/, or plain HTML/JS).
 
-- MCP (Claude Code, Cursor, Codex, any MCP client): \`claude mcp add vesta -- npx -y vesta-cli mcp\`
+- MCP (Claude Code, Cursor, Codex, any MCP client): \`claude mcp add vesta -- npx -y vesta-arcade mcp\`
   Tools: publish_game, get_feedback, list_games, set_cover.
-- CLI: \`npx vesta-cli publish [dir] --notes "what changed"\`. It saves the game's slug in vesta.json, so the next publish becomes a new version.
-- The owner signs in once with \`npx vesta-cli login ${base}\`.
+- CLI: \`npx vesta-arcade publish [dir] --notes "what changed"\`. It saves the game's slug in vesta.json, so the next publish becomes a new version.
+- ${c.env.OPEN_PUBLISHING === "1" ? `Anyone can publish here without an account: with no arcade configured, \`npx vesta-arcade publish\` (and publish_game) publish to ${base} and save a per-game key in ~/.config/vesta/keys.json. Community games are capped at 30 MB and 5 new games a day. ` : ""}The owner signs in once with \`npx vesta-arcade login ${base}\`.
 
 ## Read player feedback
 
-\`npx vesta-cli feedback <slug>\` or the get_feedback MCP tool returns Markdown: errors with stack traces, how long sessions last, milestones, and what players wrote. Fix the top error first.
+\`npx vesta-arcade feedback <slug>\` or the get_feedback MCP tool returns Markdown: errors with stack traces, how long sessions last, milestones, and what players wrote. Fix the top error first.
 
 ## Report progress from a game
 
-Vesta injects window.vesta into every game. Call \`window.vesta?.milestone("reached-level-2")\` at key moments; the creator sees what share of plays reach each one. \`window.vesta?.error("message")\` reports a game-level problem. \`await window.vesta?.submitScore(score)\` at game over shows an arcade "enter your initials" box and puts the score on the game's high-score table (higher is better). Saves in localStorage are kept per game automatically.
+Vesta injects window.vesta into every game. Call \`window.vesta?.milestone("reached-level-2")\` at key moments; the creator sees what share of plays reach each one. \`window.vesta?.error("message")\` reports a game-level problem. \`await window.vesta?.submitScore(score)\` at game over shows an arcade "enter your initials" box and puts the score on the game's high-score table (higher is better). After the player saves, the box offers a \`Challenge a friend\` link (\`/g/<slug>?c=<scoreId>\`) and \`window.vesta.shareUrl\` becomes that link, so read \`window.vesta.shareUrl\` when the player presses your own share button rather than caching it at load. A player who arrives through a challenge link sees the score to beat; \`window.vesta.challenge\` is \`{ name, score }\` or \`null\`. Saves in localStorage are kept per game automatically.
 
 ## Limits
 

@@ -83,6 +83,17 @@ export async function handlePlay(req: Request, env: Env, ctx: ExecutionContext):
   // onlyIf matched: the client's copy is current.
   if (!("body" in obj)) return new Response(null, { status: 304, headers });
 
+  // Community games (open publishing) only run inside the arcade's sandboxed frame. Opened as a
+  // page of their own they'd look like a site on this domain, which is how phishing hosts get abused.
+  if (isHtml && req.headers.get("sec-fetch-dest") === "document") {
+    const row = await env.DB.prepare("SELECT owner_key_hash IS NOT NULL AS community FROM games WHERE slug = ?").bind(slug).first<{ community: number }>();
+    if (row?.community) {
+      return env.SITE_URL
+        ? Response.redirect(`${env.SITE_URL.replace(/\/$/, "")}/g/${slug}`, 302)
+        : new Response(`Play this game on ${env.ARCADE_NAME}.`, { status: 403, headers: { "content-type": "text/plain; charset=utf-8", ...SECURITY_HEADERS } });
+    }
+  }
+
   if (isHtml && req.method === "GET") {
     headers.delete("content-length");
     headers.delete("etag");

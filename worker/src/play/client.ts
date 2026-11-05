@@ -8,7 +8,9 @@
 // 2. Counts a play, and how long the tab stays visible.
 // 3. Catches uncaught errors, unhandled rejections, console.error calls and
 //    failed asset loads, which is what a coding agent needs to fix the game.
-// 4. Exposes window.vesta.milestone(name) so games can report progress
+// 4. Shows the arcade's high-score box (window.vesta.submitScore), and turns
+//    each saved score into a challenge link the player can send to a friend.
+// 5. Exposes window.vesta.milestone(name) so games can report progress
 //    ("reached-level-3") and the creator can see where players stop.
 // No cookies, no fingerprinting, nothing about the player is sent.
 
@@ -142,16 +144,34 @@ export const CLIENT_SCRIPT = String.raw`(function () {
   });
   window.addEventListener("pagehide", reportTime);
 
-  // The arcade passes its own page URL in the hash, for share buttons.
+  // The arcade passes its own page URL in the hash, for share buttons, and the
+  // score to beat when the player arrived through a challenge link.
   var shareUrl = location.href.replace(/[?#].*$/, "");
+  var arcadeUrl = "", challenge = null, title = "";
   try {
-    var m = location.hash.match(/vesta-share=([^&]+)/);
-    if (m) {
-      shareUrl = decodeURIComponent(m[1]);
-      var rest = location.hash.replace(/&?vesta-share=[^&]+/, "").replace(/^#&/, "#");
-      history.replaceState(history.state, "", location.pathname + location.search + (rest === "#" ? "" : rest));
-    }
+    var h = location.hash.replace(/^#/, "");
+    var keep = [];
+    h.split("&").forEach(function (part) {
+      var eq = part.indexOf("=");
+      var k = eq < 0 ? part : part.slice(0, eq);
+      var v = eq < 0 ? "" : decodeURIComponent(part.slice(eq + 1));
+      if (k === "vesta-share") { if (/^https?:\/\//.test(v)) shareUrl = arcadeUrl = v; }
+      else if (k === "vesta-c") {
+        var cm = /^([A-Z0-9]{1,3}):(-?[0-9.e+]+)$/.exec(v);
+        if (cm && isFinite(Number(cm[2]))) challenge = { name: cm[1], score: Number(cm[2]) };
+      }
+      else if (k === "vesta-t") title = clip(v, 60);
+      else if (part) keep.push(part);
+    });
+    if (h) history.replaceState(history.state, "", location.pathname + location.search + (keep.length ? "#" + keep.join("&") : ""));
   } catch (e) {}
+
+  function shareLink(url, text) {
+    var data = { text: text, url: url };
+    if (navigator.share && (!navigator.canShare || navigator.canShare(data))) return navigator.share(data).then(function () { return "shared"; });
+    if (navigator.clipboard) return navigator.clipboard.writeText(text + " " + url).then(function () { return "copied"; });
+    return Promise.reject(new Error("no share"));
+  }
 
   // High scores: an arcade-style "enter your initials" box, isolated in a shadow root
   // so it can't clash with the game's CSS, and swallowing keys so typing a name
@@ -182,6 +202,8 @@ export const CLIENT_SCRIPT = String.raw`(function () {
         "button.y{background:#ffd60a;color:#161616;border-color:#ffd60a}" +
         ".rank{font-size:30px;font-weight:900;margin:6px 0 4px}" +
         ".m{font:12px ui-monospace,Menlo,monospace;color:#b9b9b6;margin-bottom:18px}" +
+        ".v{font-size:18px;font-weight:900;color:#ffd60a;margin:10px 0 2px}" +
+        ".r{flex-wrap:wrap}button.c{flex-basis:100%;background:#f2f2ee;color:#161616}" +
         "</style>" +
         "<div class=s><form class=b><div class=k></div><div class=n></div>" +
         "<div class=k>Enter your initials</div><input maxlength=3 autocomplete=off spellcheck=false aria-label='Your initials'>" +
@@ -212,8 +234,25 @@ export const CLIENT_SCRIPT = String.raw`(function () {
           .then(function (r) { return r.json(); })
           .then(function (j) {
             if (!j || !j.rank) throw new Error((j && j.error) || "failed");
-            form.innerHTML = "<div class=k>" + name + "</div><div class=rank>#" + j.rank + " all time</div><div class=m>#" + j.rankToday + " today, of " + j.total + " scores</div><div class=r><button class=y type=button>Continue</button></div>";
-            var go = form.querySelector("button");
+            var fmt = function (x) { return opts.format ? String(opts.format(x)) : Math.round(x).toLocaleString(); };
+            var link = arcadeUrl && j.id ? arcadeUrl + "?c=" + j.id : "";
+            // From now on the game's own share button sends this player's challenge link.
+            if (link && window.vesta) window.vesta.shareUrl = link;
+            var verdict = "";
+            if (challenge) verdict = score > challenge.score ? "You beat " + challenge.name + "'s " + fmt(challenge.score) + "!" : score === challenge.score ? "Tied with " + challenge.name + "." : challenge.name + " still leads with " + fmt(challenge.score) + ".";
+            form.innerHTML = "<div class=k></div>" + (verdict ? "<div class=v></div>" : "") + "<div class=rank></div><div class=m></div><div class=r>" + (link ? "<button class=c type=button>Challenge a friend</button>" : "") + "<button class=y type=button>Continue</button></div>";
+            form.querySelector(".k").textContent = name;
+            if (verdict) form.querySelector(".v").textContent = verdict;
+            form.querySelector(".rank").textContent = "#" + j.rank + " all time";
+            form.querySelector(".m").textContent = "#" + j.rankToday + " today, of " + j.total + (j.total === 1 ? " player" : " players");
+            var share = form.querySelector(".c");
+            if (share) share.addEventListener("click", function () {
+              shareLink(link, (challenge && score > challenge.score ? "I just beat " + challenge.name + ". " : "") + "I scored " + fmt(score) + (title ? " on " + title : "") + ". Beat it:").then(
+                function (how) { share.textContent = how === "copied" ? "Link copied" : "Sent"; },
+                function (e) { if (!e || e.name !== "AbortError") { try { window.prompt("Send this link to a friend:", link); } catch (x) {} } }
+              );
+            });
+            var go = form.querySelector(".y");
             go.addEventListener("click", function () { close(j); });
             go.focus();
           })
@@ -229,6 +268,7 @@ export const CLIENT_SCRIPT = String.raw`(function () {
     game: game,
     version: version,
     shareUrl: shareUrl,
+    challenge: challenge,
     milestone: function (name) {
       name = clip(String(name).trim(), 48);
       if (!name || milestones[name] || milestoneCount >= 40) return;

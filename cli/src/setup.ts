@@ -57,6 +57,7 @@ function workerConfig(o: {
   main: string;
   routes?: Route[];
   originFallback?: boolean;
+  vars?: Record<string, string>;
 }) {
   return JSON.stringify(
     {
@@ -66,7 +67,7 @@ function workerConfig(o: {
       workers_dev: true,
       observability: { enabled: true },
       ...(o.routes?.length ? { routes: o.routes } : {}),
-      vars: { ROLE: o.role, ARCADE_NAME: o.arcade, PLAY_URL: o.playUrl, ...(o.originFallback ? { ORIGIN_FALLBACK: "1" } : {}) },
+      vars: { ROLE: o.role, ARCADE_NAME: o.arcade, PLAY_URL: o.playUrl, ...(o.originFallback ? { ORIGIN_FALLBACK: "1" } : {}), ...o.vars },
       r2_buckets: [{ binding: "FILES", bucket_name: o.bucket }],
       d1_databases: [{ binding: "DB", database_name: o.bucket, database_id: o.databaseId, migrations_dir: "migrations" }],
     },
@@ -160,6 +161,8 @@ export interface SetupOptions {
   subdomain?: string;
   prefix?: string;
   rotateToken?: boolean;
+  /** Let anyone publish games to this arcade without an arcade of their own. */
+  openPublishing?: boolean;
   out: Out;
 }
 
@@ -172,7 +175,7 @@ export async function setup(opts: SetupOptions): Promise<ArcadeConfig> {
 
   const here = dirname(fileURLToPath(import.meta.url));
   const bundled = join(here, "worker");
-  if (!existsSync(join(bundled, "index.js"))) throw new Error(`The arcade bundle is missing from ${bundled}. Reinstall vesta-cli.`);
+  if (!existsSync(join(bundled, "index.js"))) throw new Error(`The arcade bundle is missing from ${bundled}. Reinstall vesta-arcade.`);
   const work = join(configDir(), "deploy");
   await mkdir(work, { recursive: true });
   await cp(join(bundled, "index.js"), join(work, "index.js"));
@@ -247,19 +250,22 @@ export async function setup(opts: SetupOptions): Promise<ArcadeConfig> {
   const playName = `${prefix}-play`;
   const siteName = prefix;
   const main = "./index.js";
-  await writeFile(join(work, "play.jsonc"), workerConfig({ name: playName, role: "play", arcade, playUrl: "", bucket, databaseId, main }));
+  const domain = (opts.domain ?? previous?.deploy?.domain)?.toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  const expectedSiteUrl = domain ? `https://${domain}` : `https://${siteName}.${sub.subdomain}.workers.dev`;
+  const open = opts.openPublishing ?? previous?.deploy?.open ?? false;
+  const vars: Record<string, string> = { SITE_URL: expectedSiteUrl, ...(open ? { OPEN_PUBLISHING: "1" } : {}) };
+  await writeFile(join(work, "play.jsonc"), workerConfig({ name: playName, role: "play", arcade, playUrl: "", bucket, databaseId, main, vars }));
   out.log(c.dim("\nDeploying the game server…"));
   const playDeploy = await wrangler(["deploy", "-c", "play.jsonc"], { cwd: work });
   const playUrl = workersDevUrl(playDeploy.output, playName) ?? previous?.playUrl;
   if (playDeploy.code !== 0 || !playUrl) throw new Error("Deploying the game server failed (see above). If wrangler asked you to register a workers.dev subdomain, do that in the dashboard and run setup again.");
   out.log(`${c.green("✓")} Game server ${c.bold(playUrl)}`);
 
-  const domain = (opts.domain ?? previous?.deploy?.domain)?.toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
   const site = domain ? await domainRoutes(domain, sub.accountId, sub.token) : null;
   if (site) out.log(`${c.green("✓")} ${domain} ${c.dim(site.originFallback ? "(route over the existing site; pages the arcade doesn't serve still reach it)" : "(custom domain)")}`);
   await writeFile(
     join(work, "site.jsonc"),
-    workerConfig({ name: siteName, role: "site", arcade, playUrl, bucket, databaseId, main, routes: site?.routes, originFallback: site?.originFallback }),
+    workerConfig({ name: siteName, role: "site", arcade, playUrl, bucket, databaseId, main, routes: site?.routes, originFallback: site?.originFallback, vars }),
   );
   const migrate = await wrangler(["d1", "migrations", "apply", bucket, "--remote", "-c", "site.jsonc"], { cwd: work, quiet: true, input: "y\n" });
   if (migrate.code !== 0) throw new Error(`Database migration failed:\n${migrate.output.slice(-1500)}`);
@@ -278,7 +284,7 @@ export async function setup(opts: SetupOptions): Promise<ArcadeConfig> {
   }
   out.log(`${c.green("✓")} Arcade ${c.bold(siteUrl)}`);
 
-  const cfg: ArcadeConfig = { url: siteUrl, token, playUrl, deploy: { prefix, name: arcade, databaseId, bucket, domain } };
+  const cfg: ArcadeConfig = { url: siteUrl, token, playUrl, deploy: { prefix, name: arcade, databaseId, bucket, domain, open } };
   await saveConfig(cfg);
 
   out.log(`
@@ -287,8 +293,8 @@ ${c.ember("▲")} ${c.bold(`${arcade} is live.`)}
 ${qr(siteUrl)}
   ${c.bold(siteUrl)}
 
-  ${c.bold("Publish a game")}        npx vesta-cli publish        ${c.dim("(from a folder with index.html, or a built dist/)")}
-  ${c.bold("Let your agent do it")}  claude mcp add vesta -- npx -y vesta-cli mcp
+  ${c.bold("Publish a game")}        npx vesta-arcade publish        ${c.dim("(from a folder with index.html, or a built dist/)")}
+  ${c.bold("Let your agent do it")}  claude mcp add vesta -- npx -y vesta-arcade mcp
   ${c.bold("Dashboard")}             ${siteUrl}/admin ${c.dim("(your token is in ~/.config/vesta/config.json)")}
 
   ${c.dim("Your token was saved to")} ${c.dim(join(configDir(), "config.json"))}${c.dim(". Keep it secret: it can publish and delete games.")}

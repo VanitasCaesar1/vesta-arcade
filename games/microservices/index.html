@@ -451,7 +451,7 @@ const JOBS = [
     },
   },
   {
-    id: "semicolon", name: "Find the missing semicolon", verb: "Find the missing ;", title: "app.js", time: 5, min: 2.8,
+    id: "semicolon", name: "Find the missing semicolon", verb: "Find the missing ;", title: "app.js", time: 6.2, min: 3.5,
     setup(c) {
       const pool = ["import fs from 'node:fs';", "const port = env.PORT ?? 3000;", "let total = 0;", "await db.connect();", "const user = await getUser(id);", "items.forEach(addToCart);", "console.log(total);", "app.listen(port);", "throw new Error('nope');", "export default app;", "res.json({ ok: true });", "const ids = rows.map(r => r.id);"];
       const lines = shuffle(pool).slice(0, c.speed > 1.4 ? 7 : 6);
@@ -465,7 +465,7 @@ const JOBS = [
     },
   },
   {
-    id: "typo", name: "Fix the typo", verb: "Find the typo!", title: "server.ts", time: 5, min: 2.8,
+    id: "typo", name: "Fix the typo", verb: "Find the typo!", title: "server.ts", time: 5.6, min: 3.2,
     setup(c) {
       const TYPO = { function: "fucntion", return: "retrun", length: "lenght", const: "cosnt", import: "improt", receive: "recieve", width: "widht", async: "asnyc", true: "ture", false: "flase", export: "exprot", console: "consloe", default: "defualt", await: "awiat", height: "hieght", status: "stauts" };
       const pool = ["import { serve } from 'bun';", "export default async function main() {", "  const width = el.clientWidth;", "  const msg = await receive(socket);", "  if (list.length === 0) return true;", "  return { status: 'ok', cached: false };", "  console.log('height', height);"];
@@ -654,7 +654,7 @@ const JOBS = [
     },
   },
   {
-    id: "naming", name: "Pick a good name", verb: "Name it!", title: "utils.js", time: 4.5, min: 2.6,
+    id: "naming", name: "Pick a good name", verb: "Name it!", title: "utils.js", time: 6.2, min: 3.6,
     setup(c) {
       const Q = pick([
         ["const ___ = users.filter(u => u.active).length;", "activeUserCount"],
@@ -816,12 +816,16 @@ async function end() {
   cancelAnimationFrame(S.raf);
   sfx.over();
   vesta().milestone("game-over");
+  const prevBest = S.best;
   const best = S.score > S.best;
   if (best) { S.best = S.score; store.set("best", String(S.score)); }
   $("overWhy").textContent = "Burned out on: " + S.killer.name.toLowerCase() + ".";
   $("overScore").textContent = S.score;
   $("overLine").textContent = (S.score === 1 ? "job" : "jobs") + " shipped." + (S.fast ? " Fastest: " + S.fast.name.toLowerCase() + " in " + S.fast.t.toFixed(2) + "s." : "") + (best && S.score ? " New personal best." : " Best: " + S.best + ".");
   $("overGrid").textContent = grid();
+  // One more run: say how close it was.
+  const gap = prevBest - S.score;
+  $("againBtn").textContent = best && prevBest ? "Beat it again" : gap > 0 && gap <= 3 ? (gap === 1 ? "1 job from your best. Again" : gap + " jobs from your best. Again") : "Clock in again";
   $("shareMsg").textContent = "";
   $("over").hidden = false;
   if (S.score > 0) await vesta().submitScore(S.score, { label: "Jobs shipped" });

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/vesta-cli/vesta.schema.json",
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
   "slug": "microservices",
   "title": "Microservices",
   "description": "Fifteen tiny developer jobs, a few seconds each. Center the div. Exit vim. Reject the cookies. Kill the process eating your CPU. Don't deploy on Friday. Every four jobs everything gets faster, and four mistakes burn you out.\n\nControls: mostly tap or click. Vim and the brackets also take the keyboard, arrow keys nudge the div, Space stops the loop.",

@@ -1,7 +1,7 @@
 # Working on Vesta
 
 - `worker/`: one Worker script deployed twice. `src/index.ts` picks the role: `src/play` (game files, injected feedback script, telemetry) or `src/site` (arcade pages, dashboard, JSON API). Locally `ROLE=auto` picks by hostname (`play.localhost` = play).
-- `cli/`: the `vesta-cli` npm package: CLI (`src/cli.ts`), publish pipeline (`src/publish.ts`), MCP server (`src/mcp.ts`), Cloudflare setup (`src/setup.ts`). `npm run build` also bundles the Worker into `cli/dist/worker` for `setup`.
+- `cli/`: the `vesta-arcade` npm package: CLI (`src/cli.ts`), publish pipeline (`src/publish.ts`), MCP server (`src/mcp.ts`), Cloudflare setup (`src/setup.ts`). `npm run build` also bundles the Worker into `cli/dist/worker` for `setup`.
 - `games/hug-of-death/`: the demo game, a single HTML file.
 
 Rules:

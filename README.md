@@ -44,8 +44,8 @@ Vesta closes that loop:
 You need Node 20+ and a free Cloudflare account.
 
 ```sh
-npx vesta-cli setup      # deploys your arcade (~2 minutes, opens a browser to sign in to Cloudflare)
-npx vesta-cli publish    # run in any folder with an index.html, or a built dist/
+npx vesta-arcade setup      # deploys your arcade (~2 minutes, opens a browser to sign in to Cloudflare)
+npx vesta-arcade publish    # run in any folder with an index.html, or a built dist/
 ```
 
 ```
@@ -55,7 +55,7 @@ npx vesta-cli publish    # run in any folder with an index.html, or a built dist
   1 files · 31.6 KB · cover: screenshot
 ```
 
-Want it on your own domain? `npx vesta-cli setup --domain games.example.com` (the domain must be on the same Cloudflare account). If the domain already serves a site, Vesta takes over the pages it knows and passes everything else through to the old site.
+Want it on your own domain? `npx vesta-arcade setup --domain games.example.com` (the domain must be on the same Cloudflare account). If the domain already serves a site, Vesta takes over the pages it knows and passes everything else through to the old site.
 
 That's it. `publish` finds your build folder (`dist/`, `build/`, `out/` or the folder itself), uploads it, screenshots the game for a cover image if you have Chrome or Playwright's Chromium, prints a QR code for your phone and saves the game's slug in `vesta.json`, so the next publish becomes v2.
 
@@ -64,13 +64,13 @@ That's it. `publish` finds your build folder (`dist/`, `build/`, `out/` or the f
 Add Vesta as an MCP server, then just ask: *“publish this game to Vesta”*, and later, *“check the Vesta feedback and fix the top error”*.
 
 ```sh
-claude mcp add vesta -- npx -y vesta-cli mcp          # Claude Code
+claude mcp add vesta -- npx -y vesta-arcade mcp          # Claude Code
 ```
 
 For Cursor, Codex, Windsurf, Cline and other MCP clients, add this to their MCP config:
 
 ```json
-{ "mcpServers": { "vesta": { "command": "npx", "args": ["-y", "vesta-cli", "mcp"] } } }
+{ "mcpServers": { "vesta": { "command": "npx", "args": ["-y", "vesta-arcade", "mcp"] } } }
 ```
 
 | Tool | What it does |
@@ -179,7 +179,7 @@ vesta delete <slug>         Delete a game, every version, its stats and comments
 vesta mcp                   Run as an MCP server
 ```
 
-CI can publish too: set `VESTA_URL` and `VESTA_TOKEN` and run `npx vesta-cli publish dist -n "$COMMIT_MESSAGE"`.
+CI can publish too: set `VESTA_URL` and `VESTA_TOKEN` and run `npx vesta-arcade publish dist -n "$COMMIT_MESSAGE"`.
 
 ### `vesta.json`
 

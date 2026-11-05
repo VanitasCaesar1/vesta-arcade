@@ -63,7 +63,7 @@ export async function loadProject(root: string): Promise<{ config: ProjectConfig
 
 export async function saveProject(root: string, config: ProjectConfig): Promise<void> {
   const clean = Object.fromEntries(Object.entries(config).filter(([, v]) => v !== undefined && v !== "" && !(Array.isArray(v) && !v.length)));
-  await writeFile(join(root, "vesta.json"), JSON.stringify({ $schema: "https://unpkg.com/vesta-cli/vesta.schema.json", ...clean }, null, 2) + "\n");
+  await writeFile(join(root, "vesta.json"), JSON.stringify({ $schema: "https://unpkg.com/vesta-arcade/vesta.schema.json", ...clean }, null, 2) + "\n");
 }
 
 async function readJSON(path: string): Promise<Record<string, unknown> | null> {

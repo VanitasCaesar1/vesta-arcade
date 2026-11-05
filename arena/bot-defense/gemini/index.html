@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bot Defense: Mainframe Lockdown</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background-color: #030712;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", monospace, sans-serif;
+    color: #e2e8f0;
+    touch-action: none;
+  }
+  #game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #020617;
+  }
+  .ui-layer {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px;
+  }
+  .hud-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .stat-card {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.2);
+    border-radius: 8px;
+    padding: 6px 14px;
+    backdrop-filter: blur(4px);
+  }
+  .stat-title {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #38bdf8;
+    margin-bottom: 2px;
+  }
+  .stat-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f8fafc;
+    font-family: monospace;
+  }
+  .health-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .health-bar {
+    width: 140px;
+    height: 10px;
+    background: #090d16;
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 3px;
+  }
+  .health-bar-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #10b981);
+    transition: width 0.1s linear, background 0.3s;
+  }
+  .btn-audio {
+    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+  }
+  .btn-audio:active { transform: scale(0.95); }
+
+  .ability-bar {
+    pointer-events: auto;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .btn-ability {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #38bdf8;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 80px;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  .btn-ability:active { transform: scale(0.96); }
+  .btn-ability.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    border-color: #475569;
+    color: #94a3b8;
+  }
+  .btn-ability .cd-text {
+    font-size: 10px;
+    color: #94a3b8;
+  }
+
+  .overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(2, 6, 23, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    pointer-events: auto;
+    z-index: 20;
+  }
+  .overlay.hidden { display: none; }
+
+  .game-title {
+    font-size: clamp(32px, 7vw, 56px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #00f0ff, #3b82f6, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.4));
+  }
+  .tagline {
+    font-size: clamp(14px, 3.5vw, 17px);
+    color: #94a3b8;
+    max-width: 520px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .instructions-box {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    max-width: 440px;
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .instructions-box strong { color: #38bdf8; }
+
+  .btn-play {
+    background: linear-gradient(135deg, #00f0ff, #0284c7);
+    border: none;
+    color: #020617;
+    font-weight: 800;
+    font-size: clamp(16px, 4vw, 20px);
+    padding: 14px 40px;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-play:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.9);
+  }
+  .btn-play:active {
+    transform: scale(0.98);
+  }
+
+  .game-over-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .game-over-stat {
+    background: #0b1329;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 12px;
+    border-radius: 10px;
+  }
+  .submitting-msg {
+    font-size: 13px;
+    color: #38bdf8;
+    margin-top: 12px;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+<div id="game-container">
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="ui-layer">
+    <div class="hud-header">
+      <div class="stat-card">
+        <div class="stat-title">Bots Blocked</div>
+        <div class="stat-val" id="hudScore">0</div>
+      </div>
+      <div class="stat-card health-container">
+        <div class="stat-title" id="integrityLabel">Server Integrity</div>
+        <div class="health-bar">
+          <div class="health-bar-fill" id="healthFill"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Wave</div>
+        <div class="stat-val" id="hudWave">1</div>
+      </div>
+      <button class="btn-audio" id="audioToggle" aria-label="Toggle Sound">
+        <span id="audioIcon">🔊</span>
+      </button>
+    </div>
+
+    <!-- Active Defensive Abilities -->
+    <div class="ability-bar">
+      <button class="btn-ability" id="btnEmp">
+        <span>⚡ EMP</span>
+        <span class="cd-text" id="cdEmp">READY</span>
+      </button>
+      <button class="btn-ability" id="btnOverclock">
+        <span>🔥 BOOST</span>
+        <span class="cd-text" id="cdOverclock">READY</span>
+      </button>
+      <button class="btn-ability" id="btnFlush">
+        <span>🛡️ PURGE</span>
+        <span class="cd-text" id="cdFlush">READY</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Start Screen -->
+  <div class="overlay" id="startScreen">
+    <h1 class="game-title">BOT DEFENSE</h1>
+    <p class="tagline">Protect the core mainframe from relentless waves of scrapers, crawlers, and DDoS botnets!</p>
+    <div class="instructions-box">
+      • <strong>Aim & Shoot:</strong> Tap screen or Click to fire the Firewall Cannon.<br>
+      • <strong>Defend Mainframe:</strong> Don't let bots breach the core server rack.<br>
+      • <strong>Abilities:</strong> Trigger EMP, Fire Rate Boost, and Buffer Purge to survive!
+    </div>
+    <button class="btn-play" id="btnStart">ENGAGE FIREWALL</button>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div class="overlay hidden" id="gameOverScreen">
+    <h1 class="game-title" style="background: linear-gradient(135deg, #ef4444, #f87171); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SERVER COMPROMISED</h1>
+    <p class="tagline" id="deathReason">Kernel Panic: Critical Load Exceeded</p>
+    <div class="game-over-stats">
+      <div class="game-over-stat">
+        <div class="stat-title">Bots Blocked</div>
+        <div class="stat-val" id="finalScore">0</div>
+      </div>
+      <div class="game-over-stat">
+        <div class="stat-title">Wave Reached</div>
+        <div class="stat-val" id="finalWave">1</div>
+      </div>
+    </div>
+    <button class="btn-play" id="btnRestart">PLAY AGAIN</button>
+    <div class="submitting-msg" id="submitStatus"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // --- AUDIO SYNTHESIZER ---
+  class SoundFX {
+    constructor() {
+      this.ctx = null;
+      this.muted = false;
+    }
+    init() {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    }
+    toggleMute() {
+      this.muted = !this.muted;
+      return this.muted;
+    }
+    playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.15, slideTo = null) {
+      if (this.muted || !this.ctx) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), this.ctx.currentTime + duration);
+        }
+        gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      } catch (e) {}
+    }
+    shoot() {
+      this.playTone(850, 'square', 0.08, 0.1, 200);
+    }
+    botHit() {
+      this.playTone(350, 'triangle', 0.06, 0.08, 120);
+    }
+    botDestroyed() {
+      this.playTone(180, 'sawtooth', 0.22, 0.2, 40);
+    }
+    empSound() {
+      this.playTone(1200, 'sine', 0.5, 0.25, 60);
+    }
+    boostSound() {
+      this.playTone(300, 'sawtooth', 0.3, 0.2, 900);
+    }
+    serverHit() {
+      this.playTone(100, 'sawtooth', 0.35, 0.3, 30);
+    }
+  }
+
+  const sfx = new SoundFX();
+
+  // --- CANVAS SETUP ---
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // --- GAME STATE ---
+  let state = 'start'; // start, playing, gameover
+  let score = 0; // Bots neutralized
+  let wave = 1;
+  let serverHealth = 100;
+  const maxHealth = 100;
+  let lastTime = performance.now();
+  let paused = false;
+  let screenShake = 0;
+
+  // Turret / Server position in center
+  const server = {
+    x: 0,
+    y: 0,
+    r: 45,
+    angle: 0,
+    fireTimer: 0,
+    fireRate: 0.18 // shots per second
+  };
+
+  // Cooldowns
+  const cooldowns = {
+    emp: 0, // 15s cd
+    overclock: 0, // 18s cd
+    flush: 0 // 20s cd
+  };
+  let overclockActive = 0;
+
+  const milestonesReached = {
+    w1: false,
+    w3: false,
+    w5: false,
+    overclocked: false
+  };
+
+  // Pools
+  let bots = [];
+  let bullets = [];
+  let particles = [];
+  let floatingTexts = [];
+  let spawnTimer = 0;
+  let botsInWaveRemaining = 12;
+
+  // Pointer aim
+  let aimTarget = { x: 0, y: 0 };
+  let isPointerDown = false;
+
+  function updateServerPos() {
+    server.x = W / 2;
+    server.y = H / 2;
+    aimTarget.x = server.x;
+    aimTarget.y = server.y - 100;
+  }
+  updateServerPos();
+  window.addEventListener('resize', updateServerPos);
+
+  // --- INPUT ---
+  function getCanvasCoords(e) {
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  window.addEventListener('pointerdown', (e) => {
+    sfx.init();
+    if (e.target.closest('button')) return;
+    const pos = getCanvasCoords(e);
+    aimTarget.x = pos.x;
+    aimTarget.y = pos.y;
+    isPointerDown = true;
+    if (state === 'playing') {
+      tryShoot();
+    }
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (e.target.closest('button')) return;
+    const pos = getCanvasCoords(e);
+    aimTarget.x = pos.x;
+    aimTarget.y = pos.y;
+  });
+
+  window.addEventListener('pointerup', () => {
+    isPointerDown = false;
+  });
+
+  // Hotkeys
+  window.addEventListener('keydown', (e) => {
+    if (state !== 'playing') return;
+    if (e.key === '1' || e.key.toLowerCase() === 'q') triggerEmp();
+    if (e.key === '2' || e.key.toLowerCase() === 'w') triggerOverclock();
+    if (e.key === '3' || e.key.toLowerCase() === 'e') triggerFlush();
+  });
+
+  // Abilities
+  function triggerEmp() {
+    if (cooldowns.emp > 0 || state !== 'playing') return;
+    sfx.init();
+    sfx.empSound();
+    cooldowns.emp = 14;
+    screenShake = 10;
+    // Destroy or stun all bots
+    for (const b of bots) {
+      b.hp -= 3;
+      addExplosion(b.x, b.y, '#38bdf8', 10);
+      if (b.hp <= 0) {
+        score++;
+        floatingTexts.push({ text: 'SCRAPED!', x: b.x, y: b.y, vy: -30, color: '#38bdf8', life: 0.6 });
+      }
+    }
+    bots = bots.filter(b => b.hp > 0);
+  }
+
+  function triggerOverclock() {
+    if (cooldowns.overclock > 0 || state !== 'playing') return;
+    sfx.init();
+    sfx.boostSound();
+    cooldowns.overclock = 18;
+    overclockActive = 6.0;
+    screenShake = 6;
+    floatingTexts.push({ text: 'OVERCLOCK 3X!', x: server.x, y: server.y - 60, vy: -40, color: '#f59e0b', life: 1 });
+    if (!milestonesReached.overclocked) {
+      milestonesReached.overclocked = true;
+      window.vesta?.milestone?.('overclocked');
+    }
+  }
+
+  function triggerFlush() {
+    if (cooldowns.flush > 0 || state !== 'playing') return;
+    sfx.init();
+    sfx.boostSound();
+    cooldowns.flush = 22;
+    serverHealth = Math.min(maxHealth, serverHealth + 35);
+    screenShake = 8;
+    floatingTexts.push({ text: 'BUFFER PURGED +35% HP', x: server.x, y: server.y - 60, vy: -40, color: '#10b981', life: 1 });
+  }
+
+  document.getElementById('btnEmp').addEventListener('click', triggerEmp);
+  document.getElementById('btnOverclock').addEventListener('click', triggerOverclock);
+  document.getElementById('btnFlush').addEventListener('click', triggerFlush);
+
+  // --- BOT SPAWNING ---
+  function spawnBot() {
+    const edge = Math.floor(Math.random() * 4);
+    let x, y;
+    if (edge === 0) { x = Math.random() * W; y = -30; }
+    else if (edge === 1) { x = W + 30; y = Math.random() * H; }
+    else if (edge === 2) { x = Math.random() * W; y = H + 30; }
+    else { x = -30; y = Math.random() * H; }
+
+    const roll = Math.random();
+    let type = 'crawler';
+    let hp = 1;
+    let speed = 90 + Math.random() * 40;
+    let radius = 14;
+    let color = '#f87171';
+
+    if (wave >= 2 && roll > 0.65) {
+      type = 'flooder'; // bulky UDP flooder
+      hp = 3;
+      speed = 60 + Math.random() * 25;
+      radius = 18;
+      color = '#fbbf24';
+    } else if (wave >= 3 && roll > 0.85) {
+      type = 'trojan'; // fast stealth crawler
+      hp = 2;
+      speed = 140;
+      radius = 13;
+      color = '#c084fc';
+    }
+
+    bots.push({
+      x, y,
+      type,
+      hp,
+      maxHp: hp,
+      speed,
+      r: radius,
+      color,
+      wobble: Math.random() * Math.PI * 2
+    });
+  }
+
+  function tryShoot() {
+    const angle = Math.atan2(aimTarget.y - server.y, aimTarget.x - server.x);
+    server.angle = angle;
+    
+    // Spread shot if overclocked
+    if (overclockActive > 0) {
+      for (const offset of [-0.18, 0, 0.18]) {
+        const a = angle + offset;
+        bullets.push({
+          x: server.x + Math.cos(a) * (server.r + 5),
+          y: server.y + Math.sin(a) * (server.r + 5),
+          vx: Math.cos(a) * 650,
+          vy: Math.sin(a) * 650,
+          life: 1.2,
+          color: '#fbbf24'
+        });
+      }
+    } else {
+      bullets.push({
+        x: server.x + Math.cos(angle) * (server.r + 5),
+        y: server.y + Math.sin(angle) * (server.r + 5),
+        vx: Math.cos(angle) * 600,
+        vy: Math.sin(angle) * 600,
+        life: 1.2,
+        color: '#00f0ff'
+      });
+    }
+    sfx.shoot();
+  }
+
+  function addExplosion(x, y, color, count = 12) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 40 + Math.random() * 160;
+      particles.push({
+        x, y,
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd,
+        life: 0.4 + Math.random() * 0.3,
+        color,
+        size: 3 + Math.random() * 3
+      });
+    }
+  }
+
+  function checkWaveMilestones() {
+    if (!milestonesReached.w1 && wave >= 2) {
+      milestonesReached.w1 = true;
+      window.vesta?.milestone?.('wave-1-cleared');
+    }
+    if (!milestonesReached.w3 && wave >= 4) {
+      milestonesReached.w3 = true;
+      window.vesta?.milestone?.('wave-3-cleared');
+    }
+    if (!milestonesReached.w5 && wave >= 6) {
+      milestonesReached.w5 = true;
+      window.vesta?.milestone?.('wave-5-cleared');
+    }
+  }
+
+  async function triggerGameOver() {
+    if (state === 'gameover') return;
+    state = 'gameover';
+    sfx.serverHit();
+    screenShake = 20;
+
+    document.getElementById('finalScore').textContent = `${score}`;
+    document.getElementById('finalWave').textContent = `${wave}`;
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+
+    const submitStatus = document.getElementById('submitStatus');
+    submitStatus.textContent = 'Submitting score...';
+
+    if (window.vesta?.submitScore) {
+      try {
+        await window.vesta.submitScore(score, { label: 'Bots Blocked' });
+        submitStatus.textContent = 'Score submitted!';
+      } catch (e) {
+        submitStatus.textContent = '';
+      }
+    } else {
+      submitStatus.textContent = '';
+    }
+
+    document.getElementById('btnRestart').focus();
+  }
+
+  function startGame() {
+    sfx.init();
+    state = 'playing';
+    score = 0;
+    wave = 1;
+    serverHealth = 100;
+    cooldowns.emp = 0;
+    cooldowns.overclock = 0;
+    cooldowns.flush = 0;
+    overclockActive = 0;
+    screenShake = 0;
+    bots = [];
+    bullets = [];
+    particles = [];
+    floatingTexts = [];
+    botsInWaveRemaining = 14;
+    spawnTimer = 0;
+
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('gameOverScreen').classList.add('hidden');
+  }
+
+  document.getElementById('btnStart').addEventListener('click', startGame);
+  document.getElementById('btnRestart').addEventListener('click', startGame);
+
+  const audioBtn = document.getElementById('audioToggle');
+  const audioIcon = document.getElementById('audioIcon');
+  audioBtn.addEventListener('click', () => {
+    sfx.init();
+    const isMuted = sfx.toggleMute();
+    audioIcon.textContent = isMuted ? '🔇' : '🔊';
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    paused = document.hidden;
+    if (!paused) lastTime = performance.now();
+  });
+
+  // --- UPDATE ---
+  function update(dt) {
+    if (state !== 'playing' || paused) return;
+
+    // Cooldown timers
+    for (const k in cooldowns) {
+      if (cooldowns[k] > 0) cooldowns[k] = Math.max(0, cooldowns[k] - dt);
+    }
+    if (overclockActive > 0) overclockActive = Math.max(0, overclockActive - dt);
+
+    // Update ability button states
+    const empBtn = document.getElementById('btnEmp');
+    const cdEmp = document.getElementById('cdEmp');
+    if (cooldowns.emp > 0) {
+      empBtn.classList.add('disabled');
+      cdEmp.textContent = `${Math.ceil(cooldowns.emp)}s`;
+    } else {
+      empBtn.classList.remove('disabled');
+      cdEmp.textContent = 'READY';
+    }
+
+    const ocBtn = document.getElementById('btnOverclock');
+    const cdOc = document.getElementById('cdOverclock');
+    if (cooldowns.overclock > 0) {
+      ocBtn.classList.add('disabled');
+      cdOc.textContent = `${Math.ceil(cooldowns.overclock)}s`;
+    } else {
+      ocBtn.classList.remove('disabled');
+      cdOc.textContent = 'READY';
+    }
+
+    const flushBtn = document.getElementById('btnFlush');
+    const cdFlush = document.getElementById('cdFlush');
+    if (cooldowns.flush > 0) {
+      flushBtn.classList.add('disabled');
+      cdFlush.textContent = `${Math.ceil(cooldowns.flush)}s`;
+    } else {
+      flushBtn.classList.remove('disabled');
+      cdFlush.textContent = 'READY';
+    }
+
+    // Auto shoot when pointer held down
+    const currentFireRate = overclockActive > 0 ? 0.08 : server.fireRate;
+    server.fireTimer += dt;
+    if (isPointerDown && server.fireTimer >= currentFireRate) {
+      server.fireTimer = 0;
+      tryShoot();
+    }
+
+    // Wave spawning logic
+    spawnTimer += dt;
+    const spawnDelay = Math.max(0.4, 1.4 - wave * 0.12);
+    if (spawnTimer >= spawnDelay && botsInWaveRemaining > 0) {
+      spawnTimer = 0;
+      spawnBot();
+      botsInWaveRemaining--;
+    }
+
+    // Advance wave when cleared
+    if (botsInWaveRemaining <= 0 && bots.length === 0) {
+      wave++;
+      checkWaveMilestones();
+      botsInWaveRemaining = 12 + wave * 6;
+      floatingTexts.push({ text: `WAVE ${wave} INCOMING!`, x: server.x, y: server.y - 80, vy: -30, color: '#38bdf8', life: 1.5 });
+    }
+
+    // Update bullets
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.life -= dt;
+      if (b.life <= 0 || b.x < -40 || b.x > W + 40 || b.y < -40 || b.y > H + 40) {
+        bullets.splice(i, 1);
+      }
+    }
+
+    // Update bots
+    for (let i = bots.length - 1; i >= 0; i--) {
+      const bot = bots[i];
+      bot.wobble += dt * 5;
+      const angle = Math.atan2(server.y - bot.y, server.x - bot.x);
+      bot.x += Math.cos(angle) * bot.speed * dt;
+      bot.y += Math.sin(angle) * bot.speed * dt;
+
+      // Hit server?
+      const distToServer = Math.hypot(server.x - bot.x, server.y - bot.y);
+      if (distToServer <= server.r + bot.r) {
+        // Damage server
+        const dmg = bot.type === 'flooder' ? 15 : 8;
+        serverHealth -= dmg;
+        sfx.serverHit();
+        screenShake = 12;
+        addExplosion(bot.x, bot.y, '#ef4444', 14);
+        bots.splice(i, 1);
+        if (serverHealth <= 0) {
+          triggerGameOver();
+          return;
+        }
+        continue;
+      }
+
+      // Check collision with bullets
+      for (let j = bullets.length - 1; j >= 0; j--) {
+        const bullet = bullets[j];
+        const dist = Math.hypot(bullet.x - bot.x, bullet.y - bot.y);
+        if (dist <= bot.r + 6) {
+          bullets.splice(j, 1);
+          bot.hp--;
+          sfx.botHit();
+          addExplosion(bullet.x, bullet.y, '#38bdf8', 4);
+          if (bot.hp <= 0) {
+            score++;
+            sfx.botDestroyed();
+            addExplosion(bot.x, bot.y, bot.color, 12);
+            bots.splice(i, 1);
+            break;
+          }
+        }
+      }
+    }
+
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    // Update floating texts
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+      const ft = floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.life -= dt;
+      if (ft.life <= 0) floatingTexts.splice(i, 1);
+    }
+
+    // Update HUD
+    document.getElementById('hudScore').textContent = `${score}`;
+    document.getElementById('hudWave').textContent = `${wave}`;
+    const healthPercent = Math.max(0, Math.min(100, (serverHealth / maxHealth) * 100));
+    const healthFill = document.getElementById('healthFill');
+    healthFill.style.width = `${healthPercent}%`;
+    if (healthPercent > 50) {
+      healthFill.style.background = 'linear-gradient(90deg, #22c55e, #10b981)';
+    } else if (healthPercent > 25) {
+      healthFill.style.background = 'linear-gradient(90deg, #f59e0b, #eab308)';
+    } else {
+      healthFill.style.background = 'linear-gradient(90deg, #ef4444, #f43f5e)';
+    }
+  }
+
+  // --- DRAW ---
+  function draw() {
+    ctx.save();
+
+    if (screenShake > 0) {
+      const sx = (Math.random() - 0.5) * screenShake;
+      const sy = (Math.random() - 0.5) * screenShake;
+      ctx.translate(sx, sy);
+      screenShake = Math.max(0, screenShake - 0.5);
+    }
+
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle server rack cyber floor grid
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
+    ctx.lineWidth = 1;
+    const gridStep = 40;
+    for (let x = 0; x < W; x += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+    }
+    for (let y = 0; y < H; y += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    // Defense perimeter ring around server
+    ctx.save();
+    ctx.strokeStyle = overclockActive > 0 ? 'rgba(245, 158, 11, 0.4)' : 'rgba(56, 189, 248, 0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 8]);
+    ctx.beginPath();
+    ctx.arc(server.x, server.y, server.r + 20, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Central Core Server
+    ctx.save();
+    ctx.translate(server.x, server.y);
+
+    // Glowing server base
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(0, 0, server.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = overclockActive > 0 ? '#fbbf24' : '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = overclockActive > 0 ? '#fbbf24' : '#00f0ff';
+    ctx.shadowBlur = 15;
+    ctx.stroke();
+
+    // Blinking rack status lights
+    const time = performance.now() * 0.003;
+    ctx.fillStyle = Math.sin(time) > 0 ? '#10b981' : '#065f46';
+    ctx.beginPath(); ctx.arc(-16, -10, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = Math.sin(time + 1) > 0 ? '#38bdf8' : '#0369a1';
+    ctx.beginPath(); ctx.arc(-16, 2, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = Math.sin(time + 2) > 0 ? '#f59e0b' : '#78350f';
+    ctx.beginPath(); ctx.arc(-16, 14, 4, 0, Math.PI * 2); ctx.fill();
+
+    // Server label
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CORE SRV', 8, 0);
+
+    // Turret barrel aiming at aimTarget
+    const turretAngle = Math.atan2(aimTarget.y - server.y, aimTarget.x - server.x);
+    ctx.rotate(turretAngle);
+    ctx.fillStyle = overclockActive > 0 ? '#fbbf24' : '#00f0ff';
+    ctx.fillRect(0, -5, server.r + 14, 10);
+    ctx.restore();
+
+    // Bullets
+    for (const b of bullets) {
+      ctx.save();
+      ctx.fillStyle = b.color;
+      ctx.shadowColor = b.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Bots
+    for (const bot of bots) {
+      ctx.save();
+      ctx.translate(bot.x, bot.y);
+
+      ctx.fillStyle = bot.color;
+      ctx.shadowColor = bot.color;
+      ctx.shadowBlur = 10;
+
+      if (bot.type === 'crawler') {
+        // Fast bug / crawler
+        ctx.beginPath();
+        ctx.arc(0, 0, bot.r, 0, Math.PI * 2);
+        ctx.fill();
+        // Spider legs
+        ctx.strokeStyle = bot.color;
+        ctx.lineWidth = 2;
+        for (let l = 0; l < 4; l++) {
+          const la = (l * Math.PI) / 2 + Math.sin(bot.wobble) * 0.3;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(la) * (bot.r + 7), Math.sin(la) * (bot.r + 7));
+          ctx.stroke();
+        }
+      } else if (bot.type === 'flooder') {
+        // Bulky packet flooder (hexagon)
+        ctx.beginPath();
+        for (let h = 0; h < 6; h++) {
+          const ha = (h * Math.PI) / 3;
+          const hx = Math.cos(ha) * bot.r;
+          const hy = Math.sin(ha) * bot.r;
+          if (h === 0) ctx.moveTo(hx, hy);
+          else ctx.lineTo(hx, hy);
+        }
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Stealth trojan (diamond)
+        ctx.beginPath();
+        ctx.moveTo(0, -bot.r);
+        ctx.lineTo(bot.r, 0);
+        ctx.lineTo(0, bot.r);
+        ctx.lineTo(-bot.r, 0);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Health bar above bot if damaged
+      if (bot.hp < bot.maxHp) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-12, -bot.r - 8, 24, 4);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(-12, -bot.r - 8, (bot.hp / bot.maxHp) * 24, 4);
+      }
+
+      ctx.restore();
+    }
+
+    // Particles
+    for (const p of particles) {
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
+    }
+
+    // Floating text
+    for (const ft of floatingTexts) {
+      ctx.save();
+      ctx.font = 'bold 15px monospace';
+      ctx.fillStyle = ft.color;
+      ctx.shadowColor = ft.color;
+      ctx.shadowBlur = 8;
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = Math.max(0, ft.life);
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  // --- LOOP ---
+  function loop(currentTime) {
+    let dt = (currentTime - lastTime) / 1000;
+    lastTime = currentTime;
+
+    if (dt > 0.1) dt = 0.1;
+
+    update(dt);
+    draw();
+
+    requestAnimationFrame(loop);
+  }
+
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

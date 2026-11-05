@@ -14,7 +14,7 @@ Launch at 12:01 am Pacific; the day's ranking runs midnight to midnight PT. Don'
 **Gallery (in this order):**
 1. The 60-second video ([demo-video.md](demo-video.md))
 2. The game page (`docs/img/game-page.png` from the live arcade)
-3. The terminal: `npx vesta-cli publish` with the QR code
+3. The terminal: `npx vesta-arcade publish` with the QR code
 4. The feedback report open in Claude Code, with the agent fixing the top error
 5. The creator dashboard
 6. Hug of Death on a phone

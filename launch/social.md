@@ -5,7 +5,7 @@
 1. I told Claude Code "make a game about surviving the Hacker News hug of death, then publish it to Vesta."
    Two minutes later it was live, and every crash a player hits comes back to the agent as a stack trace. 🧵
 2. The game: your side project just hit #1, and you're the load balancer. Route traffic before servers melt, block scraper bots, buy a CDN. Keep uptime above 90% until it falls off the front page. [link]
-3. The tool: Vesta, an open-source arcade you deploy to your own Cloudflare account, on the free plan. `npx vesta-cli setup`, then `npx vesta-cli publish`, or one MCP tool call from your agent.
+3. The tool: Vesta, an open-source arcade you deploy to your own Cloudflare account, on the free plan. `npx vesta-arcade setup`, then `npx vesta-arcade publish`, or one MCP tool call from your agent.
 4. The loop is the point: errors with stack traces, how long sessions last, how far players get, and what they wrote, as one Markdown report your agent can read and act on.
    "Check the Vesta feedback and fix the top error" works.
 5. MIT, no account with me, no platform cut: [repo]. If you're building games with Claude Code, Cursor or Codex, I'd love to see them on your own arcade.

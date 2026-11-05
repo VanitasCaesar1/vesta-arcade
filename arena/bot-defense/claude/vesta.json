@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
+  "slug": "arena-b9e85408",
+  "title": "Bot Defense",
+  "madeWith": [
+    "Claude Opus 5.5"
+  ]
+}

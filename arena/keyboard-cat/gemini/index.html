@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Keyboard Cat: Production Purr-suit</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background-color: #0b0f19;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", monospace, sans-serif;
+    color: #f1f5f9;
+    touch-action: none;
+  }
+  #game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #0f172a;
+  }
+  .ui-layer {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px;
+  }
+  .hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .stat-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(244, 114, 182, 0.4);
+    box-shadow: 0 0 15px rgba(244, 114, 182, 0.2);
+    border-radius: 8px;
+    padding: 6px 14px;
+    backdrop-filter: blur(4px);
+  }
+  .stat-title {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #f472b6;
+    margin-bottom: 2px;
+  }
+  .stat-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fdf2f8;
+    font-family: monospace;
+  }
+  .cat-lives {
+    display: flex;
+    gap: 4px;
+    font-size: 18px;
+  }
+  .btn-audio {
+    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(244, 114, 182, 0.4);
+    color: #f472b6;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+  }
+  .btn-audio:active { transform: scale(0.95); }
+
+  .meow-control {
+    pointer-events: auto;
+    align-self: center;
+    margin-bottom: 6px;
+  }
+  .btn-meow {
+    background: linear-gradient(135deg, #ec4899, #f43f5e);
+    border: none;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 16px;
+    padding: 10px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.5);
+    transition: transform 0.1s;
+    letter-spacing: 1px;
+  }
+  .btn-meow:active { transform: scale(0.92); }
+
+  .overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(2, 6, 23, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    pointer-events: auto;
+    z-index: 20;
+  }
+  .overlay.hidden { display: none; }
+
+  .game-title {
+    font-size: clamp(30px, 7vw, 54px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #f472b6, #fb7185, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 20px rgba(244, 114, 182, 0.4));
+  }
+  .tagline {
+    font-size: clamp(14px, 3.5vw, 17px);
+    color: #94a3b8;
+    max-width: 520px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .instructions-box {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(244, 114, 182, 0.3);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    max-width: 440px;
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .instructions-box strong { color: #f472b6; }
+
+  .btn-play {
+    background: linear-gradient(135deg, #ec4899, #f43f5e);
+    border: none;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: clamp(16px, 4vw, 20px);
+    padding: 14px 40px;
+    border-radius: 50px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 25px rgba(244, 63, 94, 0.6);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-play:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 35px rgba(244, 63, 94, 0.9);
+  }
+  .btn-play:active {
+    transform: scale(0.98);
+  }
+
+  .game-over-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .game-over-stat {
+    background: #0b1329;
+    border: 1px solid rgba(244, 114, 182, 0.3);
+    padding: 12px;
+    border-radius: 10px;
+  }
+  .submitting-msg {
+    font-size: 13px;
+    color: #f472b6;
+    margin-top: 12px;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+<div id="game-container">
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="ui-layer">
+    <div class="hud-top">
+      <div class="stat-card">
+        <div class="stat-title">Chaos Points</div>
+        <div class="stat-val" id="hudScore">0</div>
+      </div>
+      <div class="stat-card" style="align-items: center;">
+        <div class="stat-title">Cat Lives</div>
+        <div class="cat-lives" id="hudLives">🐾 🐾 🐾</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Bugs Deployed</div>
+        <div class="stat-val" id="hudBugs">0</div>
+      </div>
+      <button class="btn-audio" id="audioToggle" aria-label="Toggle Sound">
+        <span id="audioIcon">🔊</span>
+      </button>
+    </div>
+
+    <div class="meow-control">
+      <button class="btn-meow" id="btnMeow">🐾 MEOW! (Space)</button>
+    </div>
+  </div>
+
+  <!-- Start Screen -->
+  <div class="overlay" id="startScreen">
+    <h1 class="game-title">KEYBOARD CAT</h1>
+    <p class="tagline">Your human is deploying to production. Your mission: walk on the keyboard and cause maximum chaos!</p>
+    <div class="instructions-box">
+      • <strong>Walk & Step:</strong> Tap / Click any key or use <strong>WASD / Arrow Keys</strong> to walk your paws across the keyboard.<br>
+      • <strong>Type Chaos:</strong> Stamp on keys, sit on Spacebar, and hit Enter to push buggy commits!<br>
+      • <strong>Dodge the Human:</strong> When hands reach down to shoo you away, dodge to safety!
+    </div>
+    <button class="btn-play" id="btnStart">STEP ON KEYBOARD</button>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div class="overlay hidden" id="gameOverScreen">
+    <h1 class="game-title" style="background: linear-gradient(135deg, #fb7185, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SHOOED TO BED!</h1>
+    <p class="tagline" id="deathReason">The human finally escorted you off the desk.</p>
+    <div class="game-over-stats">
+      <div class="game-over-stat">
+        <div class="stat-title">Chaos Points</div>
+        <div class="stat-val" id="finalScore">0</div>
+      </div>
+      <div class="game-over-stat">
+        <div class="stat-title">Bugs Introduced</div>
+        <div class="stat-val" id="finalBugs">0</div>
+      </div>
+    </div>
+    <button class="btn-play" id="btnRestart">PLAY AGAIN</button>
+    <div class="submitting-msg" id="submitStatus"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // --- AUDIO SYNTHESIZER ---
+  class SoundFX {
+    constructor() {
+      this.ctx = null;
+      this.muted = false;
+    }
+    init() {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    }
+    toggleMute() {
+      this.muted = !this.muted;
+      return this.muted;
+    }
+    // Authentic mechanical keyboard click/thock
+    keyClack() {
+      if (this.muted || !this.ctx) return;
+      try {
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        // Pitch randomizer for natural typing
+        const f = 280 + Math.random() * 80;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f, t);
+        osc.frequency.exponentialRampToValueAtTime(80, t + 0.05);
+
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.06);
+      } catch (e) {}
+    }
+    // Adorable cat meow
+    meow() {
+      if (this.muted || !this.ctx) return;
+      try {
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(450, t);
+        osc.frequency.linearRampToValueAtTime(750, t + 0.12);
+        osc.frequency.linearRampToValueAtTime(520, t + 0.35);
+
+        gain.gain.setValueAtTime(0.01, t);
+        gain.gain.linearRampToValueAtTime(0.2, t + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.42);
+      } catch (e) {}
+    }
+    purr() {
+      if (this.muted || !this.ctx) return;
+      try {
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(35, t);
+        gain.gain.setValueAtTime(0.08, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.26);
+      } catch (e) {}
+    }
+    shooWarning() {
+      if (this.muted || !this.ctx) return;
+      try {
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(160, t);
+        gain.gain.setValueAtTime(0.12, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.22);
+      } catch (e) {}
+    }
+    incidentAlert() {
+      if (this.muted || !this.ctx) return;
+      try {
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(900, t);
+        osc.frequency.exponentialRampToValueAtTime(250, t + 0.3);
+        gain.gain.setValueAtTime(0.2, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.32);
+      } catch (e) {}
+    }
+  }
+
+  const sfx = new SoundFX();
+
+  // --- CANVAS & RESIZE ---
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+    layoutKeyboard();
+  }
+  window.addEventListener('resize', resize);
+
+  // --- GAME STATE ---
+  let state = 'start';
+  let score = 0; // Chaos points
+  let bugs = 0;
+  let lives = 3;
+  let lastTime = performance.now();
+  let paused = false;
+  let screenShake = 0;
+
+  const milestonesReached = {
+    m1: false, // 100 lines
+    m2: false, // coffee spill
+    m3: false, // force push
+    m4: false  // 10k chaos
+  };
+
+  // Live code editor text feed
+  let editorLines = [
+    '// PRODUCTION DEPLOYMENT ACTIVE',
+    'function processCheckout() {',
+    '  chargeCreditCards();',
+    '  notifyWarehouses();',
+    '}'
+  ];
+
+  // Keyboard layout model
+  let keys = [];
+  let kbX = 0, kbY = 0, kbW = 0, kbH = 0;
+
+  function layoutKeyboard() {
+    keys = [];
+    kbW = Math.min(W * 0.94, 820);
+    kbH = Math.min(H * 0.44, 260);
+    kbX = (W - kbW) / 2;
+    kbY = H - kbH - 45;
+
+    const rows = [
+      ['ESC', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'BACK'],
+      ['TAB', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
+      ['CAPS', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', 'ENTER'],
+      ['SHIFT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'SHIFT'],
+      ['CTRL', 'ALT', 'SPACE', 'ALT', 'PROD']
+    ];
+
+    const rowH = kbH / rows.length;
+
+    for (let r = 0; r < rows.length; r++) {
+      const row = rows[r];
+      const y = kbY + r * rowH;
+
+      // Calculate total units
+      let totalUnits = 0;
+      for (const k of row) {
+        if (k === 'SPACE') totalUnits += 5.5;
+        else if (k === 'ENTER' || k === 'SHIFT') totalUnits += 2.2;
+        else if (k === 'BACK' || k === 'CAPS' || k === 'TAB') totalUnits += 1.8;
+        else if (k === 'CTRL' || k === 'ALT' || k === 'PROD') totalUnits += 1.5;
+        else totalUnits += 1.0;
+      }
+
+      const unitW = kbW / totalUnits;
+      let currX = kbX;
+
+      for (let c = 0; c < row.length; c++) {
+        const k = row[c];
+        let w = unitW;
+        if (k === 'SPACE') w = unitW * 5.5;
+        else if (k === 'ENTER' || k === 'SHIFT') w = unitW * 2.2;
+        else if (k === 'BACK' || k === 'CAPS' || k === 'TAB') w = unitW * 1.8;
+        else if (k === 'CTRL' || k === 'ALT' || k === 'PROD') w = unitW * 1.5;
+
+        keys.push({
+          label: k,
+          x: currX + 2,
+          y: y + 2,
+          w: w - 4,
+          h: rowH - 4,
+          pressed: 0 // glow decay
+        });
+        currX += w;
+      }
+    }
+  }
+
+  // --- CAT PAWS ---
+  const cat = {
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+    pawLeft: { x: 0, y: 0 },
+    pawRight: { x: 0, y: 0 },
+    tailWag: 0,
+    speed: 380,
+    reset() {
+      this.x = W / 2;
+      this.y = kbY + kbH / 2;
+      this.targetX = this.x;
+      this.targetY = this.y;
+      this.pawLeft = { x: this.x - 24, y: this.y };
+      this.pawRight = { x: this.x + 24, y: this.y };
+    }
+  };
+
+  // --- PROGRAMMER HANDS (HAZARDS) ---
+  const shooHands = {
+    active: false,
+    x: 0,
+    y: 0,
+    w: 120,
+    h: 120,
+    timer: 0,
+    warnTimer: 1.2,
+    cooldown: 3.5
+  };
+
+  // --- PARTICLES & FLOATING TEXTS ---
+  let particles = [];
+  let floatingTexts = [];
+
+  // --- INPUT: CAT WALKING & MEOWING ---
+  const keysDown = {};
+
+  window.addEventListener('keydown', (e) => {
+    sfx.init();
+    keysDown[e.code] = true;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      triggerMeow();
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keysDown[e.code] = false;
+  });
+
+  window.addEventListener('pointerdown', (e) => {
+    sfx.init();
+    if (e.target.closest('button')) return;
+    cat.targetX = e.clientX;
+    cat.targetY = e.clientY;
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (e.target.closest('button')) return;
+    if (e.buttons > 0) {
+      cat.targetX = e.clientX;
+      cat.targetY = e.clientY;
+    }
+  });
+
+  function triggerMeow() {
+    if (state !== 'playing') return;
+    sfx.meow();
+    score += 50;
+    floatingTexts.push({ text: 'MEOW! 🐱', x: cat.x, y: cat.y - 30, vy: -40, color: '#f472b6', life: 0.8 });
+    // Meow confuses the hands
+    if (shooHands.active && shooHands.timer > 0) {
+      shooHands.timer += 0.8;
+      floatingTexts.push({ text: 'HUMAN DISTRACTED!', x: shooHands.x, y: shooHands.y - 20, vy: -30, color: '#38bdf8', life: 0.8 });
+    }
+  }
+
+  document.getElementById('btnMeow').addEventListener('click', triggerMeow);
+
+  function pressKey(k) {
+    k.pressed = 1.0;
+    sfx.keyClack();
+    score += 15;
+
+    // Insert funny chaos into editor
+    let char = k.label;
+    if (char === 'SPACE') char = ' ';
+    else if (char === 'ENTER' || char === 'PROD') {
+      bugs++;
+      score += 150;
+      sfx.incidentAlert();
+      screenShake = 6;
+      floatingTexts.push({ text: '🔥 DEPLOYED TO PROD!', x: k.x + k.w / 2, y: k.y - 20, vy: -50, color: '#f43f5e', life: 1.2 });
+      editorLines.push(`git push --force origin main // BUG #${bugs}!`);
+      if (!milestonesReached.m3) {
+        milestonesReached.m3 = true;
+        window.vesta?.milestone?.('prod-incident');
+      }
+    } else {
+      if (editorLines.length === 0) editorLines.push('');
+      editorLines[editorLines.length - 1] += char.toLowerCase();
+      if (editorLines[editorLines.length - 1].length > 35) {
+        editorLines.push('cat@work:~$ ' + char.toLowerCase());
+      }
+    }
+
+    if (editorLines.length > 7) editorLines.shift();
+
+    // Check milestones
+    if (!milestonesReached.m1 && bugs >= 5) {
+      milestonesReached.m1 = true;
+      window.vesta?.milestone?.('syntax-error');
+    }
+    if (!milestonesReached.m4 && score >= 3000) {
+      milestonesReached.m4 = true;
+      window.vesta?.milestone?.('paws-on-prod');
+    }
+
+    // Sparkles
+    for (let i = 0; i < 4; i++) {
+      particles.push({
+        x: k.x + k.w / 2,
+        y: k.y + k.h / 2,
+        vx: (Math.random() - 0.5) * 120,
+        vy: -Math.random() * 80,
+        life: 0.35,
+        color: '#f472b6',
+        size: 3
+      });
+    }
+  }
+
+  async function triggerGameOver() {
+    if (state === 'gameover') return;
+    state = 'gameover';
+    sfx.shooWarning();
+    screenShake = 14;
+
+    document.getElementById('finalScore').textContent = `${score}`;
+    document.getElementById('finalBugs').textContent = `${bugs}`;
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+
+    const submitStatus = document.getElementById('submitStatus');
+    submitStatus.textContent = 'Submitting score...';
+
+    if (window.vesta?.submitScore) {
+      try {
+        await window.vesta.submitScore(score, { label: 'Chaos Points' });
+        submitStatus.textContent = 'Score submitted!';
+      } catch (e) {
+        submitStatus.textContent = '';
+      }
+    } else {
+      submitStatus.textContent = '';
+    }
+
+    document.getElementById('btnRestart').focus();
+  }
+
+  function startGame() {
+    sfx.init();
+    state = 'playing';
+    score = 0;
+    bugs = 0;
+    lives = 3;
+    screenShake = 0;
+    particles = [];
+    floatingTexts = [];
+    shooHands.active = false;
+    shooHands.cooldown = 3.0;
+    editorLines = [
+      '// PRODUCTION DEPLOYMENT ACTIVE',
+      'function processPayments() {',
+      '  chargeCreditCards();',
+      '}'
+    ];
+    layoutKeyboard();
+    cat.reset();
+
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    updateHud();
+  }
+
+  function updateHud() {
+    document.getElementById('hudScore').textContent = `${score}`;
+    document.getElementById('hudBugs').textContent = `${bugs}`;
+    let paws = '';
+    for (let i = 0; i < lives; i++) paws += '🐾 ';
+    document.getElementById('hudLives').textContent = paws.trim();
+  }
+
+  document.getElementById('btnStart').addEventListener('click', startGame);
+  document.getElementById('btnRestart').addEventListener('click', startGame);
+
+  const audioBtn = document.getElementById('audioToggle');
+  const audioIcon = document.getElementById('audioIcon');
+  audioBtn.addEventListener('click', () => {
+    sfx.init();
+    const isMuted = sfx.toggleMute();
+    audioIcon.textContent = isMuted ? '🔇' : '🔊';
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    paused = document.hidden;
+    if (!paused) lastTime = performance.now();
+  });
+
+  // --- UPDATE ---
+  function update(dt) {
+    if (state !== 'playing' || paused) return;
+
+    // Keyboard Arrow/WASD movement
+    let moveX = 0, moveY = 0;
+    if (keysDown['KeyW'] || keysDown['ArrowUp']) moveY -= 1;
+    if (keysDown['KeyS'] || keysDown['ArrowDown']) moveY += 1;
+    if (keysDown['KeyA'] || keysDown['ArrowLeft']) moveX -= 1;
+    if (keysDown['KeyD'] || keysDown['ArrowRight']) moveX += 1;
+
+    if (moveX !== 0 || moveY !== 0) {
+      const len = Math.hypot(moveX, moveY);
+      cat.x += (moveX / len) * cat.speed * dt;
+      cat.y += (moveY / len) * cat.speed * dt;
+      cat.targetX = cat.x;
+      cat.targetY = cat.y;
+    } else {
+      // Move toward pointer target
+      const dx = cat.targetX - cat.x;
+      const dy = cat.targetY - cat.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 6) {
+        cat.x += (dx / dist) * Math.min(dist, cat.speed * dt);
+        cat.y += (dy / dist) * Math.min(dist, cat.speed * dt);
+      }
+    }
+
+    // Clamp cat to keyboard region
+    cat.x = Math.max(kbX + 15, Math.min(kbX + kbW - 15, cat.x));
+    cat.y = Math.max(kbY + 10, Math.min(kbY + kbH - 10, cat.y));
+
+    // Animate paws & tail
+    cat.tailWag += dt * 8;
+    cat.pawLeft.x = cat.x - 18 + Math.sin(cat.tailWag) * 4;
+    cat.pawLeft.y = cat.y + 12;
+    cat.pawRight.x = cat.x + 18 - Math.sin(cat.tailWag) * 4;
+    cat.pawRight.y = cat.y + 12;
+
+    // Check which keys are stepped on
+    for (const k of keys) {
+      // Glow decay
+      if (k.pressed > 0) k.pressed = Math.max(0, k.pressed - dt * 4);
+
+      // Check cat paws collision
+      const onKeyLeft = (cat.pawLeft.x >= k.x && cat.pawLeft.x <= k.x + k.w && cat.pawLeft.y >= k.y && cat.pawLeft.y <= k.y + k.h);
+      const onKeyRight = (cat.pawRight.x >= k.x && cat.pawRight.x <= k.x + k.w && cat.pawRight.y >= k.y && cat.pawRight.y <= k.y + k.h);
+
+      if ((onKeyLeft || onKeyRight) && k.pressed <= 0.1) {
+        pressKey(k);
+      }
+    }
+
+    // Shoo Hands (Programmer reaching in to shoo cat)
+    if (!shooHands.active) {
+      shooHands.cooldown -= dt;
+      if (shooHands.cooldown <= 0) {
+        shooHands.active = true;
+        shooHands.x = cat.x + (Math.random() - 0.5) * 80;
+        shooHands.y = cat.y;
+        shooHands.timer = 1.6;
+        sfx.shooWarning();
+      }
+    } else {
+      shooHands.timer -= dt;
+      if (shooHands.timer <= 0) {
+        // Hand strikes!
+        const dist = Math.hypot(cat.x - shooHands.x, cat.y - shooHands.y);
+        if (dist < 60) {
+          // Cat got grabbed / shooed!
+          lives--;
+          screenShake = 16;
+          sfx.shooWarning();
+          floatingTexts.push({ text: 'SHOO! 😾', x: cat.x, y: cat.y - 40, vy: -50, color: '#ef4444', life: 1 });
+          updateHud();
+          if (lives <= 0) {
+            triggerGameOver();
+            return;
+          }
+          // Cat dashes to another corner
+          cat.x = (cat.x > W / 2) ? kbX + 40 : kbX + kbW - 40;
+          cat.targetX = cat.x;
+        }
+        shooHands.active = false;
+        shooHands.cooldown = 2.8 + Math.random() * 2.0;
+      }
+    }
+
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    // Update floating texts
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+      const ft = floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.life -= dt;
+      if (ft.life <= 0) floatingTexts.splice(i, 1);
+    }
+
+    updateHud();
+  }
+
+  // --- DRAW ---
+  function draw() {
+    ctx.save();
+
+    if (screenShake > 0) {
+      const sx = (Math.random() - 0.5) * screenShake;
+      const sy = (Math.random() - 0.5) * screenShake;
+      ctx.translate(sx, sy);
+      screenShake = Math.max(0, screenShake - 0.5);
+    }
+
+    // Desk Wood / Dark Tech mat background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Monitor / IDE screen at the top
+    const screenH = kbY - 30;
+    if (screenH > 100) {
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(kbX, 55, kbW, screenH - 55);
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(kbX, 55, kbW, screenH - 55);
+
+      // IDE Title bar
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(kbX, 55, kbW, 24);
+      ctx.fillStyle = '#f43f5e'; ctx.beginPath(); ctx.arc(kbX + 14, 67, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#eab308'; ctx.beginPath(); ctx.arc(kbX + 26, 67, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(kbX + 38, 67, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px monospace';
+      ctx.fillText('prod-release.js — CatIDE v1.0', kbX + 54, 71);
+
+      // Code lines
+      ctx.font = '12px monospace';
+      for (let i = 0; i < editorLines.length; i++) {
+        const line = editorLines[i];
+        ctx.fillStyle = line.includes('BUG') || line.includes('CRITICAL') ? '#f43f5e' : (line.includes('//') ? '#64748b' : '#38bdf8');
+        ctx.fillText(line, kbX + 16, 100 + i * 20);
+      }
+    }
+
+    // Keyboard Base Plate
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.roundRect(kbX - 10, kbY - 8, kbW + 20, kbH + 16, 14);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Render Mechanical Keycaps
+    for (const k of keys) {
+      ctx.save();
+      const isLit = k.pressed > 0;
+
+      // Keycap body
+      ctx.fillStyle = isLit ? '#f472b6' : '#0f172a';
+      if (isLit) {
+        ctx.shadowColor = '#f472b6';
+        ctx.shadowBlur = 14;
+      }
+      ctx.beginPath();
+      ctx.roundRect(k.x, k.y + (isLit ? 2 : 0), k.w, k.h - (isLit ? 2 : 0), 4);
+      ctx.fill();
+
+      // Keycap border & label
+      ctx.strokeStyle = isLit ? '#fdf2f8' : '#334155';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = isLit ? '#ffffff' : (k.label === 'PROD' ? '#f43f5e' : '#cbd5e1');
+      ctx.font = `bold ${Math.max(9, Math.min(12, k.h * 0.35))}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(k.label, k.x + k.w / 2, k.y + k.h / 2 + (isLit ? 1 : 0));
+
+      ctx.restore();
+    }
+
+    // Warning shadow for Programmer Hand
+    if (shooHands.active) {
+      ctx.save();
+      const alpha = 0.35 + Math.sin(shooHands.timer * 12) * 0.2;
+      ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(shooHands.x, shooHands.y, 50, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Hand icon descending
+      ctx.font = '36px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const handY = shooHands.y - (shooHands.timer * 60);
+      ctx.fillText('👋', shooHands.x, handY);
+
+      ctx.fillStyle = '#fee2e2';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('SHOO INCOMING!', shooHands.x, shooHands.y - 65);
+      ctx.restore();
+    }
+
+    // Adorable Cat Sprite (Canvas Vector)
+    ctx.save();
+    ctx.translate(cat.x, cat.y);
+
+    // Cat Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(0, 16, 28, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cat Body (Fluffy Orange / Calico)
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 22, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // White fur patches
+    ctx.fillStyle = '#fef3c7';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 12, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cat Head
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.arc(0, -12, 13, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ears
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    ctx.moveTo(-11, -18); ctx.lineTo(-7, -29); ctx.lineTo(-2, -22); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(11, -18); ctx.lineTo(7, -29); ctx.lineTo(2, -22); ctx.closePath(); ctx.fill();
+
+    // Pink Inner Ears
+    ctx.fillStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.moveTo(-9, -20); ctx.lineTo(-7, -27); ctx.lineTo(-4, -22); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(9, -20); ctx.lineTo(7, -27); ctx.lineTo(4, -22); ctx.closePath(); ctx.fill();
+
+    // Eyes (Cute blink or happy eyes)
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath(); ctx.arc(-5, -12, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5, -12, 2.5, 0, Math.PI * 2); ctx.fill();
+
+    // Cute pink nose
+    ctx.fillStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.arc(0, -8, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Paws walking on keys
+    ctx.fillStyle = '#fef3c7';
+    ctx.beginPath();
+    ctx.arc(cat.pawLeft.x - cat.x, cat.pawLeft.y - cat.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cat.pawRight.x - cat.x, cat.pawRight.y - cat.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tail Wagging
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 14);
+    ctx.quadraticCurveTo(Math.sin(cat.tailWag) * 16, 26, Math.sin(cat.tailWag) * 12, 34);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Particles
+    for (const p of particles) {
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
+    }
+
+    // Floating text
+    for (const ft of floatingTexts) {
+      ctx.save();
+      ctx.font = 'bold 15px monospace';
+      ctx.fillStyle = ft.color;
+      ctx.shadowColor = ft.color;
+      ctx.shadowBlur = 8;
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = Math.max(0, ft.life);
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  // --- LOOP ---
+  function loop(currentTime) {
+    let dt = (currentTime - lastTime) / 1000;
+    lastTime = currentTime;
+
+    if (dt > 0.1) dt = 0.1;
+
+    update(dt);
+    draw();
+
+    requestAnimationFrame(loop);
+  }
+
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

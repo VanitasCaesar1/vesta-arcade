@@ -18,6 +18,8 @@ export interface GameRow {
   hidden: number;
   created_at: number;
   updated_at: number;
+  /** Set for community games (published without the admin token). Never sent to clients. */
+  owner_key_hash?: string | null;
 }
 
 export interface Game {
@@ -35,6 +37,8 @@ export interface Game {
   plays: number;
   likes: number;
   hidden: boolean;
+  /** Published by a visitor through open publishing, not by the arcade's owner. */
+  community: boolean;
   createdAt: number;
   updatedAt: number;
   recentPlays?: number;
@@ -56,6 +60,7 @@ export function toGame(r: GameRow & { recent_plays?: number }): Game {
     plays: r.plays,
     likes: r.likes,
     hidden: !!r.hidden,
+    community: !!r.owner_key_hash,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     recentPlays: r.recent_plays,
@@ -305,13 +310,25 @@ export interface ScoreRow {
 
 /** Best score per set of initials, so one player can't fill the board. */
 export async function topScores(env: Env, slug: string, limit = 10): Promise<ScoreRow[]> {
-  const { results } = await env.DB.prepare(
-    `SELECT name, MAX(score) AS score, MIN(created_at) AS created_at FROM scores
-     WHERE slug = ? AND hidden = 0 GROUP BY name ORDER BY score DESC, created_at ASC LIMIT ?`,
-  )
+  const { results } = await env.DB.prepare("SELECT name, score, created_at FROM best_scores WHERE slug = ? ORDER BY score DESC, created_at ASC LIMIT ?")
     .bind(slug, limit)
     .all<ScoreRow>();
   return results;
+}
+
+export interface Challenge {
+  id: number;
+  name: string;
+  score: number;
+}
+
+/** The score a challenge link points at (`/g/<slug>?c=<id>`). Hidden scores can't be used as challenges. */
+export async function getChallenge(env: Env, slug: string, raw: string | undefined): Promise<Challenge | null> {
+  if (!raw || !/^\d{1,12}$/.test(raw)) return null;
+  const row = await env.DB.prepare("SELECT id, name, score FROM scores WHERE id = ? AND slug = ? AND hidden = 0")
+    .bind(Number(raw), slug)
+    .first<Challenge>();
+  return row && /^[A-Z0-9]{1,3}$/.test(row.name) && Number.isFinite(row.score) ? row : null;
 }
 
 export interface LoopData {

@@ -18,7 +18,7 @@ Option 1 says what it is in terms people already know. Option 2 leads with the h
 >
 > Coding agents make it easy to build a browser game in an afternoon. The hard part is what comes after: you share a link, and you never find out that it crashed on Safari or that half the players quit in ten seconds.
 >
-> Vesta is a small arcade you deploy to your own Cloudflare account with `npx vesta-cli setup`. It uses two Workers, R2 and D1, and fits the free plan. Your agent publishes with one MCP tool call (or `npx vesta-cli publish`) and gets a link. Each game gets a tiny injected script that records uncaught errors with stacks, failed asset loads, how long the tab stays visible, and milestones the game reports. Then `get_feedback` gives the agent all of that plus players' comments as one Markdown report, and you can say "fix the top error and publish again".
+> Vesta is a small arcade you deploy to your own Cloudflare account with `npx vesta-arcade setup`. It uses two Workers, R2 and D1, and fits the free plan. Your agent publishes with one MCP tool call (or `npx vesta-arcade publish`) and gets a link. Each game gets a tiny injected script that records uncaught errors with stacks, failed asset loads, how long the tab stays visible, and milestones the game reports. Then `get_feedback` gives the agent all of that plus players' comments as one Markdown report, and you can say "fix the top error and publish again".
 >
 > From the Hug of Death launch: [N] plays, [N] distinct errors (the top one was [X], fixed in v[N]), and [N]% of players reached #1.
 >

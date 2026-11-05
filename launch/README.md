@@ -12,7 +12,7 @@ Why this order: playful projects with a sharp premise are among the most upvoted
 - [ ] Seed at least 5 more games so the arcade isn't empty: make 2–3 yourself with Claude Code (record one session end to end; that's the demo video), and ask Vibe Jam 2026 creators to publish theirs (the entry list is public).
 - [x] README screenshots are from the live arcade, with the demo link at the top.
 - [x] Public repo: https://github.com/VanitasCaesar1/vesta-arcade
-- [ ] `cd cli && npm publish` (the `vesta-cli` name was free on 2026-11-02). Test `npx vesta-cli setup` on a second Cloudflare account, or have a friend try it.
+- [ ] `cd cli && npm publish` (the `vesta-arcade` name was free on 2026-11-02). Test `npx vesta-arcade setup` on a second Cloudflare account, or have a friend try it.
 - [ ] Record the 60-second video ([demo-video.md](demo-video.md)) and a 15-second GIF of the publish → play → feedback loop for the README.
 - [ ] Turn on Cloudflare's billing alerts, so a traffic spike never surprises you. The free plan just stops serving, it doesn't charge.
 

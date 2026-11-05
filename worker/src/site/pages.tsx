@@ -1,4 +1,4 @@
-import { duration, type CommentRow, type Game, type LoopData, type ScoreRow, type Sort, type VersionRow } from "./db.ts";
+import { duration, type Challenge, type CommentRow, type Game, type LoopData, type ScoreRow, type Sort, type VersionRow } from "./db.ts";
 import { compactNumber, timeAgo } from "../lib/util.ts";
 import { Icon, Layout, Mascot, REPO_URL } from "./layout.tsx";
 
@@ -47,7 +47,7 @@ function Slot({ i }: { i: number }) {
         <b>Your game here</b>
         <p>Run this in your game's folder, or ask your coding agent to publish it.</p>
       </div>
-      <Cmd text="npx vesta-cli publish" />
+      <Cmd text="npx vesta-arcade publish" />
     </div>
   );
 }
@@ -70,12 +70,12 @@ function Loop({ d, siteUrl }: { d: LoopData; siteUrl: string }) {
             <i /> Live from {host}
           </span>
           <pre>
-            <span class="p">$ </span>npx vesta-cli publish{"\n"}
+            <span class="p">$ </span>npx vesta-arcade publish{"\n"}
             <span class="y">▲</span> {g.title} v{g.version} is live{"\n"}
             {"  "}
             {siteUrl}/g/{g.slug}
             {"\n\n"}
-            <span class="p">$ </span>npx vesta-cli feedback {g.slug}
+            <span class="p">$ </span>npx vesta-arcade feedback {g.slug}
             {"\n"}
             <span class="h"># Player feedback: {g.title}</span>
             {"\n"}- {compactNumber(d.plays)} {d.plays === 1 ? "play" : "plays"} in 14 days, average {duration(d.avgSeconds)} of active play{"\n"}- Errors on v{g.version}: <span class={d.errorKinds.length ? "r" : "g"}>{errors}</span>
@@ -122,7 +122,7 @@ function Loop({ d, siteUrl }: { d: LoopData; siteUrl: string }) {
   );
 }
 
-export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null }) {
+export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null; open?: boolean; arena?: string }) {
   const qs = (sort: Sort, tool?: string) => {
     const q = new URLSearchParams();
     if (sort !== "trending") q.set("sort", sort);
@@ -159,6 +159,17 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
           </div>
         </div>
       </section>
+
+      {p.arena ? (
+        <div class="wrap">
+          <a class="arena-strip" href="/arena">
+            <span class="k">New</span>
+            <b class="display">AI Arena</b>
+            <span>{p.arena} each built games from the same prompts. Play two blind, vote for the more fun one, see who made it.</span>
+            <span class="go">Play and vote</span>
+          </a>
+        </div>
+      ) : null}
 
       <div class="wrap">
         <section class="floor" id="games">
@@ -203,20 +214,37 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
               <Icon name="github" /> Get Vesta
             </a>
           </div>
-          <div class="steps">
-            <div>
-              <span>Deploy your own arcade</span>
-              <Cmd text="npx vesta-cli setup" />
+          {p.open ? (
+            <div class="steps">
+              <div>
+                <span>Publish your game here. No account, one command</span>
+                <Cmd text="npx vesta-arcade publish" />
+              </div>
+              <div>
+                <span>Or hand it to Claude Code</span>
+                <Cmd text="claude mcp add vesta -- npx -y vesta-arcade mcp" />
+              </div>
+              <div>
+                <span>Want your own arcade? Free on Cloudflare</span>
+                <Cmd text="npx vesta-arcade setup" />
+              </div>
             </div>
-            <div>
-              <span>Publish a game</span>
-              <Cmd text="npx vesta-cli publish" />
+          ) : (
+            <div class="steps">
+              <div>
+                <span>Deploy your own arcade</span>
+                <Cmd text="npx vesta-arcade setup" />
+              </div>
+              <div>
+                <span>Publish a game</span>
+                <Cmd text="npx vesta-arcade publish" />
+              </div>
+              <div>
+                <span>Or hand it to Claude Code</span>
+                <Cmd text="claude mcp add vesta -- npx -y vesta-arcade mcp" />
+              </div>
             </div>
-            <div>
-              <span>Or hand it to Claude Code</span>
-              <Cmd text="claude mcp add vesta -- npx -y vesta-cli mcp" />
-            </div>
-          </div>
+          )}
         </section>
       </div>
     </Layout>
@@ -231,26 +259,48 @@ export function GamePage(p: {
   versions: VersionRow[];
   comments: CommentRow[];
   scores: ScoreRow[];
+  challenge?: Challenge | null;
+  more?: Game[];
   feedback?: string;
 }) {
   const g = p.game;
   const url = `${p.siteUrl}/g/${g.slug}`;
+  const ch = p.challenge;
+  const chScore = ch ? Math.round(ch.score).toLocaleString("en-US") : "";
   const embed = `<iframe src="${p.siteUrl}/embed/${g.slug}" width="960" height="540" style="border:0;border-radius:12px;max-width:100%" allow="autoplay; fullscreen; gamepad" allowfullscreen></iframe>`;
   const badge = `[![Play ${g.title}](${p.siteUrl}/badge/${g.slug})](${url})`;
   const description = g.description || `Play ${g.title} in your browser.${g.madeWith.length ? ` Made with ${g.madeWith.join(" + ")}.` : ""}`;
   return (
     <Layout
       meta={{
-        title: `${g.title}${g.author ? ` by ${g.author}` : ""} | ${p.arcade}`,
-        description: description.slice(0, 200),
-        url,
+        title: ch ? `${ch.name} scored ${chScore} on ${g.title}. Beat it.` : `${g.title}${g.author ? ` by ${g.author}` : ""} | ${p.arcade}`,
+        description: ch ? `${ch.name} challenged you to ${g.title}. Free in your browser, no sign-up. ${description}`.slice(0, 200) : description.slice(0, 200),
+        url: ch ? `${url}?c=${ch.id}` : url,
         image: g.hasCover ? `${p.siteUrl}${cover(g)}` : undefined,
         arcade: p.arcade,
         noindex: g.hidden,
       }}
     >
       <div class="wrap">
-        <div class="stage" style={`aspect-ratio:${g.aspect}`} data-src={p.playSrc} data-title={g.title} data-share-url={url}>
+        {ch ? (
+          <div class="challenge">
+            <span class="k">Challenge</span>
+            <span>
+              <b>{ch.name}</b> scored <b class="pts">{chScore}</b>. Beat it.
+            </span>
+            <button class="btn pop sm" data-start type="button">
+              <Icon name="play" /> Play
+            </button>
+          </div>
+        ) : null}
+        <div
+          class="stage"
+          style={`aspect-ratio:${g.aspect}`}
+          data-src={p.playSrc}
+          data-title={g.title}
+          data-share-url={url}
+          data-challenge={ch ? `${ch.name}:${ch.score}` : undefined}
+        >
           <img class="cover" src={cover(g)} alt="" />
           <button class="start" data-start type="button" aria-label={`Play ${g.title}`}>
             <span class="btn-play">
@@ -284,6 +334,7 @@ export function GamePage(p: {
               <span>
                 v{g.version}, updated {timeAgo(g.updatedAt)}
               </span>
+              {g.community ? <span class="community">Community upload</span> : null}
             </div>
             {g.madeWith.length ? (
               <div class="tools">
@@ -405,8 +456,26 @@ export function GamePage(p: {
                 <Icon name="github" /> View source
               </a>
             ) : null}
+
+            <form class="report" method="post" action={`/api/games/${g.slug}/report`}>
+              <input type="hidden" name="reason" value="reported from the game page" />
+              <button class="linkbtn" type="submit">
+                Report this game
+              </button>
+            </form>
           </aside>
         </div>
+
+        {p.more?.length ? (
+          <section class="more">
+            <h2 class="display">Play next</h2>
+            <div class="grid">
+              {p.more.map((m, i) => (
+                <GameCard g={m} i={i} />
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </Layout>
   );

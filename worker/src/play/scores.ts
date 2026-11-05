@@ -39,14 +39,21 @@ export async function submitScore(req: Request, env: Env): Promise<Response> {
   const recent = await env.DB.prepare("SELECT COUNT(*) AS n FROM scores WHERE ip_hash = ? AND created_at > ?").bind(ipHash, t - 3600).first<{ n: number }>();
   if ((recent?.n ?? 0) >= 30) return json({ error: "slow down" }, 429);
 
-  await env.DB.prepare("INSERT INTO scores (slug, version, name, score, ip_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+  const inserted = await env.DB.prepare("INSERT INTO scores (slug, version, name, score, ip_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)")
     .bind(slug, version, name, score, ipHash, t)
     .run();
-  const [rank, today, total] = await env.DB.batch<{ n: number }>([
-    env.DB.prepare("SELECT COUNT(*) + 1 AS n FROM scores WHERE slug = ? AND hidden = 0 AND score > ?").bind(slug, score),
-    env.DB.prepare("SELECT COUNT(*) + 1 AS n FROM scores WHERE slug = ? AND hidden = 0 AND score > ? AND created_at > ?").bind(slug, score, t - 86_400),
-    env.DB.prepare("SELECT COUNT(*) AS n FROM scores WHERE slug = ? AND hidden = 0").bind(slug),
+  const id = Number(inserted.meta.last_row_id);
+  // Ranks place this run among other players' bests (one row per set of initials), so they read a bounded table.
+  const [, rank, today, total] = await env.DB.batch<{ n: number }>([
+    env.DB.prepare(
+      `INSERT INTO best_scores (slug, name, score, score_id, created_at) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT (slug, name) DO UPDATE SET score = excluded.score, score_id = excluded.score_id, created_at = excluded.created_at
+       WHERE excluded.score > best_scores.score`,
+    ).bind(slug, name, score, id, t),
+    env.DB.prepare("SELECT COUNT(*) + 1 AS n FROM best_scores WHERE slug = ? AND name != ? AND score > ?").bind(slug, name, score),
+    env.DB.prepare("SELECT COUNT(*) + 1 AS n FROM best_scores WHERE slug = ? AND name != ? AND score > ? AND created_at > ?").bind(slug, name, score, t - 86_400),
+    env.DB.prepare("SELECT COUNT(*) AS n FROM best_scores WHERE slug = ?").bind(slug),
   ]);
   const n = (r: D1Result<{ n: number }> | undefined) => r?.results[0]?.n ?? 1;
-  return json({ rank: n(rank), rankToday: n(today), total: n(total) });
+  return json({ id, rank: n(rank), rankToday: n(today), total: n(total) });
 }

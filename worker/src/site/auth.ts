@@ -6,7 +6,7 @@ import { hmac, safeEqual } from "../lib/util.ts";
 const COOKIE = "vesta_session";
 const SESSION_DAYS = 30;
 
-function bearer(c: Context<AppEnv>): string | null {
+export function bearer(c: Context<AppEnv>): string | null {
   const h = c.req.header("authorization");
   return h?.startsWith("Bearer ") ? h.slice(7).trim() : null;
 }
@@ -36,7 +36,7 @@ export async function isAdmin(c: Context<AppEnv>): Promise<boolean> {
  * cross-site form can't do. The cookie is SameSite=Strict as a second guard.
  */
 export const requireAdmin: MiddlewareHandler<AppEnv> = async (c, next) => {
-  if (!tokenConfigured(c)) return c.json({ error: "ADMIN_TOKEN is not set (16+ characters). Run `npx vesta-cli setup`." }, 503);
+  if (!tokenConfigured(c)) return c.json({ error: "ADMIN_TOKEN is not set (16+ characters). Run `npx vesta-arcade setup`." }, 503);
   const token = bearer(c);
   if (token) {
     if (!safeEqual(token, c.env.ADMIN_TOKEN)) return c.json({ error: "invalid token" }, 401);

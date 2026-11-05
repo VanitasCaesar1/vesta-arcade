@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
+  "slug": "arena-c2391639",
+  "title": "Packet Runner",
+  "madeWith": [
+    "Gemini 3.8 Flash"
+  ]
+}

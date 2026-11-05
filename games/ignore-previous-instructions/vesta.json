@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/vesta-cli/vesta.schema.json",
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
   "slug": "ignore-previous-instructions",
   "title": "Ignore Previous Instructions",
   "description": "You're the guardrail between an AI agent and the internet. Emails, web pages, GitHub issues and tool output stream in. Some of them are trying to take control of the agent. Block the prompt injections, let everything else through, and don't make your user miss their mail.\n\nControls: Left arrow or A to block, Right arrow or D to allow. Swipe on phones.",

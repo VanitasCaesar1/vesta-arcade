@@ -2,9 +2,11 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { extname, relative, resolve } from "node:path";
+import { basename, extname, relative, resolve } from "node:path";
 import { ApiError, Client } from "./client.ts";
-import { requireConfig } from "./config.ts";
+import { gameKey, keysPath, loadConfig, PUBLIC_ARCADE, saveGameKey, type ArcadeConfig } from "./config.ts";
+import { pathToFileURL } from "node:url";
+import { join } from "node:path";
 import {
   collectFiles,
   detectTools,
@@ -49,20 +51,24 @@ export interface PublishResult {
   cover: "uploaded" | "screenshot" | "kept" | "none";
   skipped: string[];
   projectFile: string;
+  /** Published to the public arcade with a per-game key. */
+  public: boolean;
 }
 
 const COVER_TYPES: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
 
 export async function publish(opts: PublishOptions): Promise<PublishResult> {
-  const cfg = await requireConfig();
-  const client = new Client(cfg);
+  const own = await loadConfig();
   const { out } = opts;
   const start = resolve(opts.path ?? process.cwd());
   if (!existsSync(start)) throw new PublishError(`${start} does not exist.`);
 
   // A path straight to a build folder (dist/) belongs to the project above it.
-  const looksLikeBuild = existsSync(resolve(start, "index.html")) && !existsSync(resolve(start, "package.json")) && !existsSync(resolve(start, "vesta.json"));
-  const root = looksLikeBuild ? findProjectRoot(resolve(start, "..")) : findProjectRoot(start);
+  // A build folder (dist/, build/…) belongs to the project above it. Any other folder with an
+  // index.html is a project of its own, even inside a bigger repo.
+  const has = (f: string) => existsSync(resolve(start, f));
+  const looksLikeBuild = /^(dist|build|out|public|www|_site|docs)$/i.test(basename(start)) && has("index.html") && !has("package.json") && !has("vesta.json");
+  const root = looksLikeBuild ? findProjectRoot(resolve(start, "..")) : has("vesta.json") || has("index.html") || has("package.json") ? start : findProjectRoot(start);
   const { config: project, exists: hasProjectFile } = await loadProject(root);
 
   if (opts.build) await runBuild(root, project, out);
@@ -75,9 +81,26 @@ export async function publish(opts: PublishOptions): Promise<PublishResult> {
   let slug = opts.slug ?? project.slug ?? slugify(title);
   const madeWith = opts.madeWith ?? project.madeWith ?? detectTools(root, opts.clientName);
 
+  // No arcade of your own: publish to the public one. The arcade picks a free slug and
+  // hands back a key that can update this game only; it's kept in keys.json.
+  let cfg: ArcadeConfig;
+  if (own) cfg = own;
+  else {
+    let key = await gameKey(PUBLIC_ARCADE, slug);
+    if (!key) {
+      const claim = await new Client({ url: PUBLIC_ARCADE, token: "" }).request<{ slug: string; key: string }>("POST", "/api/claim", { title });
+      slug = claim.slug;
+      key = claim.key;
+      await saveGameKey(PUBLIC_ARCADE, slug, key);
+    }
+    cfg = { url: PUBLIC_ARCADE, token: key, public: true };
+  }
+  const client = new Client(cfg);
+
   // First publish from this project: don't overwrite a different game that happens to share the slug.
   let existing = await client.game(slug);
-  if (existing && !project.slug && !opts.slug) {
+  if (existing && !existing.version && cfg.public) existing = null;
+  if (existing && !project.slug && !opts.slug && !cfg.public) {
     for (let i = 2; existing && i < 100; i++) {
       slug = `${slugify(title).slice(0, 44)}-${i}`;
       existing = await client.game(slug);
@@ -109,7 +132,9 @@ export async function publish(opts: PublishOptions): Promise<PublishResult> {
     cover = "uploaded";
   } else if (!existing?.hasCover && opts.screenshot !== false) {
     out.progress(c.dim("Taking a cover screenshot…"));
-    const shot = await screenshot(`${live.playUrl}?vesta-preview=1`);
+    // Community games only load inside the arcade's frame, so screenshot the local build instead.
+    const shotUrl = cfg.public ? `${pathToFileURL(join(buildDir, "index.html")).href}?vesta-preview=1` : `${live.playUrl}?vesta-preview=1`;
+    const shot = await screenshot(shotUrl);
     if (shot) {
       out.progress(c.dim("Composing key art…"));
       const art = (await keyArt(shot, { title, author: project.author, arcadeUrl: cfg.url }).catch(() => null)) ?? shot;
@@ -135,6 +160,7 @@ export async function publish(opts: PublishOptions): Promise<PublishResult> {
     cover,
     skipped,
     projectFile: resolve(root, "vesta.json"),
+    public: !!cfg.public,
   };
 }
 

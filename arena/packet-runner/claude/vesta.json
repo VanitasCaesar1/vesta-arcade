@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
+  "slug": "arena-a41b9f2b",
+  "title": "Packet Runner",
+  "madeWith": [
+    "Claude Opus 5.5"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
+  "slug": "arena-19b66f9c",
+  "title": "Bot Defense",
+  "madeWith": [
+    "Gemini 3.8 Flash"
+  ]
+}

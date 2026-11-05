@@ -53,7 +53,7 @@ export class Client {
     }
     if (!res.ok) {
       const msg = (data as { error?: string })?.error ?? (text.slice(0, 200) || res.statusText);
-      throw new ApiError(res.status === 401 ? `The arcade rejected the token (${msg}). Run: npx vesta-cli login` : msg, res.status, data);
+      throw new ApiError(res.status === 401 ? `The arcade rejected the token (${msg}). Run: npx vesta-arcade login` : msg, res.status, data);
     }
     return data as T;
   }

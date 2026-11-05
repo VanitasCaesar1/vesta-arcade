@@ -14,5 +14,5 @@ It reports `started`, `front-page`, `rank-1`, `survived`, `game-over`, `first-cr
 Add `?demo` to the URL to watch it play itself, or `?demo=fast` at triple speed (handy for recording a trailer).
 
 ```sh
-npx vesta-cli publish games/hug-of-death
+npx vesta-arcade publish games/hug-of-death
 ```

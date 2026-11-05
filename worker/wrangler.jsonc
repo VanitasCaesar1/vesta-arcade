@@ -1,4 +1,4 @@
-// Local development config. `npx vesta-cli setup` writes its own config when
+// Local development config. `npx vesta-arcade setup` writes its own config when
 // it deploys to your Cloudflare account, so you never need to edit this file.
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
@@ -12,7 +12,9 @@
   "vars": {
     "ROLE": "auto",
     "ARCADE_NAME": "Vesta Arcade",
-    "PLAY_URL": "http://play.localhost:8787"
+    "PLAY_URL": "http://play.localhost:8787",
+    "SITE_URL": "http://localhost:8787",
+    "OPEN_PUBLISHING": "1"
   },
   "r2_buckets": [{ "binding": "FILES", "bucket_name": "vesta-games" }],
   "d1_databases": [

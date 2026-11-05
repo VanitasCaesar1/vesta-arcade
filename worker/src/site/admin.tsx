@@ -24,7 +24,7 @@ export function LoginPage(p: { arcade: string; siteUrl: string; error?: boolean;
             </>
           ) : (
             <div class="notice err">
-              This arcade has no ADMIN_TOKEN yet. Run <code>npx vesta-cli setup</code>, or set the secret with <code>wrangler secret put ADMIN_TOKEN</code>.
+              This arcade has no ADMIN_TOKEN yet. Run <code>npx vesta-arcade setup</code>, or set the secret with <code>wrangler secret put ADMIN_TOKEN</code>.
             </div>
           )}
         </div>
@@ -90,7 +90,7 @@ export function DashboardPage(p: { arcade: string; siteUrl: string; games: GameS
         </div>
         <div class="ai">
           <p>
-            Close the loop from your editor: <code>claude mcp add vesta -- npx -y vesta-cli mcp</code>, then ask
+            Close the loop from your editor: <code>claude mcp add vesta -- npx -y vesta-arcade mcp</code>, then ask
             <em> "read the Vesta feedback for my game and fix the top error."</em>
           </p>
         </div>
@@ -131,7 +131,7 @@ export function DashboardPage(p: { arcade: string; siteUrl: string; games: GameS
         ) : (
           <div class="empty">
             <h2 class="display" style="margin:0 0 8px">No games yet</h2>
-            <p class="muted">Run <code class="mono">npx vesta-cli publish</code> in a game's folder.</p>
+            <p class="muted">Run <code class="mono">npx vesta-arcade publish</code> in a game's folder.</p>
           </div>
         )}
       </div>
