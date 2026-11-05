@@ -32,6 +32,22 @@ export async function handlePlay(req: Request, env: Env, ctx: ExecutionContext):
   }
   if (req.method !== "GET" && req.method !== "HEAD") return new Response("method not allowed", { status: 405 });
 
+  // AI Arena drawings: /svg/svg-1a2b3c4d5e.svg. Shown through <img>; opened directly, the CSP keeps them inert.
+  const svgMatch = url.pathname.match(/^\/svg\/(svg-[a-f0-9]{10})\.svg$/);
+  if (svgMatch) {
+    const obj = await env.FILES.get(`svg/${svgMatch[1]}.svg`);
+    if (!obj) return notFound();
+    return new Response(req.method === "HEAD" ? null : obj.body, {
+      headers: {
+        ...SECURITY_HEADERS,
+        "content-type": "image/svg+xml",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox",
+        "cache-control": "public, max-age=31536000, immutable",
+        "access-control-allow-origin": "*",
+      },
+    });
+  }
+
   // /<slug>/<version>/<path>
   const m = url.pathname.match(/^\/([^/]+)\/(\d{1,6})(\/.*)?$/);
   if (!m) {

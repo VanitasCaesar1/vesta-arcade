@@ -211,13 +211,27 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .arena-strip .go { font-weight: 700; text-decoration: underline; }
 @media (max-width: 700px) { .arena-strip { grid-template-columns: auto 1fr; } .arena-strip span:nth-of-type(2) { grid-column: 1 / -1; } }
 .arena-head { margin: 24px 0 18px; }
+.arena-tabs { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+.arena-tabs a { padding: 7px 14px; border: 2px solid var(--line); text-decoration: none; color: inherit; font-weight: 700; font-size: 14px; }
+.arena-tabs a.on { background: var(--pop); color: var(--pop-ink); border-color: var(--pop-ink); }
+.arena-svg { aspect-ratio: 4/3; background: #fff; border: 2px solid var(--line); display: grid; place-items: center; overflow: hidden; }
+.arena-svg img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.arena-reveal small { opacity: .75; font-size: 12px; }
+.arena-submit { margin: 40px 0 20px; padding: 20px; border: 2px dashed var(--line); }
+.arena-submit h2 { margin: 0 0 8px; }
+.arena-submit select { width: 100%; font: inherit; padding: 10px; border: 2px solid var(--line); background: transparent; color: inherit; }
+.arena-submit .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.arena-submit textarea { font-family: var(--mono); font-size: 12px; }
+.board-kind { margin: 18px 0 8px; }
+.board-kind h2 { margin: 0 0 6px; }
+small.community { font-weight: 400; opacity: .7; }
 .arena-head .k, .arena-prompt .k, .arena-reveal .k { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; background: var(--pop); color: var(--pop-ink); padding: 3px 7px; display: inline-block; }
 .arena-head h1 { margin: 10px 0 8px; font-size: clamp(32px, 5vw, 60px); line-height: 1; }
 .arena-prompt { margin: 0 0 18px; padding: 14px 16px; border: 2px solid var(--line); display: grid; gap: 8px; font-size: 18px; }
 .arena-prompt .k { justify-self: start; }
 .arena-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 800px) { .arena-pair { grid-template-columns: 1fr; } }
-.arena-side .stage { margin: 0; max-height: 62vh; }
+.arena-side .stage { margin: 0; max-height: 70vh; }
 .arena-label { font-size: 22px; margin: 0 0 8px; }
 .arena-vote { margin: 22px 0; padding: 18px; border: 2px solid var(--line); display: grid; gap: 12px; text-align: center; }
 .arena-vote .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
@@ -407,7 +421,7 @@ export const APP_JS = String.raw`(function () {
     var ready = played === all.length;
     $$("[data-vote]", vote).forEach(function (b) { b.disabled = !ready; });
     var hint = $("[data-vote-hint]", vote);
-    if (hint) hint.textContent = ready ? "Which one was more fun?" : played ? "Now play the other one." : "Play both, then vote.";
+    if (hint && all.length) hint.textContent = ready ? "Which one was more fun?" : played ? "Now play the other one." : "Play both, then vote.";
   }
   if (vote) {
     arenaReady();
@@ -420,12 +434,18 @@ export const APP_JS = String.raw`(function () {
             if (!j.a || !j.b) throw new Error(j.error || "failed");
             ["a", "b"].forEach(function (k) {
               var who = $("[data-reveal=" + k + "]", vote); who.textContent = j[k].model + (j[k].lab ? " (" + j[k].lab + ")" : "");
-              var link = $("[data-link=" + k + "]", vote); link.href = "/g/" + j[k].slug;
+              var by = $("[data-by=" + k + "]", vote); if (by) by.textContent = j[k].community ? "Community entry" + (j[k].author ? " by " + j[k].author : "") + ", model self-reported" : "Made by the arena, one attempt";
+              var link = $("[data-link=" + k + "]", vote); if (link) link.href = "/g/" + j[k].slug;
             });
             var row = b.parentNode; if (row) row.hidden = true;
             var hint = $("[data-vote-hint]", vote);
             if (hint) hint.textContent = (j.winner === "tie" ? "You called it a tie." : "You picked " + j[j.winner].model + ".") + (j.counted ? "" : " (You already voted on this pair today, so this one wasn't counted.)");
             $(".arena-reveal", vote).hidden = false;
+            var sb = $("[data-arena-share]", vote);
+            if (sb) {
+              var lab = function (k) { return j[k].model.split(" ")[0]; };
+              sb.setAttribute("data-share-text", j.winner === "tie" ? "I played " + lab("a") + " vs " + lab("b") + " blind: same game prompt, one attempt each. Called it a tie. Which would you pick?" : "I played " + lab("a") + " vs " + lab("b") + " blind: same game prompt, one attempt each. I picked " + lab(j.winner) + ". Which would you pick?");
+            }
           })
           .catch(function (e) { toast(e.message || "Vote failed"); arenaReady(); });
       });
@@ -447,8 +467,9 @@ export const APP_JS = String.raw`(function () {
 
   $$("[data-share]").forEach(function (b) {
     b.addEventListener("click", function () {
-      var url = b.getAttribute("data-share"), title = document.title;
-      if (navigator.share && window.matchMedia("(pointer: coarse)").matches) navigator.share({ title: title, url: url }).catch(function () {});
+      var url = b.getAttribute("data-share"), title = document.title, text = b.getAttribute("data-share-text");
+      if (navigator.share && window.matchMedia("(pointer: coarse)").matches) { navigator.share(text ? { title: title, text: text, url: url } : { title: title, url: url }).catch(function () {}); return; }
+      if (text) { copy(text + " " + url, "Copied. Paste it anywhere"); return; }
       else copy(url, "Link copied");
     });
   });

@@ -131,7 +131,7 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
     return s ? `/?${s}#games` : "/#games";
   };
   const featured = p.games[0];
-  const lede = "Every game here was built by a coding agent. Play one, break it, say what's wrong. The crash and your comment go back to the agent that made it, as a report it can act on.";
+  const lede = "Everything here was made by AI: games, drawings, whatever people push it to make next. Play it, judge models blind in the arena, and tell the AI what broke. The crash and your comment go back to the agent that made it.";
   return (
     <Layout meta={{ title: `${p.arcade}: games made by AI, broken by you`, description: lede, url: p.siteUrl, arcade: p.arcade }}>
       <section class="cab">
@@ -165,8 +165,8 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
           <a class="arena-strip" href="/arena">
             <span class="k">New</span>
             <b class="display">AI Arena</b>
-            <span>{p.arena} each built games from the same prompts. Play two blind, vote for the more fun one, see who made it.</span>
-            <span class="go">Play and vote</span>
+            <span>Same prompt, different AIs: {p.arena} games and SVG drawings, judged blind by you. Bring your own model's entry.</span>
+            <span class="go">Judge them</span>
           </a>
         </div>
       ) : null}

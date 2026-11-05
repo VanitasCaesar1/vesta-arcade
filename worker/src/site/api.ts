@@ -6,7 +6,7 @@ import { contentType, COVER_TYPES } from "../lib/mime.ts";
 import { cleanList, cleanText, ipHash, now, safeEqual, sha256 } from "../lib/util.ts";
 import type { MiddlewareHandler } from "hono";
 import { bearer, endSession, isAdmin, requireAdmin, startSession, tokenConfigured } from "./auth.ts";
-import { recordVote, verifyMatchup } from "./arena.ts";
+import { ARENA_KINDS, checkSvg, recordVote, revealOnly, svgSlug, verifyMatchup, type ArenaKind } from "./arena.ts";
 import { feedbackReport, getGame, getGameRow, listGames, reportMarkdown, topScores, type Sort } from "./db.ts";
 
 export const VERSION = "0.1.0";
@@ -150,9 +150,54 @@ api.post("/arena/vote", async (c) => {
     if (!reveal) return c.json({ error: "not found" }, 404);
     return c.json({ ...reveal, counted: true });
   }
-  const { results } = await c.env.DB.prepare("SELECT slug, model, lab FROM arena_entries WHERE slug IN (?, ?)").bind(m.a, m.b).all<{ slug: string; model: string; lab: string }>();
-  const find = (slug: string) => results.find((r) => r.slug === slug);
-  return c.json({ a: find(m.a), b: find(m.b), winner, counted: false });
+  return c.json({ ...(await revealOnly(c.env, m.a, m.b)), winner, counted: false });
+});
+
+const SUBMISSIONS_PER_DAY = 10;
+
+// Community entries: anyone can add their model's drawing to an SVG prompt. The model name is self-reported.
+api.post("/arena/submit", async (c) => {
+  const form = await c.req.formData().catch(() => null);
+  const get = (k: string) => String(form?.get(k) ?? "");
+  const prompt = get("prompt");
+  const back = (msg: string) => c.redirect(`/arena/svg?p=${encodeURIComponent(prompt)}&submitted=${encodeURIComponent(msg)}#submit`, 303);
+  if (get("website")) return back("Thanks!");
+  const row = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'svg'").bind(prompt).first();
+  if (!row) return back("Pick a prompt first.");
+  const model = cleanText(get("model"), 60);
+  if (!model) return back("Say which model made it, e.g. GPT-6 Luna or Llama 5.");
+  let svg: string;
+  try {
+    svg = checkSvg(get("svg"));
+  } catch (e) {
+    return back((e as Error).message);
+  }
+  const ip = await ipHash(c.req.raw, c.env.ADMIN_TOKEN ?? "vesta");
+  const t = now();
+  const recent = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_entries WHERE ip_hash = ? AND created_at > ?").bind(ip, t - 86_400).first<{ n: number }>();
+  if ((recent?.n ?? 0) >= SUBMISSIONS_PER_DAY) return back(`That's ${SUBMISSIONS_PER_DAY} entries today. Come back tomorrow.`);
+  const slug = svgSlug();
+  const key = `svg/${slug}.svg`;
+  await c.env.FILES.put(key, svg, { httpMetadata: { contentType: "image/svg+xml" } });
+  await c.env.DB.prepare(
+    "INSERT INTO arena_entries (slug, prompt, model, lab, kind, file_key, community, author, ip_hash, created_at) VALUES (?, ?, ?, '', 'svg', ?, 1, ?, ?, ?)",
+  )
+    .bind(slug, prompt, model, key, cleanText(get("author"), 40), ip, t)
+    .run();
+  return back("Your drawing is in the arena. It'll show up in matchups for this prompt.");
+});
+
+// Anyone can report an arena entry. Three distinct reports hide a community entry until the owner looks.
+api.post("/arena/entries/:slug/report", async (c) => {
+  const slug = c.req.param("slug");
+  if (!/^[a-z0-9-]{3,60}$/.test(slug)) return c.json({ error: "bad entry" }, 400);
+  const row = await c.env.DB.prepare("SELECT community FROM arena_entries WHERE slug = ?").bind(slug).first<{ community: number }>();
+  if (!row) return c.json({ error: "not found" }, 404);
+  const ip = await ipHash(c.req.raw, c.env.ADMIN_TOKEN ?? "vesta");
+  await c.env.DB.prepare("INSERT OR IGNORE INTO reports (slug, ip_hash, reason, created_at) VALUES (?, ?, 'arena entry', ?)").bind(slug, ip, now()).run();
+  const n = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM reports WHERE slug = ?").bind(slug).first<{ n: number }>();
+  if (row.community && (n?.n ?? 0) >= REPORTS_TO_HIDE) await c.env.DB.prepare("UPDATE arena_entries SET hidden = 1 WHERE slug = ?").bind(slug).run();
+  return c.json({ ok: true });
 });
 
 api.get("/games/:slug", async (c) => {
@@ -391,11 +436,12 @@ admin.post("/comments/:id/hide", requireAdmin, async (c) => {
 
 admin.put("/arena/prompts/:id", requireAdmin, async (c) => {
   const id = validateSlug(c.req.param("id"));
-  const input = await c.req.json<{ title?: unknown; prompt?: unknown }>().catch(() => ({}) as { title?: unknown; prompt?: unknown });
+  const input = await c.req.json<{ title?: unknown; prompt?: unknown; kind?: unknown }>().catch(() => ({}) as { title?: unknown; prompt?: unknown; kind?: unknown });
+  const kind: ArenaKind = ARENA_KINDS.includes(input.kind as ArenaKind) ? (input.kind as ArenaKind) : "game";
   await c.env.DB.prepare(
-    "INSERT INTO arena_prompts (id, title, prompt, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET title = excluded.title, prompt = excluded.prompt",
+    "INSERT INTO arena_prompts (id, title, prompt, kind, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET title = excluded.title, prompt = excluded.prompt, kind = excluded.kind",
   )
-    .bind(id, cleanText(input.title, 80) || id, cleanText(input.prompt, 2000), now())
+    .bind(id, cleanText(input.title, 80) || id, cleanText(input.prompt, 2000), kind, now())
     .run();
   return c.json({ id });
 });
@@ -414,6 +460,36 @@ admin.put("/arena/entries/:slug", requireAdmin, async (c) => {
     .bind(slug, prompt, model, cleanText(input.lab, 40), now())
     .run();
   return c.json({ slug, prompt, model });
+});
+
+// Entries the arena ran itself (they rate their model). Re-posting the same slug replaces the drawing.
+admin.post("/arena/svg", requireAdmin, async (c) => {
+  const input = await c.req.json<{ prompt?: unknown; model?: unknown; lab?: unknown; svg?: unknown; slug?: unknown }>().catch(() => ({}) as Record<string, unknown>);
+  const prompt = validateSlug(input.prompt);
+  const model = cleanText(input.model, 60);
+  if (!model) return c.json({ error: "model is required" }, 400);
+  let svg: string;
+  try {
+    svg = checkSvg(String(input.svg ?? ""));
+  } catch (e) {
+    return c.json({ error: (e as Error).message }, 400);
+  }
+  const slug = typeof input.slug === "string" && /^svg-[a-f0-9]{10}$/.test(input.slug) ? input.slug : svgSlug();
+  const key = `svg/${slug}.svg`;
+  await c.env.FILES.put(key, svg, { httpMetadata: { contentType: "image/svg+xml" } });
+  await c.env.DB.prepare(
+    `INSERT INTO arena_entries (slug, prompt, model, lab, kind, file_key, community, created_at) VALUES (?, ?, ?, ?, 'svg', ?, 0, ?)
+     ON CONFLICT (slug) DO UPDATE SET prompt = excluded.prompt, model = excluded.model, lab = excluded.lab, file_key = excluded.file_key`,
+  )
+    .bind(slug, prompt, model, cleanText(input.lab, 40), key, now())
+    .run();
+  return c.json({ slug, prompt, model });
+});
+
+admin.post("/arena/entries/:slug/hide", requireAdmin, async (c) => {
+  const { hidden } = await c.req.json<{ hidden?: boolean }>().catch(() => ({ hidden: true }));
+  await c.env.DB.prepare("UPDATE arena_entries SET hidden = ? WHERE slug = ?").bind(hidden ? 1 : 0, c.req.param("slug")).run();
+  return c.json({ slug: c.req.param("slug"), hidden: !!hidden });
 });
 
 api.route("/", admin);
