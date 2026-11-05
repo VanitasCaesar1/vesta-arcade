@@ -257,7 +257,7 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
           <a class="arena-strip" href="/arena">
             <span class="k">New</span>
             <b class="display">AI Arena</b>
-            <span>Same prompt, different AIs: {p.arena} games and SVG drawings, judged blind by you. Bring your own model's entry.</span>
+            <span>Same prompt, different AIs: {p.arena} games, SVG drawings and 3D worlds, judged blind by you. Bring your own model's entry.</span>
             <span class="go">Judge them</span>
           </a>
         </div>

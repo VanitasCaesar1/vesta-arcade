@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
+  "slug": "arena-2d31c45e",
+  "title": "Tiny Solar System",
+  "madeWith": [
+    "Gemini 3.8 Flash"
+  ]
+}
