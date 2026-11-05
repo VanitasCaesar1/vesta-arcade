@@ -13,7 +13,7 @@ let ogBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaOgBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaSvgOgBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
-import { feedbackReport, getChallenge, getGame, listAchievements, listComments, listUpdates, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
+import { type Game, feedbackReport, getChallenge, getGame, listAchievements, listComments, listUpdates, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
 import { DeveloperPage, EmbedPage, GamePage, HomePage, LibraryPage, NotFoundPage, UpdatesPage } from "./pages.tsx";
 import { ArenaBoardPage, ArenaEmbedPage, ArenaPage, EntryPage, PromptGalleryPage } from "./arenaPages.tsx";
@@ -118,6 +118,17 @@ async function loadGame(c: Context<AppEnv>) {
 const notFound = (c: Context<AppEnv>) => c.html(<NotFoundPage arcade={arcade(c)} siteUrl={origin(c)} />, 404);
 const playSrc = (c: Context<AppEnv>, slug: string, n: number) => `${c.env.PLAY_URL.replace(/\/$/, "")}/${slug}/${n}/`;
 
+/** "More like this": games sharing the most tags and AI tools, then the most played. */
+function moreLikeThis(game: Game, all: Game[]): Game[] {
+  const mine = new Set([...game.tags, ...game.madeWith].map((t) => t.toLowerCase()));
+  return all
+    .filter((o) => o.slug !== game.slug)
+    .map((o) => ({ o, shared: [...o.tags, ...o.madeWith].filter((t) => mine.has(t.toLowerCase())).length }))
+    .sort((a, b) => b.shared - a.shared || b.o.plays - a.o.plays)
+    .slice(0, 3)
+    .map((x) => x.o);
+}
+
 site.get("/g/:slug", async (c) => {
   const game = await loadGame(c);
   if (!game) return notFound(c);
@@ -126,7 +137,7 @@ site.get("/g/:slug", async (c) => {
     listComments(c.env, game.slug, { limit: 30 }),
     topScores(c.env, game.slug, 10),
     getChallenge(c.env, game.slug, c.req.query("c")),
-    listGames(c.env, { limit: 4 }),
+    listGames(c.env, { limit: 40 }),
     recentReviews(c.env, game.slug),
     listAchievements(c.env, game.slug),
   ]);
@@ -140,7 +151,7 @@ site.get("/g/:slug", async (c) => {
       comments={comments}
       scores={scores}
       challenge={challenge}
-      more={others.filter((o) => o.slug !== game.slug).slice(0, 3)}
+      more={moreLikeThis(game, others)}
       reviews={reviews}
       achievements={achievements}
       reviewNotice={c.req.query("review")?.slice(0, 120)}

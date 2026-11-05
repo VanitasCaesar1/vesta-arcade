@@ -37,6 +37,7 @@ function GameCard({ g, i }: { g: Game; i: number }) {
         </span>
         {g.madeWith[0] ? <span>{g.madeWith.join(" + ")}</span> : null}
         {g.author ? <span>{g.author}</span> : null}
+        {g.keyboardRequired ? null : <span title="Plays on phones and tablets">📱</span>}
       </div>
     </a>
   );
@@ -618,7 +619,7 @@ export function GamePage(p: {
 
         {p.more?.length ? (
           <section class="more">
-            <h2 class="display">Play next</h2>
+            <h2 class="display">More like this</h2>
             <div class="grid">
               {p.more.map((m, i) => (
                 <GameCard g={m} i={i} />
