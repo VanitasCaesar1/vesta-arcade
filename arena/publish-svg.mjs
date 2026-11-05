@@ -16,7 +16,11 @@ const MODELS = {
   gemini: { model: "Gemini 3.8 Flash", lab: "Google" },
 };
 const md = readFileSync(join(here, "SVG_PROMPTS.md"), "utf8");
-const PROMPTS = [...md.matchAll(/^## Prompt \d+: ([a-z0-9-]+)\n\n([^\n]+)/gm)].map(([, id, text]) => ({ id, text, title: id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") }));
+const titleOf = (id) => id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+const PROMPTS = [...md.matchAll(/^## Prompt \d+: ([a-z0-9-]+)\n\n([^\n]+)/gm)].map(([, id, text]) => ({ id, text, title: titleOf(id) }));
+// Daily challenges: "## 2026-11-07: dragon-cafe", each goes live on its date (UTC).
+const daily = readFileSync(join(here, "DAILY_PROMPTS.md"), "utf8");
+for (const [, date, id, text] of daily.matchAll(/^## (\d{4}-\d{2}-\d{2}): ([a-z0-9-]+)\n\n([^\n]+)/gm)) PROMPTS.push({ id, text, title: titleOf(id), live_from: date });
 
 async function api(method, path, body) {
   const res = await fetch(url + path, { method, headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -25,7 +29,7 @@ async function api(method, path, body) {
 }
 
 for (const p of PROMPTS) {
-  await api("PUT", `/api/arena/prompts/${p.id}`, { title: p.title, prompt: p.text, kind: "svg" });
+  await api("PUT", `/api/arena/prompts/${p.id}`, { title: p.title, prompt: p.text, kind: "svg", live_from: p.live_from });
   for (const [key, m] of Object.entries(MODELS)) {
     const file = join(here, "svg", p.id, `${key}.svg`);
     if (!existsSync(file)) continue;

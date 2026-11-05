@@ -64,8 +64,8 @@ export async function isArenaEntry(env: Env, slug: string): Promise<boolean> {
 
 export async function arenaPrompts(env: Env, kind?: ArenaKind): Promise<ArenaPrompt[]> {
   const q = kind
-    ? env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE kind = ? AND hidden = 0 ORDER BY community, created_at").bind(kind)
-    : env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE hidden = 0 ORDER BY kind, community, created_at");
+    ? env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE kind = ? AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now')) ORDER BY community, created_at").bind(kind)
+    : env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE hidden = 0 AND (live_from IS NULL OR live_from <= date('now')) ORDER BY kind, community, created_at");
   return (await q.all<ArenaPrompt>()).results;
 }
 
@@ -85,7 +85,13 @@ export async function randomMatchup(env: Env, kind: ArenaKind, promptId?: string
         }>();
   const byPrompt = new Map<string, typeof results>();
   for (const r of results) byPrompt.set(r.prompt, [...(byPrompt.get(r.prompt) ?? []), r]);
-  const eligible = [...byPrompt].filter(([, es]) => es.length >= 2).map(([p]) => p);
+  const { results: live } = await env.DB.prepare(
+    "SELECT id FROM arena_prompts WHERE kind = ? AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))",
+  )
+    .bind(kind)
+    .all<{ id: string }>();
+  const liveIds = new Set(live.map((r) => r.id));
+  const eligible = [...byPrompt].filter(([id, es]) => es.length >= 2 && liveIds.has(id)).map(([p]) => p);
   if (!eligible.length) return null;
   const pid = promptId && eligible.includes(promptId) ? promptId : pick(eligible);
   const entries = byPrompt.get(pid)!;
@@ -94,7 +100,7 @@ export async function randomMatchup(env: Env, kind: ArenaKind, promptId?: string
   const differentModel = others.filter((e) => e.model !== first.model);
   const second = pick(differentModel.length ? differentModel : others);
   const [a, b] = Math.random() < 0.5 ? [first, second] : [second, first];
-  const prompt = await env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0").bind(pid).first<ArenaPrompt>();
+  const prompt = await env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").bind(pid).first<ArenaPrompt>();
   if (!prompt) return null;
   const side = async (e: typeof a): Promise<Side | null> => {
     if (kind === "svg") return { slug: e.slug, svg: `/${e.file_key}` };
@@ -172,7 +178,7 @@ export async function leaderboard(env: Env) {
       `SELECT e.*, COALESCE(g.title, '') AS title FROM arena_entries e LEFT JOIN games g ON g.slug = e.slug
        WHERE e.hidden = 0 ORDER BY e.prompt, e.rating DESC`,
     ),
-    env.DB.prepare("SELECT id, title, prompt, kind FROM arena_prompts ORDER BY kind, created_at"),
+    env.DB.prepare("SELECT id, title, prompt, kind FROM arena_prompts WHERE hidden = 0 AND (live_from IS NULL OR live_from <= date('now')) ORDER BY kind, created_at"),
     env.DB.prepare("SELECT COUNT(*) AS n FROM arena_votes"),
   ]);
   return {
@@ -240,7 +246,7 @@ export async function crowd(env: Env, a: string, b: string): Promise<{ picks: Re
 
 /** Every visible entry for one prompt, best rated first: the prompt's gallery page. */
 export async function promptGallery(env: Env, id: string) {
-  const prompt = await env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0").bind(id).first<ArenaPrompt>();
+  const prompt = await env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").bind(id).first<ArenaPrompt>();
   if (!prompt) return null;
   const { results } = await env.DB.prepare("SELECT * FROM arena_entries WHERE prompt = ? AND hidden = 0 ORDER BY rating DESC, created_at ASC LIMIT 200").bind(id).all<ArenaEntry>();
   return { prompt, entries: results };
@@ -252,8 +258,8 @@ export async function featuredChallenge(env: Env) {
     `SELECT p.id, p.prompt, p.community, p.author,
             (SELECT COUNT(*) FROM arena_entries e WHERE e.prompt = p.id AND e.hidden = 0) AS n,
             (SELECT COUNT(*) FROM arena_entries e WHERE e.prompt = p.id AND e.hidden = 0 AND e.created_at > ?) AS recent
-     FROM arena_prompts p WHERE p.kind = 'svg' AND p.hidden = 0
-     ORDER BY recent DESC, n DESC, p.created_at ASC LIMIT 1`,
+     FROM arena_prompts p WHERE p.kind = 'svg' AND p.hidden = 0 AND (p.live_from IS NULL OR p.live_from <= date('now'))
+     ORDER BY (p.live_from = date('now')) DESC, recent DESC, n DESC, p.created_at ASC LIMIT 1`,
   )
     .bind(now() - 7 * 86_400)
     .first<{ id: string; prompt: string; community: number; author: string; n: number }>();
@@ -275,10 +281,19 @@ export async function entryPage(env: Env, slug: string) {
   const e = await env.DB.prepare("SELECT * FROM arena_entries WHERE slug = ? AND hidden = 0").bind(slug).first<ArenaEntry>();
   if (!e) return null;
   const [prompt, rank, total] = await Promise.all([
-    env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0").bind(e.prompt).first<ArenaPrompt>(),
+    env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").bind(e.prompt).first<ArenaPrompt>(),
     env.DB.prepare("SELECT COUNT(*) + 1 AS n FROM arena_entries WHERE prompt = ? AND hidden = 0 AND rating > ?").bind(e.prompt, e.rating).first<{ n: number }>(),
     env.DB.prepare("SELECT COUNT(*) AS n FROM arena_entries WHERE prompt = ? AND hidden = 0").bind(e.prompt).first<{ n: number }>(),
   ]);
   if (!prompt) return null;
   return { entry: e, prompt, rank: rank?.n ?? 1, total: total?.n ?? 1 };
+}
+
+/** Today's daily challenge (live_from = today, UTC) and a teaser for tomorrow's. */
+export async function daily(env: Env) {
+  const [today, tomorrow] = await env.DB.batch<{ id: string; prompt: string; live_from: string }>([
+    env.DB.prepare("SELECT id, prompt, live_from FROM arena_prompts WHERE kind = 'svg' AND hidden = 0 AND live_from = date('now') LIMIT 1"),
+    env.DB.prepare("SELECT id, prompt, live_from FROM arena_prompts WHERE kind = 'svg' AND hidden = 0 AND live_from = date('now', '+1 day') LIMIT 1"),
+  ]);
+  return { today: today?.results[0] ?? null, tomorrow: tomorrow?.results[0] ?? null };
 }

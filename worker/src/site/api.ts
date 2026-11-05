@@ -171,7 +171,7 @@ api.post("/arena/submit", async (c) => {
     const started = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_prompts WHERE ip_hash = ? AND created_at > ?").bind(ip0, now() - 86_400).first<{ n: number }>();
     if ((started?.n ?? 0) >= 3) return back("You've started 3 challenges today. Add drawings to existing ones, or come back tomorrow.");
   } else {
-    const row = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'svg' AND hidden = 0").bind(prompt).first();
+    const row = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'svg' AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").bind(prompt).first();
     if (!row) return back("Pick a prompt first.");
   }
   const model = cleanText(get("model"), 60);
@@ -488,9 +488,9 @@ admin.post("/games/:slug/arena", requireGameAccess, async (c) => {
   const slug = slugParam(c);
   const input = await c.req.json<{ prompt?: unknown; model?: unknown }>().catch(() => ({}) as Record<string, unknown>);
   const promptId = typeof input.prompt === "string" ? input.prompt : "";
-  const prompt = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'game' AND hidden = 0").bind(promptId).first();
+  const prompt = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'game' AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").bind(promptId).first();
   if (!prompt) {
-    const { results } = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE kind = 'game' AND hidden = 0").all<{ id: string }>();
+    const { results } = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE kind = 'game' AND hidden = 0 AND (live_from IS NULL OR live_from <= date('now'))").all<{ id: string }>();
     return c.json({ error: `unknown arena prompt "${promptId}". Game prompts: ${results.map((r) => r.id).join(", ")}` }, 400);
   }
   const model = cleanText(input.model, 60);
@@ -510,12 +510,14 @@ admin.post("/games/:slug/arena", requireGameAccess, async (c) => {
 
 admin.put("/arena/prompts/:id", requireAdmin, async (c) => {
   const id = validateSlug(c.req.param("id"));
-  const input = await c.req.json<{ title?: unknown; prompt?: unknown; kind?: unknown }>().catch(() => ({}) as { title?: unknown; prompt?: unknown; kind?: unknown });
+  const input = await c.req.json<{ title?: unknown; prompt?: unknown; kind?: unknown; live_from?: unknown }>().catch(() => ({}) as Record<string, unknown>);
   const kind: ArenaKind = ARENA_KINDS.includes(input.kind as ArenaKind) ? (input.kind as ArenaKind) : "game";
+  const liveFrom = typeof input.live_from === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input.live_from) ? input.live_from : null;
   await c.env.DB.prepare(
-    "INSERT INTO arena_prompts (id, title, prompt, kind, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET title = excluded.title, prompt = excluded.prompt, kind = excluded.kind",
+    `INSERT INTO arena_prompts (id, title, prompt, kind, live_from, created_at) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT (id) DO UPDATE SET title = excluded.title, prompt = excluded.prompt, kind = excluded.kind, live_from = excluded.live_from`,
   )
-    .bind(id, cleanText(input.title, 80) || id, cleanText(input.prompt, 2000), kind, now())
+    .bind(id, cleanText(input.title, 80) || id, cleanText(input.prompt, 2000), kind, liveFrom, now())
     .run();
   return c.json({ id });
 });

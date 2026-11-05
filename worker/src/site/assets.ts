@@ -221,6 +221,15 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .gallery-item .linkbtn { justify-self: start; font-size: 11px; opacity: .5; }
 .challenges { margin: 40px 0 10px; }
 .hot { margin: 10px 0 0; font-weight: 800; }
+.embed-arena { padding: 10px; }
+.embed-arena .arena-pair { gap: 8px; }
+.embed-arena .arena-label { font-size: 14px; margin: 0 0 4px; }
+.embed-arena .arena-vote { margin: 10px 0 0; padding: 10px; gap: 8px; }
+.embed-q { margin: 0 0 8px; font-weight: 700; font-size: 14px; }
+.daily { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 12px 0 0; padding: 10px 14px; border: 2px solid var(--pop); }
+.daily b { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.daily [data-streak] { font-weight: 800; }
+.daily .tomorrow { opacity: .7; font-size: 14px; }
 .entry-big { max-width: 900px; margin: 10px 0 16px; }
 .featured { display: grid; grid-template-columns: 1fr 1.1fr; gap: 24px; align-items: center; margin: 22px 0 0; padding: 20px; border: 2px solid var(--line); box-shadow: 6px 6px 0 var(--pop); }
 @media (max-width: 800px) { .featured { grid-template-columns: 1fr; } }
@@ -512,6 +521,26 @@ export const APP_JS = String.raw`(function () {
     });
   });
 
+  // Daily challenge streak, kept in this browser: voting on consecutive days' prompts.
+  var dailyEl = $("[data-daily]");
+  function dayBefore(d) { var t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() - 1); return t.toISOString().slice(0, 10); }
+  function streakText(st, today) {
+    if (!st.last) return "Vote today to start a streak.";
+    var alive = st.last === today || st.last === dayBefore(today);
+    if (!alive) return "Your streak ended. Vote today to start a new one.";
+    return "🔥 " + st.n + "-day streak" + (st.last === today ? ". Come back tomorrow." : ". Vote today to keep it.");
+  }
+  function readStreak() { try { return JSON.parse(localStorage.getItem("vesta:streak") || "{}"); } catch (e) { return {}; } }
+  if (dailyEl) { var sEl = $("[data-streak]", dailyEl); if (sEl) sEl.textContent = streakText(readStreak(), dailyEl.getAttribute("data-daily")); }
+  function bumpStreak() {
+    if (!dailyEl) return;
+    var today = dailyEl.getAttribute("data-daily"), st = readStreak();
+    if (st.last !== today) { st.n = st.last === dayBefore(today) ? (st.n || 0) + 1 : 1; st.last = today; }
+    try { localStorage.setItem("vesta:streak", JSON.stringify(st)); } catch (e) {}
+    var sEl = $("[data-streak]", dailyEl); if (sEl) sEl.textContent = streakText(st, today);
+    if (st.n > 1) toast("🔥 " + st.n + "-day streak");
+  }
+
   // Keyboard: 1/A, 2/B, T to vote; N or Enter for the next matchup.
   if (vote) document.addEventListener("keydown", function (e) {
     var tg = e.target && e.target.tagName; if (tg === "INPUT" || tg === "TEXTAREA" || tg === "SELECT" || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -541,6 +570,7 @@ export const APP_JS = String.raw`(function () {
             if (hint) hint.textContent = (j.winner === "tie" ? "You called it a tie." : "You picked " + j[j.winner].model + ".") + (j.counted ? "" : " (You already voted on this pair today, so this one wasn't counted.)");
             $(".arena-reveal", vote).hidden = false;
             showCrowd(j, b.getAttribute("data-vote"));
+            bumpStreak();
             showTaste(j);
             var rv = $(".arena-reveal", vote); if (rv && rv.scrollIntoView) rv.scrollIntoView({ behavior: "smooth", block: "center" });
             var sb = $("[data-arena-share]", vote);

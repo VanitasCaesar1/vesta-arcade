@@ -5,9 +5,12 @@ import type { Game } from "./db.ts";
 const cover = (g: Game) => `/cover/${g.slug}?v=${g.updatedAt}`;
 const KIND_LABEL: Record<ArenaKind, string> = { game: "Games", svg: "SVG drawings" };
 
-function Tabs({ kind }: { kind: ArenaKind | "board" }) {
+function Tabs({ kind }: { kind: ArenaKind | "board" | "daily" }) {
   return (
     <nav class="arena-tabs">
+      <a class={kind === "daily" ? "on" : ""} href="/arena/today">
+        Daily
+      </a>
       <a class={kind === "game" ? "on" : ""} href="/arena">
         Games
       </a>
@@ -64,6 +67,7 @@ export function ArenaPage(p: {
   promptId?: string;
   counts?: Record<string, number>;
   hot?: number;
+  daily?: { date: string; tomorrow: string | null } | null;
 }) {
   const m = p.m;
   const isSvg = p.kind === "svg";
@@ -89,7 +93,14 @@ export function ArenaPage(p: {
               ? "Same prompt, different models. Pick the better drawing, then see who made it. Anyone can add their model's drawing."
               : "Same prompt, one attempt each, no human edits. Play both, vote for the more fun one, then see which model made it."}
           </p>
-          <Tabs kind={p.kind} />
+          <Tabs kind={p.daily ? "daily" : p.kind} />
+          {p.daily ? (
+            <div class="daily" data-daily={p.daily.date}>
+              <b>Daily challenge · {p.daily.date}</b>
+              <span data-streak />
+              {p.daily.tomorrow ? <span class="tomorrow">Tomorrow: "{p.daily.tomorrow}"</span> : null}
+            </div>
+          ) : null}
           {(p.hot ?? 0) >= 5 ? <p class="hot">🔥 {p.hot} votes in the last hour</p> : null}
         </header>
         {m ? (
@@ -434,6 +445,17 @@ export function PromptGalleryPage(p: {
             </button>
           </div>
           {p.submitted ? <div class="notice">{p.submitted}</div> : null}
+          <button class="linkbtn" data-toggle="#embed" type="button">
+            <Icon name="code" /> Embed a live matchup on your site
+          </button>
+          <div class="embed" id="embed" hidden>
+            <textarea class="code" id="embed-code" rows={3} readonly aria-label="Embed code">
+              {`<iframe src="${p.siteUrl}/embed/arena?p=${p.prompt.id}" width="720" height="520" style="border:0;max-width:100%" loading="lazy" title="AI Arena: ${p.prompt.prompt.replace(/"/g, "")}"></iframe>`}
+            </textarea>
+            <button class="btn sm" data-copy="#embed-code" data-msg="Embed code copied" type="button">
+              Copy embed code
+            </button>
+          </div>
           <Tabs kind="svg" />
         </header>
         <div class="gallery">
@@ -506,6 +528,78 @@ export function EntryPage(p: { arcade: string; siteUrl: string; playOrigin: stri
             Add your model's
           </a>
         </div>
+      </div>
+    </Layout>
+  );
+}
+
+/** A compact, votable SVG matchup for other sites to iframe. */
+export function ArenaEmbedPage(p: { arcade: string; siteUrl: string; m: Matchup | null; playOrigin: string; promptId?: string }) {
+  const m = p.m;
+  const next = `/embed/arena${p.promptId ? `?p=${p.promptId}` : ""}`;
+  return (
+    <Layout meta={{ title: `AI Arena | ${p.arcade}`, description: "Which AI draws it better? Vote blind.", url: `${p.siteUrl}/arena/svg`, arcade: p.arcade, noindex: true }} bare>
+      <div class="arena embed-arena">
+        {m ? (
+          <>
+            <p class="embed-q">
+              <a href={`${p.siteUrl}/arena/svg`} target="_blank" rel="noopener">
+                AI Arena
+              </a>{" "}
+              · "{m.prompt.prompt}"
+            </p>
+            <div class="arena-pair">
+              <SvgSide side={m.a} label="A" playOrigin={p.playOrigin} />
+              <SvgSide side={m.b} label="B" playOrigin={p.playOrigin} />
+            </div>
+            <div class="arena-vote" data-matchup={m.token} data-kind="svg">
+              <p class="sub" data-vote-hint>
+                Which one is better?
+              </p>
+              <div class="row">
+                <button class="btn pop sm" data-vote="a" type="button">
+                  A
+                </button>
+                <button class="btn sm" data-vote="tie" type="button">
+                  Tie
+                </button>
+                <button class="btn pop sm" data-vote="b" type="button">
+                  B
+                </button>
+              </div>
+              <div class="arena-reveal" hidden>
+                <div class="crowd">
+                  <div class="bar">
+                    <span data-bar="a" />
+                    <span data-bar="tie" />
+                    <span data-bar="b" />
+                  </div>
+                  <p data-crowd-text />
+                </div>
+                <div class="pair">
+                  <div>
+                    <span class="k">A</span>
+                    <b data-reveal="a" />
+                  </div>
+                  <div>
+                    <span class="k">B</span>
+                    <b data-reveal="b" />
+                  </div>
+                </div>
+                <div class="row">
+                  <a class="btn pop sm" href={next} data-next>
+                    Next
+                  </a>
+                  <a class="btn sm" href={`${p.siteUrl}/arena/svg`} target="_blank" rel="noopener">
+                    More on Vesta
+                  </a>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p class="sub">No matchups yet.</p>
+        )}
       </div>
     </Layout>
   );
