@@ -15,7 +15,7 @@ without accounts (players are anonymous; creators hold per-game keys) and on Clo
 | Library, wishlist, recently played | `/library`: recently played + liked, kept in the browser | done |
 | Workshop / community content | arena community entries, community challenges, open publishing | done |
 | Community hub, discussions | comments per game; arena galleries | done |
-| News / updates | per-game changelog; global `/updates` feed | planned |
+| News / updates | per-game changelog; global `/updates` page + RSS | done |
 | Developer tools (SDK, analytics, crash reports) | CLI + MCP, telemetry, feedback report, alerts | done |
 | 3D content | three.js served from the play origin, 3D arena | planned |
 | Model / AI comparisons (Vesta-only) | blind arenas for games, SVG, 3D; daily challenge | done (3D planned) |

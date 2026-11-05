@@ -436,3 +436,25 @@ export async function listAchievements(env: Env, slug: string): Promise<Achievem
     .all<AchievementRow>();
   return results;
 }
+
+export interface UpdateRow {
+  slug: string;
+  title: string;
+  n: number;
+  notes: string;
+  live_at: number;
+  author: string;
+}
+
+/** Patch notes across the arcade, newest first: every live version that came with notes. */
+export async function listUpdates(env: Env, limit = 60): Promise<UpdateRow[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT v.slug, g.title, v.n, v.notes, COALESCE(v.live_at, v.created_at) AS live_at, g.author
+     FROM versions v JOIN games g ON g.slug = v.slug
+     WHERE g.hidden = 0 AND v.status IN ('live', 'pruned') AND v.notes != ''
+     ORDER BY live_at DESC LIMIT ?`,
+  )
+    .bind(limit)
+    .all<UpdateRow>();
+  return results;
+}

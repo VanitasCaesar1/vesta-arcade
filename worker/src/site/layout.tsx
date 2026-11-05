@@ -74,6 +74,9 @@ export function Layout(props: { meta: Meta; children: Child; bare?: boolean }) {
                 <a class="link" href="/library">
                   Library
                 </a>
+                <a class="link" href="/updates">
+                  Updates
+                </a>
                 <a class="link" href="/llms.txt">
                   For agents
                 </a>

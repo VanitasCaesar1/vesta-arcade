@@ -1,4 +1,4 @@
-import { duration, type AchievementRow, type Challenge, type CommentRow, type Game, type LoopData, type ScoreRow, type Sort, type VersionRow } from "./db.ts";
+import { duration, type UpdateRow, type AchievementRow, type Challenge, type CommentRow, type Game, type LoopData, type ScoreRow, type Sort, type VersionRow } from "./db.ts";
 import { compactNumber, timeAgo } from "../lib/util.ts";
 import { reviewLabel, type ReviewRow } from "./reviews.ts";
 import { Icon, Layout, Mascot, REPO_URL } from "./layout.tsx";
@@ -704,6 +704,37 @@ export function LibraryPage(p: { arcade: string; siteUrl: string }) {
             Press ♥ on a game to keep it here.
           </p>
         </section>
+      </div>
+    </Layout>
+  );
+}
+
+export function UpdatesPage(p: { arcade: string; siteUrl: string; updates: UpdateRow[] }) {
+  return (
+    <Layout meta={{ title: `News & updates | ${p.arcade}`, description: "Patch notes from every game on the arcade, newest first. Most were written by the AI that shipped the fix.", url: `${p.siteUrl}/updates`, arcade: p.arcade }}>
+      <div class="wrap">
+        <section class="dev-head">
+          <span class="k">News & updates</span>
+          <h1 class="display">What changed</h1>
+          <p class="sub">
+            Patch notes from every game, newest first. Most fixes start in a player's crash report or review. <a href="/feed.xml">RSS</a>
+          </p>
+        </section>
+        <ul class="updates">
+          {p.updates.map((u) => (
+            <li>
+              <a class="u-game" href={`/g/${u.slug}`}>
+                <b>{u.title}</b> v{u.n}
+              </a>
+              <p>{u.notes}</p>
+              <small>
+                {u.author ? `${u.author} · ` : ""}
+                {timeAgo(u.live_at)}
+              </small>
+            </li>
+          ))}
+        </ul>
+        {p.updates.length ? null : <p class="sub">No patch notes yet.</p>}
       </div>
     </Layout>
   );

@@ -13,9 +13,9 @@ let ogBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaOgBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaSvgOgBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
-import { feedbackReport, getChallenge, getGame, listAchievements, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
+import { feedbackReport, getChallenge, getGame, listAchievements, listComments, listUpdates, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
-import { DeveloperPage, EmbedPage, GamePage, HomePage, LibraryPage, NotFoundPage } from "./pages.tsx";
+import { DeveloperPage, EmbedPage, GamePage, HomePage, LibraryPage, NotFoundPage, UpdatesPage } from "./pages.tsx";
 import { ArenaBoardPage, ArenaEmbedPage, ArenaPage, EntryPage, PromptGalleryPage } from "./arenaPages.tsx";
 import { arenaNames, arenaPrompts, daily, entryPage, featuredChallenge, isArenaEntry, leaderboard, promptGallery, randomMatchup, votesLastHour, type ArenaKind } from "./arena.ts";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
@@ -223,6 +223,11 @@ site.get("/arena/leaderboard", async (c) => {
   return c.html(<ArenaBoardPage arcade={arcade(c)} siteUrl={origin(c)} names={names} playOrigin={playOrigin(c)} {...board} />);
 });
 
+site.get("/updates", async (c) => {
+  c.header("cache-control", "public, max-age=60");
+  return c.html(<UpdatesPage arcade={arcade(c)} siteUrl={origin(c)} updates={await listUpdates(c.env)} />);
+});
+
 site.get("/library", (c) => c.html(<LibraryPage arcade={arcade(c)} siteUrl={origin(c)} />));
 
 site.get("/dev/:name", async (c) => {
@@ -385,7 +390,7 @@ site.get("/__version", (c) => c.json({ vesta: VERSION }));
 // When the arcade takes over a domain that already had a site (ORIGIN_FALLBACK=1),
 // anything the arcade doesn't serve is passed through to that site, so old
 // links like /download keep working.
-const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/", "/dev/", "/arena", "/library"];
+const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/", "/dev/", "/arena", "/library", "/updates"];
 site.notFound(async (c) => {
   const path = new URL(c.req.url).pathname;
   if (c.env.ORIGIN_FALLBACK === "1" && (c.req.method === "GET" || c.req.method === "HEAD") && !OWN_PREFIXES.some((p) => path.startsWith(p))) {
