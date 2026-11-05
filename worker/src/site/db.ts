@@ -402,3 +402,18 @@ export async function loopData(env: Env): Promise<LoopData | null> {
     comment: (comment?.results[0] as LoopData["comment"]) ?? null,
   };
 }
+
+export interface AchievementRow {
+  id: string;
+  name: string;
+  description: string;
+  count: number;
+}
+
+/** A game's achievements, most unlocked first. */
+export async function listAchievements(env: Env, slug: string): Promise<AchievementRow[]> {
+  const { results } = await env.DB.prepare("SELECT id, name, description, count FROM achievements WHERE slug = ? ORDER BY count DESC, first_seen ASC LIMIT 50")
+    .bind(slug)
+    .all<AchievementRow>();
+  return results;
+}

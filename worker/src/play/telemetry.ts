@@ -16,7 +16,8 @@ type Event =
   | { t: "start" }
   | { t: "time"; s: number; prev: number; total: number }
   | { t: "err"; k: string; m: string; src: string; l: number; c: number; st: string }
-  | { t: "ms"; n: string };
+  | { t: "ms"; n: string }
+  | { t: "ach"; id: string; n: string; d?: string };
 
 function limited(req: Request): boolean {
   const ip = req.headers.get("cf-connecting-ip") ?? "local";
@@ -124,7 +125,20 @@ export async function ingest(req: Request, env: Env, ctx: ExecutionContext): Pro
         stmts.push(upsertDay("errors", 1));
         break;
       }
-      case "ms": {
+      case "ach": {
+        const id = str(raw.id, 40).toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+        if (!id) break;
+        const name = str(raw.n, 60).trim() || id;
+        stmts.push(
+          env.DB.prepare(
+            `INSERT INTO achievements (slug, id, name, description, count, first_seen)
+             SELECT ?, ?, ?, ?, 1, ? WHERE (SELECT COUNT(*) FROM achievements WHERE slug = ?) < 50 OR EXISTS (SELECT 1 FROM achievements WHERE slug = ? AND id = ?)
+             ON CONFLICT (slug, id) DO UPDATE SET count = count + 1, name = excluded.name, description = excluded.description`,
+          ).bind(slug, id, name, str(raw.d, 120), t, slug, slug, id),
+        );
+        break;
+      }
+            case "ms": {
         const name = str(raw.n, 48).replace(/[^\w .:/-]/g, "");
         if (!name) break;
         stmts.push(

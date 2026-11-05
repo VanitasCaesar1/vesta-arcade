@@ -253,7 +253,7 @@
 
 <script>
 "use strict";
-const vesta = () => window.vesta || { milestone() {}, error() {}, submitScore() { return Promise.resolve(null); } };
+const vesta = () => window.vesta || { milestone() {}, error() {}, achievement() {}, submitScore() { return Promise.resolve(null); } };
 const $ = (id) => document.getElementById(id);
 const rnd = (a, b) => a + Math.random() * (b - a);
 const ri = (a, b) => Math.floor(rnd(a, b + 1));
@@ -787,6 +787,15 @@ function finish(ok, msg) {
     if (!cur.job.survive && (!S.fast || secs < S.fast.t)) S.fast = { name: cur.job.name, t: secs };
     sfx.win();
     if ([5, 10, 20, 30, 50].includes(S.score)) vesta().milestone("shipped-" + S.score);
+    // Achievements (the arcade shows a trophy once and counts how many players get each).
+    const ach = (id, name, d) => { const v = vesta(); if (v.achievement) v.achievement(id, name, d); };
+    if (S.score === 1) ach("first-job", "Clocked in", "Ship your first job");
+    if (S.score === 10) ach("ship-10", "Senior engineer", "Ship 10 jobs in one run");
+    if (S.score === 20) ach("ship-20", "Staff engineer", "Ship 20 jobs in one run");
+    if (S.score === 8 && S.lives === 4) ach("no-pages", "Nobody paged you", "Ship 8 jobs without a single mistake");
+    if (cur.job.id === "vim" && secs < 2) ach("escape-artist", "Escape artist", "Exit vim in under 2 seconds");
+    if (cur.job.id === "friday") ach("read-only-friday", "Read-only Friday", "Resist deploying on Friday");
+    if (cur.job.id === "dns") ach("always-dns", "It was DNS", "Find the root cause");
   } else {
     S.lives--;
     S.killer = cur.job;

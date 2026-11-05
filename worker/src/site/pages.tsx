@@ -1,4 +1,4 @@
-import { duration, type Challenge, type CommentRow, type Game, type LoopData, type ScoreRow, type Sort, type VersionRow } from "./db.ts";
+import { duration, type AchievementRow, type Challenge, type CommentRow, type Game, type LoopData, type ScoreRow, type Sort, type VersionRow } from "./db.ts";
 import { compactNumber, timeAgo } from "../lib/util.ts";
 import { reviewLabel, type ReviewRow } from "./reviews.ts";
 import { Icon, Layout, Mascot, REPO_URL } from "./layout.tsx";
@@ -353,6 +353,7 @@ export function GamePage(p: {
   more?: Game[];
   reviews?: ReviewRow[];
   reviewNotice?: string;
+  achievements?: AchievementRow[];
   feedback?: string;
 }) {
   const g = p.game;
@@ -532,6 +533,28 @@ export function GamePage(p: {
                     </li>
                   ))}
                 </ol>
+              </div>
+            ) : null}
+
+            {p.achievements?.length ? (
+              <div>
+                <h3>Achievements</h3>
+                <ul class="achievements">
+                  {p.achievements.map((a) => {
+                    const pct = Math.min(100, Math.round((a.count / Math.max(1, g.plays)) * 100));
+                    return (
+                      <li title={a.description || a.name}>
+                        <span class="trophy">🏆</span>
+                        <span>
+                          <b>{a.name}</b>
+                          {a.description ? <small>{a.description}</small> : null}
+                        </span>
+                        <span class="pct">{pct < 1 ? "<1" : pct}%</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p class="sub small">Share of players who unlocked each.</p>
               </div>
             ) : null}
 

@@ -10,7 +10,8 @@
 //    failed asset loads, which is what a coding agent needs to fix the game.
 // 4. Shows the arcade's high-score box (window.vesta.submitScore), and turns
 //    each saved score into a challenge link the player can send to a friend.
-// 5. Exposes window.vesta.milestone(name) so games can report progress
+// 5. Shows achievements a game unlocks (window.vesta.achievement) and counts how many players get each.
+// 6. Exposes window.vesta.milestone(name) so games can report progress
 //    ("reached-level-3") and the creator can see where players stop.
 // No cookies, no fingerprinting, nothing about the player is sent.
 
@@ -263,8 +264,37 @@ export const CLIENT_SCRIPT = String.raw`(function () {
     });
   }
 
+  // Achievements: a toast in the corner, remembered per game in this browser, counted once per browser.
+  var achieved = {};
+  try { achieved = JSON.parse(localStorage.getItem("__vesta_achievements") || "{}") || {}; } catch (e) {}
+  function showAchievement(name) {
+    var host = document.createElement("div");
+    host.style.cssText = "position:fixed;top:12px;right:12px;z-index:2147483646;pointer-events:none";
+    var root = host.attachShadow ? host.attachShadow({ mode: "open" }) : host;
+    root.innerHTML =
+      "<style>.a{display:flex;gap:10px;align-items:center;background:#1d1d1d;color:#f2f2ee;border:2px solid #ffd60a;box-shadow:4px 4px 0 #ffd60a;padding:10px 14px;font:700 13px Arial,sans-serif;animation:i .35s cubic-bezier(.2,1.6,.4,1),o .4s 3.2s forwards}" +
+      ".t{font:700 10px ui-monospace,Menlo,monospace;letter-spacing:.12em;color:#ffd60a;text-transform:uppercase}.e{font-size:22px}" +
+      "@keyframes i{from{transform:translateY(-20px);opacity:0}}@keyframes o{to{opacity:0;transform:translateY(-10px)}}</style>" +
+      "<div class=a><span class=e>🏆</span><div><div class=t>Achievement unlocked</div><div class=n></div></div></div>";
+    root.querySelector(".n").textContent = name;
+    (document.body || document.documentElement).appendChild(host);
+    setTimeout(function () { if (host.parentNode) host.parentNode.removeChild(host); }, 3800);
+  }
+  function achievement(id, name, description) {
+    id = clip(String(id == null ? "" : id).trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-"), 40);
+    if (!id || achieved[id]) return false;
+    name = clip(String(name || id), 60);
+    achieved[id] = 1;
+    try { localStorage.setItem("__vesta_achievements", JSON.stringify(achieved)); } catch (e) {}
+    push({ t: "ach", id: id, n: name, d: clip(description || "", 120) });
+    if (!quiet) showAchievement(name);
+    return true;
+  }
+
   window.vesta = {
     submitScore: submitScore,
+    achievement: achievement,
+    achievements: function () { return Object.keys(achieved); },
     game: game,
     version: version,
     shareUrl: shareUrl,

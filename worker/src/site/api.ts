@@ -371,7 +371,7 @@ admin.delete("/games/:slug", requireGameAccess, async (c) => {
   await deletePrefix(c.env, `g/${slug}/`);
   await deletePrefix(c.env, `c/${slug}/`);
   await c.env.DB.batch(
-    ["comments", "likes", "scores", "best_scores", "reports", "arena_entries", "reviews", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
+    ["comments", "likes", "scores", "best_scores", "reports", "arena_entries", "reviews", "achievements", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
       c.env.DB.prepare(`DELETE FROM ${t} WHERE slug = ?`).bind(slug),
     ),
   );

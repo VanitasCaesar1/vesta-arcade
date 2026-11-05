@@ -8,7 +8,7 @@ without accounts (players are anonymous; creators hold per-game keys) and on Clo
 | Store page per game (media, description, changelog) | `/g/<slug>` | done |
 | Big-picture play | fullscreen player, mobile auto-fullscreen | done |
 | Reviews with summary label ("Very Positive") | thumbs up/down + text, label on cards and page, in the agent report | done |
-| Achievements with global unlock % | `window.vesta.achievement(id, name)`, toast, % of players | planned |
+| Achievements with global unlock % | `window.vesta.achievement(id, name, description)`, trophy toast, % of players on the game page | done |
 | Leaderboards | high scores per game, challenge links | done |
 | Discovery: search, tags, sections | search, tag filter, Top rated / New & Trending / Hidden gems | planned |
 | Developer pages | `/dev/<name>` | planned |

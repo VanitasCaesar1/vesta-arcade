@@ -221,6 +221,13 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .gallery-item .linkbtn { justify-self: start; font-size: 11px; opacity: .5; }
 .challenges { margin: 40px 0 10px; }
 .hot { margin: 10px 0 0; font-weight: 800; }
+.achievements { list-style: none; padding: 0; margin: 0; border: 2px solid var(--line); }
+.achievements li { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--hair); }
+.achievements li:first-child { border-top: 0; }
+.achievements b { display: block; font-size: 14px; }
+.achievements small { display: block; opacity: .7; font-size: 12px; }
+.achievements .pct { font: 700 13px var(--mono); }
+.sub.small { font-size: 12px; margin: 6px 0 0; }
 .review-label { font-weight: 800; font-size: 13px; }
 .review-label.pos { color: #4cb3ff; }
 .review-label.mixed { color: #c8a24a; }

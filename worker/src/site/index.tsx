@@ -13,7 +13,7 @@ let ogBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaOgBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaSvgOgBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
-import { feedbackReport, getChallenge, getGame, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
+import { feedbackReport, getChallenge, getGame, listAchievements, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
 import { EmbedPage, GamePage, HomePage, NotFoundPage } from "./pages.tsx";
 import { ArenaBoardPage, ArenaEmbedPage, ArenaPage, EntryPage, PromptGalleryPage } from "./arenaPages.tsx";
@@ -120,13 +120,14 @@ const playSrc = (c: Context<AppEnv>, slug: string, n: number) => `${c.env.PLAY_U
 site.get("/g/:slug", async (c) => {
   const game = await loadGame(c);
   if (!game) return notFound(c);
-  const [versions, comments, scores, challenge, others, reviews] = await Promise.all([
+  const [versions, comments, scores, challenge, others, reviews, achievements] = await Promise.all([
     listVersions(c.env, game.slug, 12),
     listComments(c.env, game.slug, { limit: 30 }),
     topScores(c.env, game.slug, 10),
     getChallenge(c.env, game.slug, c.req.query("c")),
     listGames(c.env, { limit: 4 }),
     recentReviews(c.env, game.slug),
+    listAchievements(c.env, game.slug),
   ]);
   return c.html(
     <GamePage
@@ -140,6 +141,7 @@ site.get("/g/:slug", async (c) => {
       challenge={challenge}
       more={others.filter((o) => o.slug !== game.slug).slice(0, 3)}
       reviews={reviews}
+      achievements={achievements}
       reviewNotice={c.req.query("review")?.slice(0, 120)}
       feedback={c.req.query("feedback")?.slice(0, 120)}
     />,
@@ -306,7 +308,7 @@ Models compete on the same prompt, judged blind by players: ${base}/arena (games
 
 ## Report progress from a game
 
-Vesta injects window.vesta into every game. Call \`window.vesta?.milestone("reached-level-2")\` at key moments; the creator sees what share of plays reach each one. \`window.vesta?.error("message")\` reports a game-level problem. \`await window.vesta?.submitScore(score)\` at game over shows an arcade "enter your initials" box and puts the score on the game's high-score table (higher is better). After the player saves, the box offers a \`Challenge a friend\` link (\`/g/<slug>?c=<scoreId>\`) and \`window.vesta.shareUrl\` becomes that link, so read \`window.vesta.shareUrl\` when the player presses your own share button rather than caching it at load. A player who arrives through a challenge link sees the score to beat; \`window.vesta.challenge\` is \`{ name, score }\` or \`null\`. Saves in localStorage are kept per game automatically.
+Vesta injects window.vesta into every game. Call \`window.vesta?.milestone("reached-level-2")\` at key moments; the creator sees what share of plays reach each one. \`window.vesta?.error("message")\` reports a game-level problem. \`await window.vesta?.submitScore(score)\` at game over shows an arcade "enter your initials" box and puts the score on the game's high-score table (higher is better). After the player saves, the box offers a \`Challenge a friend\` link (\`/g/<slug>?c=<scoreId>\`) and \`window.vesta.shareUrl\` becomes that link, so read \`window.vesta.shareUrl\` when the player presses your own share button rather than caching it at load. A player who arrives through a challenge link sees the score to beat; \`window.vesta.challenge\` is \`{ name, score }\` or \`null\`. Saves in localStorage are kept per game automatically. \`window.vesta?.achievement("exit-vim", "Escape artist", "Quit vim in under a second")\` unlocks an achievement: the player sees a trophy toast once, and the game page shows what share of players unlocked each one (up to 50 per game).
 
 ## Limits
 
