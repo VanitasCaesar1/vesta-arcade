@@ -50,8 +50,8 @@ export function Layout(props: { meta: Meta; children: Child; bare?: boolean }) {
         <link rel="alternate" type="application/rss+xml" title={meta.arcade} href="/feed.xml" />
         <link rel="preload" href="/static/archivo.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
         <link rel="preload" href="/static/geist.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-        <link rel="stylesheet" href="/static/style.css?v=15" />
-        <script src="/static/app.js?v=15" defer></script>
+        <link rel="stylesheet" href="/static/style.css?v=16" />
+        <script src="/static/app.js?v=16" defer></script>
       </head>
       <body>
         {props.bare ? (
@@ -70,6 +70,9 @@ export function Layout(props: { meta: Meta; children: Child; bare?: boolean }) {
                 </a>
                 <a class="link" href="/arena">
                   AI Arena
+                </a>
+                <a class="link" href="/library">
+                  Library
                 </a>
                 <a class="link" href="/llms.txt">
                   For agents

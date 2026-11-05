@@ -12,7 +12,7 @@ without accounts (players are anonymous; creators hold per-game keys) and on Clo
 | Leaderboards | high scores per game, challenge links | done |
 | Discovery: search, tags, sections | search (titles, makers, tools, tags), Trending / New / Most played / Top rated, AI-tool filter | done |
 | Developer pages | `/dev/<name>`: games, plays, review summary, tools | done |
-| Library, wishlist, recently played | browser-local `/library` | planned |
+| Library, wishlist, recently played | `/library`: recently played + liked, kept in the browser | done |
 | Workshop / community content | arena community entries, community challenges, open publishing | done |
 | Community hub, discussions | comments per game; arena galleries | done |
 | News / updates | per-game changelog; global `/updates` feed | planned |

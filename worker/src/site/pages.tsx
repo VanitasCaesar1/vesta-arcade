@@ -395,6 +395,8 @@ export function GamePage(p: {
           class="stage"
           style={`aspect-ratio:${g.aspect}`}
           data-src={p.playSrc}
+          data-slug={g.slug}
+          data-cover={cover(g)}
           data-title={g.title}
           data-share-url={url}
           data-challenge={ch ? `${ch.name}:${ch.score}` : undefined}
@@ -497,7 +499,7 @@ export function GamePage(p: {
                 <button class="btn pop lg" data-start data-fullscreen type="button">
                   <Icon name="expand" /> Play fullscreen
                 </button>
-                <button class="btn" data-like={g.slug} type="button" aria-label="Like">
+                <button class="btn" data-like={g.slug} data-like-title={g.title} data-like-cover={cover(g)} type="button" aria-label="Like">
                   <span class="off">
                     <Icon name="heart" />
                   </span>
@@ -674,6 +676,34 @@ export function DeveloperPage(p: { arcade: string; siteUrl: string; name: string
             <GameCard g={g} i={i} />
           ))}
         </div>
+      </div>
+    </Layout>
+  );
+}
+
+export function LibraryPage(p: { arcade: string; siteUrl: string }) {
+  return (
+    <Layout meta={{ title: `Your library | ${p.arcade}`, description: "Games you played and liked, kept in this browser.", url: `${p.siteUrl}/library`, arcade: p.arcade, noindex: true }}>
+      <div class="wrap">
+        <section class="dev-head">
+          <span class="k">Library</span>
+          <h1 class="display">Your games</h1>
+          <p class="sub">Kept in this browser. No account needed.</p>
+        </section>
+        <section class="lib">
+          <h2 class="display">Recently played</h2>
+          <div class="grid" data-library="recent" />
+          <p class="sub" data-library-empty="recent" hidden>
+            Nothing yet. <a href="/#games">Find something to play.</a>
+          </p>
+        </section>
+        <section class="lib">
+          <h2 class="display">Liked</h2>
+          <div class="grid" data-library="saved" />
+          <p class="sub" data-library-empty="saved" hidden>
+            Press ♥ on a game to keep it here.
+          </p>
+        </section>
       </div>
     </Layout>
   );

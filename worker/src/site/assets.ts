@@ -221,6 +221,8 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .gallery-item .linkbtn { justify-self: start; font-size: 11px; opacity: .5; }
 .challenges { margin: 40px 0 10px; }
 .hot { margin: 10px 0 0; font-weight: 800; }
+.lib { margin: 10px 0 36px; }
+.lib h2 { margin: 0 0 14px; }
 .search input { width: min(320px, 100%); font: inherit; padding: 8px 12px; border: 2px solid var(--line); background: transparent; color: inherit; }
 .dev-head { margin: 28px 0 22px; }
 .dev-head .k { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; background: var(--pop); color: var(--pop-ink); padding: 3px 7px; }
@@ -452,6 +454,27 @@ export const APP_JS = String.raw`(function () {
 
   // Load the game only when someone presses play: no autoplay surprises, and
   // a play is counted only when a person asked for one.
+  // Library: recently played and liked games, kept in this browser.
+  function libList(key) { try { var v = JSON.parse(localStorage.getItem(key) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function remember(key, g) {
+    if (!g || !/^[a-z0-9-]+$/.test(g.slug || "")) return;
+    var list = libList(key).filter(function (x) { return x.slug !== g.slug; });
+    list.unshift({ slug: g.slug, title: String(g.title || g.slug).slice(0, 80), cover: /^\/cover\//.test(g.cover || "") ? g.cover : "", t: Date.now() });
+    try { localStorage.setItem(key, JSON.stringify(list.slice(0, 48))); } catch (e) {}
+  }
+  $$("[data-library]").forEach(function (box) {
+    var key = box.getAttribute("data-library") === "saved" ? "vesta:saved" : "vesta:recent";
+    var list = libList(key);
+    var empty = $("[data-library-empty=" + box.getAttribute("data-library") + "]"); if (empty) empty.hidden = list.length > 0;
+    list.forEach(function (g) {
+      var a = document.createElement("a"); a.className = "card"; a.href = "/g/" + g.slug;
+      var art = document.createElement("div"); art.className = "art";
+      if (g.cover) { var img = document.createElement("img"); img.src = g.cover; img.alt = ""; img.loading = "lazy"; art.appendChild(img); }
+      var h = document.createElement("h3"); h.textContent = g.title;
+      a.appendChild(art); a.appendChild(h); box.appendChild(a);
+    });
+  });
+
   var stages = $$(".stage");
   var stage = stages[0] || null;
   function start(target) {
@@ -471,6 +494,7 @@ export const APP_JS = String.raw`(function () {
     st.innerHTML = "";
     st.appendChild(f);
     st.setAttribute("data-started", "1");
+    if (st.getAttribute("data-slug")) remember("vesta:recent", { slug: st.getAttribute("data-slug"), title: st.getAttribute("data-title"), cover: st.getAttribute("data-cover") });
     f.addEventListener("load", function () { try { f.focus(); } catch (e) {} });
     setTimeout(function () { try { f.focus(); } catch (e) {} }, 300);
     if (!st.hasAttribute("data-arena") && window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 700) fullscreen();
@@ -620,7 +644,7 @@ export const APP_JS = String.raw`(function () {
       b.classList.add("liked");
       fetch("/api/games/" + b.getAttribute("data-like") + "/like", { method: "POST" })
         .then(function (r) { return r.json(); })
-        .then(function (j) { localStorage.setItem(key, "1"); var n = $("[data-likes]", b); if (n && j.likes != null) n.textContent = j.likes; })
+        .then(function (j) { localStorage.setItem(key, "1"); remember("vesta:saved", { slug: b.getAttribute("data-like"), title: b.getAttribute("data-like-title"), cover: b.getAttribute("data-like-cover") }); var n = $("[data-likes]", b); if (n && j.likes != null) n.textContent = j.likes; })
         .catch(function () { b.classList.remove("liked"); });
     });
   });
