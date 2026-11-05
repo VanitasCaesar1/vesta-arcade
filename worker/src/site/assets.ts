@@ -221,6 +221,23 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .gallery-item .linkbtn { justify-self: start; font-size: 11px; opacity: .5; }
 .challenges { margin: 40px 0 10px; }
 .hot { margin: 10px 0 0; font-weight: 800; }
+.review-label { font-weight: 800; font-size: 13px; }
+.review-label.pos { color: #4cb3ff; }
+.review-label.mixed { color: #c8a24a; }
+.review-label.neg { color: #e0644b; }
+.review-label.none { opacity: .6; }
+.card .review-label { display: block; margin: -2px 0 4px; }
+.reviews { margin: 34px 0; }
+.reviews h2 { margin: 0 0 4px; }
+.review-form { margin: 12px 0; }
+.vote-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.vote { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 2px solid var(--line); cursor: pointer; font-weight: 700; }
+.vote input { accent-color: var(--pop); }
+.review-list { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+.review-list li { border-left: 4px solid #4cb3ff; padding: 6px 12px; }
+.review-list li.down { border-left-color: #e0644b; }
+.review-list p { margin: 4px 0; }
+.review-list small { opacity: .6; }
 .embed-arena { padding: 10px; }
 .embed-arena .arena-pair { gap: 8px; }
 .embed-arena .arena-label { font-size: 14px; margin: 0 0 4px; }

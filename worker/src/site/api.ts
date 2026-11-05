@@ -5,6 +5,7 @@ import { ManifestError, validateManifest, validatePath, validateSlug, type Manif
 import { contentType, COVER_TYPES } from "../lib/mime.ts";
 import { cleanList, cleanText, ipHash, now, safeEqual, sha256 } from "../lib/util.ts";
 import { notify, validWebhook } from "../lib/notify.ts";
+import { recount } from "./reviews.ts";
 import type { MiddlewareHandler } from "hono";
 import { bearer, endSession, isAdmin, requireAdmin, startSession, tokenConfigured } from "./auth.ts";
 import { ARENA_KINDS, checkSvg, crowd, recordVote, revealOnly, svgSlug, verifyMatchup, type ArenaKind } from "./arena.ts";
@@ -249,6 +250,33 @@ api.post("/games/:slug/like", async (c) => {
   return c.json({ likes: game.likes + (res.meta.changes ? 1 : 0), liked: true });
 });
 
+// Reviews: one per visitor per game. Posting again changes your review.
+api.post("/games/:slug/review", async (c) => {
+  const slug = slugParam(c);
+  const form = await c.req.formData().catch(() => null);
+  const get = (k: string) => String(form?.get(k) ?? "");
+  const back = (msg: string) => c.redirect(`/g/${slug}?review=${encodeURIComponent(msg)}#reviews`, 303);
+  if (get("website")) return back("Thanks!");
+  const vote = get("vote");
+  if (vote !== "up" && vote !== "down") return back("Pick Recommended or Not recommended.");
+  const game = await getGame(c.env, slug);
+  if (!game || !game.version || game.hidden) return back("Game not found.");
+  const body = cleanText(get("body"), 1000);
+  const ip = await ipHash(c.req.raw, c.env.ADMIN_TOKEN ?? "vesta");
+  await c.env.DB.prepare(
+    `INSERT INTO reviews (slug, ip_hash, up, body, version, created_at) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT (slug, ip_hash) DO UPDATE SET up = excluded.up, body = excluded.body, version = excluded.version, created_at = excluded.created_at`,
+  )
+    .bind(slug, ip, vote === "up" ? 1 : 0, body, game.version, now())
+    .run();
+  await recount(c.env, slug);
+  if (body) {
+    const hook = await c.env.DB.prepare("SELECT webhook_url FROM games WHERE slug = ?").bind(slug).first<{ webhook_url: string | null }>();
+    if (hook?.webhook_url) c.executionCtx.waitUntil(notify(hook.webhook_url, `${vote === "up" ? "👍" : "👎"} New review of **${game.title}**:\n> ${body.slice(0, 600).replace(/\n/g, "\n> ")}\n${siteUrl(c)}/g/${slug}#reviews`));
+  }
+  return back("Thanks for the review.");
+});
+
 api.post("/games/:slug/comments", async (c) => {
   const slug = slugParam(c);
   const isForm = (c.req.header("content-type") ?? "").includes("form");
@@ -343,7 +371,7 @@ admin.delete("/games/:slug", requireGameAccess, async (c) => {
   await deletePrefix(c.env, `g/${slug}/`);
   await deletePrefix(c.env, `c/${slug}/`);
   await c.env.DB.batch(
-    ["comments", "likes", "scores", "best_scores", "reports", "arena_entries", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
+    ["comments", "likes", "scores", "best_scores", "reports", "arena_entries", "reviews", "versions", "daily_stats", "dropoff", "errors", "milestones", "games"].map((t) =>
       c.env.DB.prepare(`DELETE FROM ${t} WHERE slug = ?`).bind(slug),
     ),
   );

@@ -20,6 +20,7 @@ import { ArenaBoardPage, ArenaEmbedPage, ArenaPage, EntryPage, PromptGalleryPage
 import { arenaNames, arenaPrompts, daily, entryPage, featuredChallenge, isArenaEntry, leaderboard, promptGallery, randomMatchup, votesLastHour, type ArenaKind } from "./arena.ts";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
 import { REPO_URL } from "./layout.tsx";
+import { recentReviews } from "./reviews.ts";
 
 export const site = new Hono<AppEnv>();
 
@@ -119,12 +120,13 @@ const playSrc = (c: Context<AppEnv>, slug: string, n: number) => `${c.env.PLAY_U
 site.get("/g/:slug", async (c) => {
   const game = await loadGame(c);
   if (!game) return notFound(c);
-  const [versions, comments, scores, challenge, others] = await Promise.all([
+  const [versions, comments, scores, challenge, others, reviews] = await Promise.all([
     listVersions(c.env, game.slug, 12),
     listComments(c.env, game.slug, { limit: 30 }),
     topScores(c.env, game.slug, 10),
     getChallenge(c.env, game.slug, c.req.query("c")),
     listGames(c.env, { limit: 4 }),
+    recentReviews(c.env, game.slug),
   ]);
   return c.html(
     <GamePage
@@ -137,6 +139,8 @@ site.get("/g/:slug", async (c) => {
       scores={scores}
       challenge={challenge}
       more={others.filter((o) => o.slug !== game.slug).slice(0, 3)}
+      reviews={reviews}
+      reviewNotice={c.req.query("review")?.slice(0, 120)}
       feedback={c.req.query("feedback")?.slice(0, 120)}
     />,
   );

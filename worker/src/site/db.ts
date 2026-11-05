@@ -1,4 +1,5 @@
 import type { Env } from "../lib/env.ts";
+import { reviewLabel } from "./reviews.ts";
 import { daysAgo, now, parseJSONArray, SESSION_BUCKETS, timeAgo } from "../lib/util.ts";
 
 export interface GameRow {
@@ -20,6 +21,8 @@ export interface GameRow {
   updated_at: number;
   /** Set for community games (published without the admin token). Never sent to clients. */
   owner_key_hash?: string | null;
+  reviews_up?: number;
+  reviews_total?: number;
 }
 
 export interface Game {
@@ -39,6 +42,8 @@ export interface Game {
   hidden: boolean;
   /** Published by a visitor through open publishing, not by the arcade's owner. */
   community: boolean;
+  reviewsUp: number;
+  reviewsTotal: number;
   createdAt: number;
   updatedAt: number;
   recentPlays?: number;
@@ -61,6 +66,8 @@ export function toGame(r: GameRow & { recent_plays?: number }): Game {
     likes: r.likes,
     hidden: !!r.hidden,
     community: !!r.owner_key_hash,
+    reviewsUp: r.reviews_up ?? 0,
+    reviewsTotal: r.reviews_total ?? 0,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     recentPlays: r.recent_plays,
@@ -173,6 +180,7 @@ export interface FeedbackReport {
   olderErrors: ErrorRow[];
   comments: CommentRow[];
   scores?: ScoreRow[];
+  reviews?: { up: number; body: string; version: number | null; created_at: number }[];
 }
 
 export async function feedbackReport(env: Env, slug: string, days = 14): Promise<FeedbackReport | null> {
@@ -194,6 +202,11 @@ export async function feedbackReport(env: Env, slug: string, days = 14): Promise
     listComments(env, slug, { limit: 40 }),
     topScores(env, slug, 10),
   ]);
+  const reviews = (
+    await env.DB.prepare("SELECT up, body, version, created_at FROM reviews WHERE slug = ? AND hidden = 0 ORDER BY up ASC, created_at DESC LIMIT 30")
+      .bind(slug)
+      .all<{ up: number; body: string; version: number | null; created_at: number }>()
+  ).results;
 
   // Fill every day so charts and agents see zeros, not gaps.
   const byDay = new Map(daily.results.map((d) => [d.day, d]));
@@ -221,6 +234,7 @@ export async function feedbackReport(env: Env, slug: string, days = 14): Promise
     olderErrors: olderErrors.results,
     comments,
     scores,
+    reviews,
   };
 }
 
@@ -285,6 +299,17 @@ export function reportMarkdown(r: FeedbackReport, siteUrl: string): string {
   if (!r.comments.length) out.push("No comments yet.");
   for (const c of r.comments) {
     out.push(`- "${c.body.replace(/\s+/g, " ")}"${c.name ? ` (${c.name})` : ""}, v${c.version ?? "?"}, ${timeAgo(c.created_at)}`);
+  }
+  out.push("");
+
+  const rg = r.game;
+  out.push("## Reviews");
+  if (!rg.reviewsTotal) out.push("No reviews yet.");
+  else {
+    out.push(`${reviewLabel(rg.reviewsUp, rg.reviewsTotal).label}: ${Math.round((rg.reviewsUp / rg.reviewsTotal) * 100)}% of ${rg.reviewsTotal} recommend it.`);
+    const written = (r.reviews ?? []).filter((x) => x.body);
+    if (written.length) out.push("Written reviews, not-recommended first (fix what these say):");
+    for (const x of written.slice(0, 15)) out.push(`- ${x.up ? "👍" : "👎"} "${x.body.replace(/\s+/g, " ")}" (v${x.version ?? "?"}, ${timeAgo(x.created_at)})`);
   }
   out.push("");
 

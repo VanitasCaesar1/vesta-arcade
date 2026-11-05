@@ -1,5 +1,6 @@
 import { duration, type Challenge, type CommentRow, type Game, type LoopData, type ScoreRow, type Sort, type VersionRow } from "./db.ts";
 import { compactNumber, timeAgo } from "../lib/util.ts";
+import { reviewLabel, type ReviewRow } from "./reviews.ts";
 import { Icon, Layout, Mascot, REPO_URL } from "./layout.tsx";
 
 const SORTS: { id: Sort; label: string }[] = [
@@ -28,6 +29,7 @@ function GameCard({ g, i }: { g: Game; i: number }) {
         <img src={cover(g)} alt="" loading="lazy" width={640} height={360} />
       </div>
       <h3>{g.title}</h3>
+      {g.reviewsTotal ? <ReviewBadge up={g.reviewsUp} total={g.reviewsTotal} /> : null}
       <div class="meta">
         <span>
           <b>{compactNumber(g.plays)}</b> {g.plays === 1 ? "play" : "plays"}
@@ -36,6 +38,60 @@ function GameCard({ g, i }: { g: Game; i: number }) {
         {g.author ? <span>{g.author}</span> : null}
       </div>
     </a>
+  );
+}
+
+export function ReviewBadge({ up, total, long }: { up: number; total: number; long?: boolean }) {
+  const r = reviewLabel(up, total);
+  return (
+    <span class={`review-label ${r.tone}`} title={total ? `${Math.round((up / total) * 100)}% of ${total} reviews recommend it` : ""}>
+      {r.label}
+      {long && total ? <small> ({Math.round((up / total) * 100)}% of {total.toLocaleString("en-US")})</small> : null}
+    </span>
+  );
+}
+
+function Reviews(p: { g: Game; reviews: ReviewRow[]; notice?: string }) {
+  const g = p.g;
+  return (
+    <section class="reviews" id="reviews">
+      <h2 class="display">Reviews</h2>
+      <p class="sub">
+        <ReviewBadge up={g.reviewsUp} total={g.reviewsTotal} long />
+      </p>
+      {p.notice ? <div class="notice">{p.notice}</div> : null}
+      <form class="fb review-form" method="post" action={`/api/games/${g.slug}/review`}>
+        <div class="vote-row">
+          <label class="vote up">
+            <input type="radio" name="vote" value="up" required /> <span>👍 Recommended</span>
+          </label>
+          <label class="vote down">
+            <input type="radio" name="vote" value="down" /> <span>👎 Not recommended</span>
+          </label>
+        </div>
+        <label class="field">
+          Your review (optional)
+          <textarea name="body" maxlength={1000} rows={3} placeholder="What made it fun, or what would make it better?" />
+        </label>
+        <div class="hp" aria-hidden="true">
+          <input name="website" tabindex={-1} autocomplete="off" />
+        </div>
+        <button class="btn" type="submit">
+          Post review
+        </button>
+      </form>
+      <ul class="review-list">
+        {p.reviews.map((r) => (
+          <li class={r.up ? "up" : "down"}>
+            <b>{r.up ? "👍 Recommended" : "👎 Not recommended"}</b>
+            <p>{r.body}</p>
+            <small>
+              v{r.version ?? "?"}, {timeAgo(r.created_at)}
+            </small>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -295,6 +351,8 @@ export function GamePage(p: {
   scores: ScoreRow[];
   challenge?: Challenge | null;
   more?: Game[];
+  reviews?: ReviewRow[];
+  reviewNotice?: string;
   feedback?: string;
 }) {
   const g = p.game;
@@ -369,6 +427,11 @@ export function GamePage(p: {
                 v{g.version}, updated {timeAgo(g.updatedAt)}
               </span>
               {g.community ? <span class="community">Community upload</span> : null}
+              {g.reviewsTotal ? (
+                <a href="#reviews">
+                  <ReviewBadge up={g.reviewsUp} total={g.reviewsTotal} />
+                </a>
+              ) : null}
             </div>
             {g.madeWith.length ? (
               <div class="tools">
@@ -380,6 +443,8 @@ export function GamePage(p: {
               </div>
             ) : null}
             {g.description ? <p class="desc">{g.description}</p> : null}
+
+            <Reviews g={g} reviews={p.reviews ?? []} notice={p.reviewNotice} />
 
             <section class="feedback" id="feedback">
               <h2 class="display">Tell the creator</h2>
