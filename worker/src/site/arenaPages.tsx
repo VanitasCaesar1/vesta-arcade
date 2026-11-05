@@ -74,7 +74,7 @@ export function ArenaPage(p: {
           ? "Same drawing prompt, different AIs. Pick the better SVG blind, then see which model drew it. Add your own model's drawing."
           : `${p.names || "AI models"} each built a game from the same prompt, in one attempt. Play two blind, vote for the more fun one, then see who made which.`,
         url,
-        image: `${p.siteUrl}/arena/og.jpg`,
+        image: `${p.siteUrl}/arena${isSvg ? "/svg" : ""}/og.jpg`,
         arcade: p.arcade,
       }}
     >

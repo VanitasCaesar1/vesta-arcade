@@ -1,0 +1,1038 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+<defs>
+
+    <!-- Kitchen Ambient Light Gradient -->
+    <linearGradient id="wallGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="50%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+
+    <!-- Window Morning Sky Gradient -->
+    <linearGradient id="morningSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fdba74"/>
+      <stop offset="50%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#bae6fd"/>
+    </linearGradient>
+
+    <!-- Sunbeam Gradient -->
+    <linearGradient id="sunbeam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Wood Countertop -->
+    <linearGradient id="countertop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="25%" stop-color="#92400e"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+    <linearGradient id="counterEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#92400e"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+
+    <!-- Subway Tile Backsplash Gradient -->
+    <linearGradient id="tileGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="50%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+
+    <!-- Cabinet Lower Teal -->
+    <linearGradient id="cabinetGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="50%" stop-color="#115e59"/>
+      <stop offset="100%" stop-color="#134e4a"/>
+    </linearGradient>
+
+    <!-- Chrome / Steel -->
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="25%" stop-color="#cbd5e1"/>
+      <stop offset="50%" stop-color="#64748b"/>
+      <stop offset="75%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+
+    <!-- Cast Iron Skillet -->
+    <radialGradient id="castIron" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="60%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </radialGradient>
+
+    <!-- Gas Flame -->
+    <radialGradient id="gasFlame" cx="0.5" cy="0.8" r="0.6">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="30%" stop-color="#38bdf8"/>
+      <stop offset="70%" stop-color="#2563eb"/>
+      <stop offset="90%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Robot Enamel (Aqua Mint) -->
+    <linearGradient id="robotAqua" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="40%" stop-color="#06b6d4"/>
+      <stop offset="85%" stop-color="#0891b2"/>
+      <stop offset="100%" stop-color="#155e75"/>
+    </linearGradient>
+
+    <linearGradient id="robotHead" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a5f3fc"/>
+      <stop offset="35%" stop-color="#22d3ee"/>
+      <stop offset="85%" stop-color="#0891b2"/>
+      <stop offset="100%" stop-color="#164e63"/>
+    </linearGradient>
+
+    <!-- Brass / Copper Details -->
+    <linearGradient id="brassGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="40%" stop-color="#eab308"/>
+      <stop offset="85%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#854d0e"/>
+    </linearGradient>
+
+    <linearGradient id="copper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="40%" stop-color="#f97316"/>
+      <stop offset="80%" stop-color="#c2410c"/>
+      <stop offset="100%" stop-color="#7c2d12"/>
+    </linearGradient>
+
+    <!-- Screen / Visor -->
+    <linearGradient id="visorScreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="60%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- Egg Yolk Gradient -->
+    <radialGradient id="yolkGrad" cx="0.35" cy="0.35" r="0.6">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="35%" stop-color="#fbb016"/>
+      <stop offset="80%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </radialGradient>
+
+    <!-- Bacon Gradient -->
+    <linearGradient id="baconGrad" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0%" stop-color="#991b1b"/>
+      <stop offset="25%" stop-color="#fecaca"/>
+      <stop offset="45%" stop-color="#b91c1c"/>
+      <stop offset="65%" stop-color="#fee2e2"/>
+      <stop offset="85%" stop-color="#7f1d1d"/>
+    </linearGradient>
+
+    <!-- Pancake Gradient -->
+    <radialGradient id="pancakeGrad" cx="0.4" cy="0.3" r="0.7">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="50%" stop-color="#d97706"/>
+      <stop offset="85%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </radialGradient>
+
+    <!-- Coffee Carafe -->
+    <linearGradient id="coffeeGlass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="25%" stop-color="#ffffff" stop-opacity="0.1"/>
+      <stop offset="75%" stop-color="#bae6fd" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="coffeeBrew" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#78350f"/>
+      <stop offset="50%" stop-color="#451a03"/>
+      <stop offset="100%" stop-color="#1c1917"/>
+    </linearGradient>
+
+    <!-- Steam Filter Blur -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+</defs>
+<rect width="800" height="600" fill="#f8fafc"/>
+<rect width="800" height="260" fill="url(#wallGrad)"/>
+<g id="subwayTiles" stroke="#cbd5e1" stroke-width="1.5" fill="#ffffff" opacity="0.95">
+  <rect x="-40" y="140" width="40" height="18" rx="1"/>
+  <rect x="0" y="140" width="40" height="18" rx="1"/>
+  <rect x="40" y="140" width="40" height="18" rx="1"/>
+  <rect x="80" y="140" width="40" height="18" rx="1"/>
+  <rect x="120" y="140" width="40" height="18" rx="1"/>
+  <rect x="160" y="140" width="40" height="18" rx="1"/>
+  <rect x="200" y="140" width="40" height="18" rx="1"/>
+  <rect x="240" y="140" width="40" height="18" rx="1"/>
+  <rect x="280" y="140" width="40" height="18" rx="1"/>
+  <rect x="320" y="140" width="40" height="18" rx="1"/>
+  <rect x="360" y="140" width="40" height="18" rx="1"/>
+  <rect x="400" y="140" width="40" height="18" rx="1"/>
+  <rect x="440" y="140" width="40" height="18" rx="1"/>
+  <rect x="480" y="140" width="40" height="18" rx="1"/>
+  <rect x="520" y="140" width="40" height="18" rx="1"/>
+  <rect x="560" y="140" width="40" height="18" rx="1"/>
+  <rect x="600" y="140" width="40" height="18" rx="1"/>
+  <rect x="640" y="140" width="40" height="18" rx="1"/>
+  <rect x="680" y="140" width="40" height="18" rx="1"/>
+  <rect x="720" y="140" width="40" height="18" rx="1"/>
+  <rect x="760" y="140" width="40" height="18" rx="1"/>
+  <rect x="800" y="140" width="40" height="18" rx="1"/>
+  <rect x="-20" y="158" width="40" height="18" rx="1"/>
+  <rect x="20" y="158" width="40" height="18" rx="1"/>
+  <rect x="60" y="158" width="40" height="18" rx="1"/>
+  <rect x="100" y="158" width="40" height="18" rx="1"/>
+  <rect x="140" y="158" width="40" height="18" rx="1"/>
+  <rect x="180" y="158" width="40" height="18" rx="1"/>
+  <rect x="220" y="158" width="40" height="18" rx="1"/>
+  <rect x="260" y="158" width="40" height="18" rx="1"/>
+  <rect x="300" y="158" width="40" height="18" rx="1"/>
+  <rect x="340" y="158" width="40" height="18" rx="1"/>
+  <rect x="380" y="158" width="40" height="18" rx="1"/>
+  <rect x="420" y="158" width="40" height="18" rx="1"/>
+  <rect x="460" y="158" width="40" height="18" rx="1"/>
+  <rect x="500" y="158" width="40" height="18" rx="1"/>
+  <rect x="540" y="158" width="40" height="18" rx="1"/>
+  <rect x="580" y="158" width="40" height="18" rx="1"/>
+  <rect x="620" y="158" width="40" height="18" rx="1"/>
+  <rect x="660" y="158" width="40" height="18" rx="1"/>
+  <rect x="700" y="158" width="40" height="18" rx="1"/>
+  <rect x="740" y="158" width="40" height="18" rx="1"/>
+  <rect x="780" y="158" width="40" height="18" rx="1"/>
+  <rect x="820" y="158" width="40" height="18" rx="1"/>
+  <rect x="-40" y="176" width="40" height="18" rx="1"/>
+  <rect x="0" y="176" width="40" height="18" rx="1"/>
+  <rect x="40" y="176" width="40" height="18" rx="1"/>
+  <rect x="80" y="176" width="40" height="18" rx="1"/>
+  <rect x="120" y="176" width="40" height="18" rx="1"/>
+  <rect x="160" y="176" width="40" height="18" rx="1"/>
+  <rect x="200" y="176" width="40" height="18" rx="1"/>
+  <rect x="240" y="176" width="40" height="18" rx="1"/>
+  <rect x="280" y="176" width="40" height="18" rx="1"/>
+  <rect x="320" y="176" width="40" height="18" rx="1"/>
+  <rect x="360" y="176" width="40" height="18" rx="1"/>
+  <rect x="400" y="176" width="40" height="18" rx="1"/>
+  <rect x="440" y="176" width="40" height="18" rx="1"/>
+  <rect x="480" y="176" width="40" height="18" rx="1"/>
+  <rect x="520" y="176" width="40" height="18" rx="1"/>
+  <rect x="560" y="176" width="40" height="18" rx="1"/>
+  <rect x="600" y="176" width="40" height="18" rx="1"/>
+  <rect x="640" y="176" width="40" height="18" rx="1"/>
+  <rect x="680" y="176" width="40" height="18" rx="1"/>
+  <rect x="720" y="176" width="40" height="18" rx="1"/>
+  <rect x="760" y="176" width="40" height="18" rx="1"/>
+  <rect x="800" y="176" width="40" height="18" rx="1"/>
+  <rect x="-20" y="194" width="40" height="18" rx="1"/>
+  <rect x="20" y="194" width="40" height="18" rx="1"/>
+  <rect x="60" y="194" width="40" height="18" rx="1"/>
+  <rect x="100" y="194" width="40" height="18" rx="1"/>
+  <rect x="140" y="194" width="40" height="18" rx="1"/>
+  <rect x="180" y="194" width="40" height="18" rx="1"/>
+  <rect x="220" y="194" width="40" height="18" rx="1"/>
+  <rect x="260" y="194" width="40" height="18" rx="1"/>
+  <rect x="300" y="194" width="40" height="18" rx="1"/>
+  <rect x="340" y="194" width="40" height="18" rx="1"/>
+  <rect x="380" y="194" width="40" height="18" rx="1"/>
+  <rect x="420" y="194" width="40" height="18" rx="1"/>
+  <rect x="460" y="194" width="40" height="18" rx="1"/>
+  <rect x="500" y="194" width="40" height="18" rx="1"/>
+  <rect x="540" y="194" width="40" height="18" rx="1"/>
+  <rect x="580" y="194" width="40" height="18" rx="1"/>
+  <rect x="620" y="194" width="40" height="18" rx="1"/>
+  <rect x="660" y="194" width="40" height="18" rx="1"/>
+  <rect x="700" y="194" width="40" height="18" rx="1"/>
+  <rect x="740" y="194" width="40" height="18" rx="1"/>
+  <rect x="780" y="194" width="40" height="18" rx="1"/>
+  <rect x="820" y="194" width="40" height="18" rx="1"/>
+  <rect x="-40" y="212" width="40" height="18" rx="1"/>
+  <rect x="0" y="212" width="40" height="18" rx="1"/>
+  <rect x="40" y="212" width="40" height="18" rx="1"/>
+  <rect x="80" y="212" width="40" height="18" rx="1"/>
+  <rect x="120" y="212" width="40" height="18" rx="1"/>
+  <rect x="160" y="212" width="40" height="18" rx="1"/>
+  <rect x="200" y="212" width="40" height="18" rx="1"/>
+  <rect x="240" y="212" width="40" height="18" rx="1"/>
+  <rect x="280" y="212" width="40" height="18" rx="1"/>
+  <rect x="320" y="212" width="40" height="18" rx="1"/>
+  <rect x="360" y="212" width="40" height="18" rx="1"/>
+  <rect x="400" y="212" width="40" height="18" rx="1"/>
+  <rect x="440" y="212" width="40" height="18" rx="1"/>
+  <rect x="480" y="212" width="40" height="18" rx="1"/>
+  <rect x="520" y="212" width="40" height="18" rx="1"/>
+  <rect x="560" y="212" width="40" height="18" rx="1"/>
+  <rect x="600" y="212" width="40" height="18" rx="1"/>
+  <rect x="640" y="212" width="40" height="18" rx="1"/>
+  <rect x="680" y="212" width="40" height="18" rx="1"/>
+  <rect x="720" y="212" width="40" height="18" rx="1"/>
+  <rect x="760" y="212" width="40" height="18" rx="1"/>
+  <rect x="800" y="212" width="40" height="18" rx="1"/>
+  <rect x="-20" y="230" width="40" height="18" rx="1"/>
+  <rect x="20" y="230" width="40" height="18" rx="1"/>
+  <rect x="60" y="230" width="40" height="18" rx="1"/>
+  <rect x="100" y="230" width="40" height="18" rx="1"/>
+  <rect x="140" y="230" width="40" height="18" rx="1"/>
+  <rect x="180" y="230" width="40" height="18" rx="1"/>
+  <rect x="220" y="230" width="40" height="18" rx="1"/>
+  <rect x="260" y="230" width="40" height="18" rx="1"/>
+  <rect x="300" y="230" width="40" height="18" rx="1"/>
+  <rect x="340" y="230" width="40" height="18" rx="1"/>
+  <rect x="380" y="230" width="40" height="18" rx="1"/>
+  <rect x="420" y="230" width="40" height="18" rx="1"/>
+  <rect x="460" y="230" width="40" height="18" rx="1"/>
+  <rect x="500" y="230" width="40" height="18" rx="1"/>
+  <rect x="540" y="230" width="40" height="18" rx="1"/>
+  <rect x="580" y="230" width="40" height="18" rx="1"/>
+  <rect x="620" y="230" width="40" height="18" rx="1"/>
+  <rect x="660" y="230" width="40" height="18" rx="1"/>
+  <rect x="700" y="230" width="40" height="18" rx="1"/>
+  <rect x="740" y="230" width="40" height="18" rx="1"/>
+  <rect x="780" y="230" width="40" height="18" rx="1"/>
+  <rect x="820" y="230" width="40" height="18" rx="1"/>
+  <rect x="-40" y="248" width="40" height="18" rx="1"/>
+  <rect x="0" y="248" width="40" height="18" rx="1"/>
+  <rect x="40" y="248" width="40" height="18" rx="1"/>
+  <rect x="80" y="248" width="40" height="18" rx="1"/>
+  <rect x="120" y="248" width="40" height="18" rx="1"/>
+  <rect x="160" y="248" width="40" height="18" rx="1"/>
+  <rect x="200" y="248" width="40" height="18" rx="1"/>
+  <rect x="240" y="248" width="40" height="18" rx="1"/>
+  <rect x="280" y="248" width="40" height="18" rx="1"/>
+  <rect x="320" y="248" width="40" height="18" rx="1"/>
+  <rect x="360" y="248" width="40" height="18" rx="1"/>
+  <rect x="400" y="248" width="40" height="18" rx="1"/>
+  <rect x="440" y="248" width="40" height="18" rx="1"/>
+  <rect x="480" y="248" width="40" height="18" rx="1"/>
+  <rect x="520" y="248" width="40" height="18" rx="1"/>
+  <rect x="560" y="248" width="40" height="18" rx="1"/>
+  <rect x="600" y="248" width="40" height="18" rx="1"/>
+  <rect x="640" y="248" width="40" height="18" rx="1"/>
+  <rect x="680" y="248" width="40" height="18" rx="1"/>
+  <rect x="720" y="248" width="40" height="18" rx="1"/>
+  <rect x="760" y="248" width="40" height="18" rx="1"/>
+  <rect x="800" y="248" width="40" height="18" rx="1"/>
+  <rect x="-20" y="266" width="40" height="18" rx="1"/>
+  <rect x="20" y="266" width="40" height="18" rx="1"/>
+  <rect x="60" y="266" width="40" height="18" rx="1"/>
+  <rect x="100" y="266" width="40" height="18" rx="1"/>
+  <rect x="140" y="266" width="40" height="18" rx="1"/>
+  <rect x="180" y="266" width="40" height="18" rx="1"/>
+  <rect x="220" y="266" width="40" height="18" rx="1"/>
+  <rect x="260" y="266" width="40" height="18" rx="1"/>
+  <rect x="300" y="266" width="40" height="18" rx="1"/>
+  <rect x="340" y="266" width="40" height="18" rx="1"/>
+  <rect x="380" y="266" width="40" height="18" rx="1"/>
+  <rect x="420" y="266" width="40" height="18" rx="1"/>
+  <rect x="460" y="266" width="40" height="18" rx="1"/>
+  <rect x="500" y="266" width="40" height="18" rx="1"/>
+  <rect x="540" y="266" width="40" height="18" rx="1"/>
+  <rect x="580" y="266" width="40" height="18" rx="1"/>
+  <rect x="620" y="266" width="40" height="18" rx="1"/>
+  <rect x="660" y="266" width="40" height="18" rx="1"/>
+  <rect x="700" y="266" width="40" height="18" rx="1"/>
+  <rect x="740" y="266" width="40" height="18" rx="1"/>
+  <rect x="780" y="266" width="40" height="18" rx="1"/>
+  <rect x="820" y="266" width="40" height="18" rx="1"/>
+  <rect x="-40" y="284" width="40" height="18" rx="1"/>
+  <rect x="0" y="284" width="40" height="18" rx="1"/>
+  <rect x="40" y="284" width="40" height="18" rx="1"/>
+  <rect x="80" y="284" width="40" height="18" rx="1"/>
+  <rect x="120" y="284" width="40" height="18" rx="1"/>
+  <rect x="160" y="284" width="40" height="18" rx="1"/>
+  <rect x="200" y="284" width="40" height="18" rx="1"/>
+  <rect x="240" y="284" width="40" height="18" rx="1"/>
+  <rect x="280" y="284" width="40" height="18" rx="1"/>
+  <rect x="320" y="284" width="40" height="18" rx="1"/>
+  <rect x="360" y="284" width="40" height="18" rx="1"/>
+  <rect x="400" y="284" width="40" height="18" rx="1"/>
+  <rect x="440" y="284" width="40" height="18" rx="1"/>
+  <rect x="480" y="284" width="40" height="18" rx="1"/>
+  <rect x="520" y="284" width="40" height="18" rx="1"/>
+  <rect x="560" y="284" width="40" height="18" rx="1"/>
+  <rect x="600" y="284" width="40" height="18" rx="1"/>
+  <rect x="640" y="284" width="40" height="18" rx="1"/>
+  <rect x="680" y="284" width="40" height="18" rx="1"/>
+  <rect x="720" y="284" width="40" height="18" rx="1"/>
+  <rect x="760" y="284" width="40" height="18" rx="1"/>
+  <rect x="800" y="284" width="40" height="18" rx="1"/>
+  <rect x="-20" y="302" width="40" height="18" rx="1"/>
+  <rect x="20" y="302" width="40" height="18" rx="1"/>
+  <rect x="60" y="302" width="40" height="18" rx="1"/>
+  <rect x="100" y="302" width="40" height="18" rx="1"/>
+  <rect x="140" y="302" width="40" height="18" rx="1"/>
+  <rect x="180" y="302" width="40" height="18" rx="1"/>
+  <rect x="220" y="302" width="40" height="18" rx="1"/>
+  <rect x="260" y="302" width="40" height="18" rx="1"/>
+  <rect x="300" y="302" width="40" height="18" rx="1"/>
+  <rect x="340" y="302" width="40" height="18" rx="1"/>
+  <rect x="380" y="302" width="40" height="18" rx="1"/>
+  <rect x="420" y="302" width="40" height="18" rx="1"/>
+  <rect x="460" y="302" width="40" height="18" rx="1"/>
+  <rect x="500" y="302" width="40" height="18" rx="1"/>
+  <rect x="540" y="302" width="40" height="18" rx="1"/>
+  <rect x="580" y="302" width="40" height="18" rx="1"/>
+  <rect x="620" y="302" width="40" height="18" rx="1"/>
+  <rect x="660" y="302" width="40" height="18" rx="1"/>
+  <rect x="700" y="302" width="40" height="18" rx="1"/>
+  <rect x="740" y="302" width="40" height="18" rx="1"/>
+  <rect x="780" y="302" width="40" height="18" rx="1"/>
+  <rect x="820" y="302" width="40" height="18" rx="1"/>
+  <rect x="-40" y="320" width="40" height="18" rx="1"/>
+  <rect x="0" y="320" width="40" height="18" rx="1"/>
+  <rect x="40" y="320" width="40" height="18" rx="1"/>
+  <rect x="80" y="320" width="40" height="18" rx="1"/>
+  <rect x="120" y="320" width="40" height="18" rx="1"/>
+  <rect x="160" y="320" width="40" height="18" rx="1"/>
+  <rect x="200" y="320" width="40" height="18" rx="1"/>
+  <rect x="240" y="320" width="40" height="18" rx="1"/>
+  <rect x="280" y="320" width="40" height="18" rx="1"/>
+  <rect x="320" y="320" width="40" height="18" rx="1"/>
+  <rect x="360" y="320" width="40" height="18" rx="1"/>
+  <rect x="400" y="320" width="40" height="18" rx="1"/>
+  <rect x="440" y="320" width="40" height="18" rx="1"/>
+  <rect x="480" y="320" width="40" height="18" rx="1"/>
+  <rect x="520" y="320" width="40" height="18" rx="1"/>
+  <rect x="560" y="320" width="40" height="18" rx="1"/>
+  <rect x="600" y="320" width="40" height="18" rx="1"/>
+  <rect x="640" y="320" width="40" height="18" rx="1"/>
+  <rect x="680" y="320" width="40" height="18" rx="1"/>
+  <rect x="720" y="320" width="40" height="18" rx="1"/>
+  <rect x="760" y="320" width="40" height="18" rx="1"/>
+  <rect x="800" y="320" width="40" height="18" rx="1"/>
+  <rect x="-20" y="338" width="40" height="18" rx="1"/>
+  <rect x="20" y="338" width="40" height="18" rx="1"/>
+  <rect x="60" y="338" width="40" height="18" rx="1"/>
+  <rect x="100" y="338" width="40" height="18" rx="1"/>
+  <rect x="140" y="338" width="40" height="18" rx="1"/>
+  <rect x="180" y="338" width="40" height="18" rx="1"/>
+  <rect x="220" y="338" width="40" height="18" rx="1"/>
+  <rect x="260" y="338" width="40" height="18" rx="1"/>
+  <rect x="300" y="338" width="40" height="18" rx="1"/>
+  <rect x="340" y="338" width="40" height="18" rx="1"/>
+  <rect x="380" y="338" width="40" height="18" rx="1"/>
+  <rect x="420" y="338" width="40" height="18" rx="1"/>
+  <rect x="460" y="338" width="40" height="18" rx="1"/>
+  <rect x="500" y="338" width="40" height="18" rx="1"/>
+  <rect x="540" y="338" width="40" height="18" rx="1"/>
+  <rect x="580" y="338" width="40" height="18" rx="1"/>
+  <rect x="620" y="338" width="40" height="18" rx="1"/>
+  <rect x="660" y="338" width="40" height="18" rx="1"/>
+  <rect x="700" y="338" width="40" height="18" rx="1"/>
+  <rect x="740" y="338" width="40" height="18" rx="1"/>
+  <rect x="780" y="338" width="40" height="18" rx="1"/>
+  <rect x="820" y="338" width="40" height="18" rx="1"/>
+  <rect x="-40" y="356" width="40" height="18" rx="1"/>
+  <rect x="0" y="356" width="40" height="18" rx="1"/>
+  <rect x="40" y="356" width="40" height="18" rx="1"/>
+  <rect x="80" y="356" width="40" height="18" rx="1"/>
+  <rect x="120" y="356" width="40" height="18" rx="1"/>
+  <rect x="160" y="356" width="40" height="18" rx="1"/>
+  <rect x="200" y="356" width="40" height="18" rx="1"/>
+  <rect x="240" y="356" width="40" height="18" rx="1"/>
+  <rect x="280" y="356" width="40" height="18" rx="1"/>
+  <rect x="320" y="356" width="40" height="18" rx="1"/>
+  <rect x="360" y="356" width="40" height="18" rx="1"/>
+  <rect x="400" y="356" width="40" height="18" rx="1"/>
+  <rect x="440" y="356" width="40" height="18" rx="1"/>
+  <rect x="480" y="356" width="40" height="18" rx="1"/>
+  <rect x="520" y="356" width="40" height="18" rx="1"/>
+  <rect x="560" y="356" width="40" height="18" rx="1"/>
+  <rect x="600" y="356" width="40" height="18" rx="1"/>
+  <rect x="640" y="356" width="40" height="18" rx="1"/>
+  <rect x="680" y="356" width="40" height="18" rx="1"/>
+  <rect x="720" y="356" width="40" height="18" rx="1"/>
+  <rect x="760" y="356" width="40" height="18" rx="1"/>
+  <rect x="800" y="356" width="40" height="18" rx="1"/>
+  <rect x="-20" y="374" width="40" height="18" rx="1"/>
+  <rect x="20" y="374" width="40" height="18" rx="1"/>
+  <rect x="60" y="374" width="40" height="18" rx="1"/>
+  <rect x="100" y="374" width="40" height="18" rx="1"/>
+  <rect x="140" y="374" width="40" height="18" rx="1"/>
+  <rect x="180" y="374" width="40" height="18" rx="1"/>
+  <rect x="220" y="374" width="40" height="18" rx="1"/>
+  <rect x="260" y="374" width="40" height="18" rx="1"/>
+  <rect x="300" y="374" width="40" height="18" rx="1"/>
+  <rect x="340" y="374" width="40" height="18" rx="1"/>
+  <rect x="380" y="374" width="40" height="18" rx="1"/>
+  <rect x="420" y="374" width="40" height="18" rx="1"/>
+  <rect x="460" y="374" width="40" height="18" rx="1"/>
+  <rect x="500" y="374" width="40" height="18" rx="1"/>
+  <rect x="540" y="374" width="40" height="18" rx="1"/>
+  <rect x="580" y="374" width="40" height="18" rx="1"/>
+  <rect x="620" y="374" width="40" height="18" rx="1"/>
+  <rect x="660" y="374" width="40" height="18" rx="1"/>
+  <rect x="700" y="374" width="40" height="18" rx="1"/>
+  <rect x="740" y="374" width="40" height="18" rx="1"/>
+  <rect x="780" y="374" width="40" height="18" rx="1"/>
+  <rect x="820" y="374" width="40" height="18" rx="1"/>
+</g>
+
+    <!-- Kitchen Window -->
+    <g id="window">
+      <!-- Window Frame Outer Cast Shadow -->
+      <path d="M 35 45 C 35 15 155 15 155 45 L 155 240 L 35 240 Z" fill="#475569" opacity="0.25"/>
+      <!-- Window Frame Exterior Wood -->
+      <path d="M 40 50 C 40 25 150 25 150 50 L 150 235 L 40 235 Z" fill="#f1f5f9" stroke="#94a3b8" stroke-width="4"/>
+      <!-- Window Glass Morning Sky -->
+      <path d="M 48 54 C 48 35 142 35 142 54 L 142 228 L 48 228 Z" fill="url(#morningSky)"/>
+      <!-- Morning Sun outside -->
+      <circle cx="85" cy="110" r="28" fill="#fff" opacity="0.9"/>
+      <circle cx="85" cy="110" r="45" fill="#fef08a" opacity="0.4"/>
+      <!-- Distant little bird silhouettes -->
+      <path d="M 65 75 Q 70 70 75 75 Q 80 70 85 75" stroke="#9a3412" stroke-width="1.5" fill="none"/>
+      <path d="M 110 90 Q 114 86 118 90 Q 122 86 126 90" stroke="#9a3412" stroke-width="1.2" fill="none"/>
+      <!-- Window Muntins / Panes divider -->
+      <line x1="95" y1="36" x2="95" y2="228" stroke="#f8fafc" stroke-width="5"/>
+      <line x1="48" y1="130" x2="142" y2="130" stroke="#f8fafc" stroke-width="5"/>
+      <!-- Window Sill -->
+      <rect x="30" y="232" width="130" height="12" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+      <!-- Little Herb Potted Plant on Window Sill -->
+      <polygon points="50,232 54,212 72,212 76,232" fill="#c2410c"/>
+      <ellipse cx="63" cy="212" rx="9" ry="2.5" fill="#78350f"/>
+      <!-- Basil / Thyme Leaves -->
+      <g fill="#22c55e" stroke="#15803d" stroke-width="1">
+        <ellipse cx="63" cy="202" rx="5" ry="8"/>
+        <ellipse cx="56" cy="206" rx="7" ry="5" transform="rotate(-30 56 206)"/>
+        <ellipse cx="70" cy="206" rx="7" ry="5" transform="rotate(30 70 206)"/>
+        <ellipse cx="60" cy="195" rx="6" ry="4" transform="rotate(-20 60 195)"/>
+        <ellipse cx="67" cy="195" rx="6" ry="4" transform="rotate(20 67 195)"/>
+      </g>
+    </g>
+
+    <!-- Warm angled Sunbeams crossing kitchen -->
+    <g opacity="0.55">
+      <polygon points="45,60 145,50 480,480 320,530" fill="url(#sunbeam)"/>
+      <polygon points="45,140 145,130 550,560 380,590" fill="url(#sunbeam)" opacity="0.6"/>
+    </g>
+    
+
+    <!-- Upper Wooden Shelves -->
+    <g id="shelves">
+      <!-- Shelf 1 (y=90, x=220 to 760) -->
+      <rect x="220" y="90" width="540" height="14" rx="2" fill="url(#countertop)"/>
+      <rect x="220" y="104" width="540" height="4" fill="#451a03"/>
+      <!-- Shelf brackets -->
+      <polygon points="260,104 260,130 270,104" fill="#475569"/>
+      <polygon points="480,104 480,130 490,104" fill="#475569"/>
+      <polygon points="700,104 700,130 710,104" fill="#475569"/>
+
+      <!-- Items on Shelf 1 -->
+      <!-- Spice Jars with colorful contents -->
+      <!-- Jar 1: Turmeric -->
+      <rect x="240" y="62" width="16" height="28" rx="2" fill="#ffffff" opacity="0.6"/>
+      <rect x="242" y="70" width="12" height="18" fill="#eab308"/>
+      <rect x="242" y="58" width="12" height="5" rx="1" fill="#78350f"/>
+      <!-- Jar 2: Paprika -->
+      <rect x="262" y="62" width="16" height="28" rx="2" fill="#ffffff" opacity="0.6"/>
+      <rect x="264" y="68" width="12" height="20" fill="#dc2626"/>
+      <rect x="264" y="58" width="12" height="5" rx="1" fill="#78350f"/>
+      <!-- Jar 3: Rosemary -->
+      <rect x="284" y="62" width="16" height="28" rx="2" fill="#ffffff" opacity="0.6"/>
+      <rect x="286" y="72" width="12" height="16" fill="#15803d"/>
+      <rect x="286" y="58" width="12" height="5" rx="1" fill="#78350f"/>
+
+      <!-- Olive Oil Cruet -->
+      <path d="M 320 90 L 316 68 C 316 60 324 55 324 50 L 324 45 L 328 45 L 328 50 C 328 55 336 60 336 68 L 332 90 Z" fill="#84cc16" opacity="0.85"/>
+      <rect x="323" y="42" width="6" height="4" rx="1" fill="#d97706"/>
+
+      <!-- Stack of Ceramic Bowls -->
+      <ellipse cx="375" cy="88" rx="24" ry="6" fill="#f87171"/>
+      <ellipse cx="375" cy="82" rx="21" ry="5.5" fill="#38bdf8"/>
+      <ellipse cx="375" cy="76" rx="18" ry="5" fill="#facc15"/>
+      <ellipse cx="375" cy="70" rx="15" ry="4.5" fill="#4ade80"/>
+
+      <!-- Hanging copper pots / pans below shelf -->
+      <g stroke="#94a3b8" stroke-width="2">
+        <line x1="430" y1="104" x2="430" y2="120"/>
+        <circle cx="430" cy="140" r="18" fill="url(#copper)" stroke="none"/>
+        <circle cx="430" cy="140" r="14" fill="#c2410c" stroke="none"/>
+        
+        <line x1="490" y1="104" x2="490" y2="120"/>
+        <circle cx="490" cy="136" r="14" fill="url(#copper)" stroke="none"/>
+        <circle cx="490" cy="136" r="10.5" fill="#c2410c" stroke="none"/>
+
+        <!-- Whisk -->
+        <line x1="550" y1="104" x2="550" y2="124"/>
+        <path d="M 545 130 C 543 145 550 152 550 152 C 550 152 557 145 555 130 Z" fill="none" stroke="url(#steel)" stroke-width="1.8"/>
+        <line x1="550" y1="128" x2="550" y2="152" stroke="url(#steel)" stroke-width="1.8"/>
+      </g>
+
+      <!-- Vintage Robot Cookbooks on shelf -->
+      <rect x="610" y="40" width="12" height="50" rx="1" fill="#ef4444" transform="rotate(-6 610 90)"/>
+      <rect x="625" y="38" width="14" height="52" rx="1" fill="#3b82f6"/>
+      <rect x="642" y="42" width="10" height="48" rx="1" fill="#10b981"/>
+      <rect x="655" y="45" width="16" height="45" rx="1" fill="#f59e0b"/>
+      <!-- Bookends (gears) -->
+      <circle cx="680" cy="75" r="12" fill="url(#brassGrad)"/>
+      <circle cx="680" cy="75" r="5" fill="#1e293b"/>
+      <circle cx="600" cy="75" r="12" fill="url(#brassGrad)"/>
+      <circle cx="600" cy="75" r="5" fill="#1e293b"/>
+    </g>
+    
+
+    <!-- Kitchen Cabinets (Bottom) -->
+    <g id="cabinets">
+      <rect x="0" y="380" width="800" height="220" fill="url(#cabinetGrad)"/>
+      <!-- Cabinet Door Paneling -->
+      <rect x="30" y="415" width="120" height="160" rx="4" fill="#0d5c56" stroke="#134e4a" stroke-width="3"/>
+      <rect x="42" y="427" width="96" height="136" rx="2" fill="#0f766e" stroke="#042f2e" stroke-width="2"/>
+      <circle cx="125" cy="495" r="6" fill="url(#brassGrad)"/>
+
+      <rect x="175" y="415" width="120" height="160" rx="4" fill="#0d5c56" stroke="#134e4a" stroke-width="3"/>
+      <rect x="187" y="427" width="96" height="136" rx="2" fill="#0f766e" stroke="#042f2e" stroke-width="2"/>
+      <circle cx="190" cy="495" r="6" fill="url(#brassGrad)"/>
+
+      <!-- Striped Kitchen Runner Rug on Floor in front of Robot -->
+      <polygon points="260,560 740,560 780,600 220,600" fill="#f59e0b"/>
+      <polygon points="290,560 320,560 310,600 270,600" fill="#dc2626"/>
+      <polygon points="360,560 390,560 390,600 350,600" fill="#dc2626"/>
+      <polygon points="430,560 460,560 470,600 430,600" fill="#dc2626"/>
+      <polygon points="500,560 530,560 550,600 510,600" fill="#dc2626"/>
+      <polygon points="570,560 600,560 630,600 590,600" fill="#dc2626"/>
+      <polygon points="640,560 670,560 710,600 670,600" fill="#dc2626"/>
+      <!-- Rug fringe -->
+      <line x1="220" y1="600" x2="210" y2="600" stroke="#fef08a" stroke-width="3"/>
+      <line x1="780" y1="600" x2="790" y2="600" stroke="#fef08a" stroke-width="3"/>
+
+      <!-- Countertop Edge -->
+      <rect x="0" y="365" width="800" height="18" fill="url(#countertop)"/>
+      <rect x="0" y="380" width="800" height="8" fill="url(#counterEdge)"/>
+    </g>
+    
+
+    <!-- Cooktop Surface -->
+    <g id="cooktop">
+      <rect x="130" y="358" width="220" height="12" rx="3" fill="#334155" stroke="#1e293b" stroke-width="1.5"/>
+      <!-- Dials on front edge of stove -->
+      <circle cx="165" cy="378" r="6" fill="url(#brassGrad)"/>
+      <line x1="165" y1="375" x2="165" y2="378" stroke="#1e293b" stroke-width="2"/>
+      <circle cx="195" cy="378" r="6" fill="url(#brassGrad)"/>
+      <line x1="195" y1="375" x2="198" y2="378" stroke="#1e293b" stroke-width="2"/>
+      <circle cx="285" cy="378" r="6" fill="url(#brassGrad)"/>
+      <line x1="285" y1="375" x2="285" y2="378" stroke="#1e293b" stroke-width="2"/>
+      <circle cx="315" cy="378" r="6" fill="url(#brassGrad)"/>
+      <line x1="315" y1="375" x2="315" y2="378" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Burner 1 (Inactive on Left: 180, 358) -->
+      <ellipse cx="180" cy="358" rx="35" ry="7" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <ellipse cx="180" cy="358" rx="14" ry="3" fill="#475569"/>
+
+      <!-- Burner 2 (ACTIVE SIZZLING BURNER: 280, 358) -->
+      <ellipse cx="280" cy="358" rx="42" ry="8" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <!-- Glowing Blue & Orange Gas Flame Ring -->
+      <g filter="url(#softGlow)">
+      
+  <circle cx="314.0" cy="358.0" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="311.1" cy="360.6" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="302.8" cy="362.8" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="290.5" cy="364.2" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="276.4" cy="364.5" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="263.0" cy="363.6" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="252.5" cy="361.8" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="246.7" cy="359.4" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="246.7" cy="356.6" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="252.5" cy="354.2" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="263.0" cy="352.4" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="276.4" cy="351.5" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="290.5" cy="351.8" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="302.8" cy="353.2" r="4.5" fill="url(#gasFlame)"/>
+  <circle cx="311.1" cy="355.4" r="4.5" fill="url(#gasFlame)"/>
+
+      </g>
+
+      <!-- Sizzling Cast Iron Skillet on Burner 2 -->
+      <g id="skillet" transform="translate(0, -6)">
+        <!-- Skillet handle pointing left -->
+        <path d="M 220 355 L 140 348 C 136 348 134 353 138 355 L 220 362 Z" fill="url(#castIron)"/>
+        <ellipse cx="145" cy="352" rx="4" ry="2" fill="#cbd5e1"/> <!-- hanging hole in handle -->
+
+        <!-- Skillet Pan Body -->
+        <ellipse cx="280" cy="352" rx="60" ry="16" fill="url(#castIron)" stroke="#0f172a" stroke-width="2"/>
+        <ellipse cx="280" cy="350" rx="54" ry="13" fill="#1e293b"/>
+        <!-- Sizzling butter / oil glaze -->
+        <ellipse cx="280" cy="350" rx="48" ry="11" fill="#d97706" opacity="0.35"/>
+
+        <!-- BREAKFAST FOOD IN PAN: Two Eggs & Two Slices of Crispy Bacon! -->
+        <!-- Crispy Wavy Bacon Strip 1 -->
+        <path d="M 240 347 Q 255 342 270 348 T 300 346 T 325 351" stroke="url(#baconGrad)" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <!-- Crispy Wavy Bacon Strip 2 -->
+        <path d="M 245 354 Q 260 349 278 355 T 310 353 T 328 357" stroke="url(#baconGrad)" stroke-width="6.5" fill="none" stroke-linecap="round"/>
+
+        <!-- Sunny-Side-Up Egg 1 -->
+        <!-- Egg White -->
+        <path d="M 242 346 C 240 338 255 334 266 338 C 275 336 280 344 278 350 C 272 355 258 355 248 352 C 242 350 240 348 242 346 Z" fill="#ffffff" filter="url(#softGlow)"/>
+        <path d="M 244 345 C 242 339 254 336 264 339 C 272 338 276 344 274 349 C 269 353 257 353 249 350 Z" fill="#fef9c3"/>
+        <!-- Golden Yolk -->
+        <ellipse cx="260" cy="344" rx="8" ry="6" fill="url(#yolkGrad)"/>
+        <ellipse cx="258" cy="342" rx="2.5" ry="1.8" fill="#ffffff" opacity="0.85"/> <!-- yolk gleam -->
+
+        <!-- Sunny-Side-Up Egg 2 -->
+        <path d="M 285 345 C 285 339 295 336 306 340 C 316 339 320 347 317 352 C 310 356 298 356 290 352 Z" fill="#ffffff" filter="url(#softGlow)"/>
+        <!-- Golden Yolk 2 -->
+        <ellipse cx="302" cy="346" rx="7.5" ry="5.5" fill="url(#yolkGrad)"/>
+        <ellipse cx="300" cy="344" rx="2.2" ry="1.5" fill="#ffffff" opacity="0.85"/>
+
+        <!-- Sizzle butter bubbles -->
+        <circle cx="236" cy="350" r="1.5" fill="#fef08a"/>
+        <circle cx="250" cy="356" r="1.2" fill="#fef08a"/>
+        <circle cx="275" cy="342" r="1.5" fill="#fef08a"/>
+        <circle cx="318" cy="348" r="1.3" fill="#fef08a"/>
+        <circle cx="324" cy="354" r="1.8" fill="#fef08a"/>
+
+        <!-- Delicious rising steam wisps from skillet -->
+        <g stroke="#ffffff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.65" filter="url(#softGlow)">
+          <path d="M 260 332 Q 252 315 264 298 T 255 275"/>
+          <path d="M 285 330 Q 295 310 282 290 T 290 265"/>
+          <path d="M 305 335 Q 312 318 302 300 T 310 280"/>
+        </g>
+      </g>
+    </g>
+    
+
+    <!-- Breakfast Accessories (Right Counter) -->
+    <g id="accessories">
+      <!-- Retro Chrome 2-Slice Toaster (x=630, y=310) -->
+      <g id="toaster" transform="translate(635, 305)">
+        <!-- Toaster Body Shadow -->
+        <ellipse cx="40" cy="62" rx="45" ry="6" fill="#0f172a" opacity="0.3"/>
+        <!-- Curved Chrome Body -->
+        <rect x="0" y="10" width="80" height="50" rx="12" fill="url(#steel)" stroke="#475569" stroke-width="2"/>
+        <!-- Bottom Base and Feet -->
+        <rect x="-4" y="55" width="88" height="6" rx="2" fill="#1e293b"/>
+        <rect x="6" y="60" width="12" height="4" fill="#0f172a"/>
+        <rect x="62" y="60" width="12" height="4" fill="#0f172a"/>
+        <!-- Toasting Slots (Glowing orange inside!) -->
+        <rect x="14" y="12" width="22" height="5" rx="2" fill="#ea580c"/>
+        <rect x="44" y="12" width="22" height="5" rx="2" fill="#ea580c"/>
+        <!-- Slider Lever on side -->
+        <rect x="76" y="24" width="8" height="4" rx="2" fill="#1e293b"/>
+        <circle cx="84" cy="26" r="3.5" fill="#f59e0b"/>
+        <!-- Temperature Dial -->
+        <circle cx="40" cy="45" r="7" fill="url(#brassGrad)"/>
+        <circle cx="40" cy="45" r="3" fill="#1e293b"/>
+
+        <!-- TWO SLICES OF GOLDEN TOAST POPPING UP IN THE AIR! -->
+        <!-- Toast Slice 1 (Left - flying high with speed lines!) -->
+        <g transform="translate(8, -48) rotate(-12)">
+          <path d="M 4 8 C 4 2 12 0 17 3 C 22 0 30 2 30 8 L 30 32 L 4 32 Z" fill="#d97706"/>
+          <path d="M 6 10 C 6 4 13 3 17 5 C 21 3 28 4 28 10 L 28 30 L 6 30 Z" fill="#fde68a"/>
+          <!-- Butter pat melting on toast -->
+          <rect x="12" y="15" width="10" height="8" rx="1.5" fill="#fef08a"/>
+          <ellipse cx="17" cy="24" rx="6" ry="2" fill="#fde047" opacity="0.8"/>
+        </g>
+        <!-- Toast Slice 2 (Right - popping up) -->
+        <g transform="translate(42, -36) rotate(14)">
+          <path d="M 4 8 C 4 2 12 0 17 3 C 22 0 30 2 30 8 L 30 32 L 4 32 Z" fill="#d97706"/>
+          <path d="M 6 10 C 6 4 13 3 17 5 C 21 3 28 4 28 10 L 28 30 L 6 30 Z" fill="#fde68a"/>
+        </g>
+        <!-- Popping motion lines -->
+        <path d="M 24 -6 L 20 -18 M 28 -4 L 28 -16 M 54 -4 L 58 -16" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+        <!-- Toast crumbs flying -->
+        <circle cx="20" cy="-22" r="1.5" fill="#d97706"/>
+        <circle cx="40" cy="-28" r="1.2" fill="#d97706"/>
+        <circle cx="65" cy="-20" r="1.5" fill="#d97706"/>
+      </g>
+
+      <!-- Glass Coffee Pot Carafe (x=735, y=315) -->
+      <g id="coffeepot" transform="translate(725, 305)">
+        <ellipse cx="25" cy="62" rx="22" ry="4" fill="#0f172a" opacity="0.3"/>
+        <!-- Heating plate base -->
+        <rect x="4" y="60" width="42" height="5" rx="2" fill="#334155"/>
+        <circle cx="8" cy="62" r="1.8" fill="#ef4444"/> <!-- red power indicator -->
+        
+        <!-- Glass Carafe -->
+        <path d="M 12 25 L 8 58 C 8 62 42 62 42 58 L 38 25 Z" fill="url(#coffeeGlass)" stroke="#94a3b8" stroke-width="1.5"/>
+        <!-- Brewed Dark Roast Coffee Level -->
+        <path d="M 10 38 L 8 58 C 8 61 42 61 42 58 L 40 38 Z" fill="url(#coffeeBrew)"/>
+        <!-- Measurement markings on glass -->
+        <line x1="14" y1="42" x2="18" y2="42" stroke="#ffffff" stroke-width="1.2" opacity="0.8"/>
+        <line x1="13" y1="48" x2="18" y2="48" stroke="#ffffff" stroke-width="1.2" opacity="0.8"/>
+        <line x1="11" y1="54" x2="18" y2="54" stroke="#ffffff" stroke-width="1.2" opacity="0.8"/>
+        <!-- Plastic Lid & Spout -->
+        <path d="M 10 25 L 6 20 L 44 20 L 40 25 Z" fill="#1e293b"/>
+        <!-- Black Plastic Handle -->
+        <path d="M 40 22 C 55 22 55 55 41 57" fill="none" stroke="#1e293b" stroke-width="5" stroke-linecap="round"/>
+        <!-- Coffee Steam -->
+        <path d="M 14 16 Q 10 5 18 -5" stroke="#ffffff" stroke-width="1.8" fill="none" opacity="0.5" stroke-linecap="round"/>
+      </g>
+    </g>
+    
+
+    <!-- THE ROBOT CHEF -->
+    <g id="robotChef">
+      <!-- Ground Shadow of Robot Base -->
+      <ellipse cx="485" cy="565" rx="60" ry="14" fill="#042f2e" opacity="0.4"/>
+
+      <!-- BASE / LEGS: Single sturdy unicycle rolling sphere with heavy shock absorbers -->
+      <g id="robotBase">
+        <!-- Rolling Ball / Omni-wheel -->
+        <circle cx="485" cy="535" r="28" fill="url(#steel)"/>
+        <circle cx="485" cy="535" r="28" fill="none" stroke="#0f172a" stroke-width="3"/>
+        <!-- Sphere Tread Rings -->
+        <ellipse cx="485" cy="535" rx="14" ry="28" fill="none" stroke="#1e293b" stroke-width="2.5"/>
+        <line x1="457" y1="535" x2="513" y2="535" stroke="#1e293b" stroke-width="2.5"/>
+        
+        <!-- Suspension Fork & Heavy Brass Springs -->
+        <!-- Fork arms -->
+        <path d="M 454 535 L 458 485 L 512 485 L 516 535" fill="none" stroke="url(#steel)" stroke-width="8" stroke-linejoin="round"/>
+        <!-- Coil springs over fork -->
+        <g stroke="url(#brassGrad)" stroke-width="4" fill="none">
+          <path d="M 455 490 Q 463 495 455 500 Q 463 505 455 510 Q 463 515 455 520"/>
+          <path d="M 515 490 Q 507 495 515 500 Q 507 505 515 510 Q 507 515 515 520"/>
+        </g>
+        <!-- Fork mounting hub -->
+        <circle cx="454" cy="535" r="7" fill="url(#brassGrad)"/>
+        <circle cx="516" cy="535" r="7" fill="url(#brassGrad)"/>
+        <!-- Pelvis / Waist Turret -->
+        <ellipse cx="485" cy="480" rx="36" ry="12" fill="url(#steel)"/>
+        <rect x="460" y="470" width="50" height="12" rx="3" fill="#1e293b"/>
+      </g>
+
+      <!-- TORSO: Retro-futuristic curved enamel body with gauge, louvers, lights -->
+      <g id="robotTorso">
+        <!-- Main Torso Pod -->
+        <path d="M 425 470 
+                 C 415 390 415 320 440 280 
+                 C 455 260 515 260 530 280 
+                 C 555 320 555 390 545 470 Z" 
+              fill="url(#robotAqua)" stroke="#0891b2" stroke-width="2"/>
+        <!-- Enamel highlight reflection -->
+        <path d="M 436 460 C 428 395 432 320 448 285 C 452 288 444 340 446 450 Z" fill="#ffffff" opacity="0.4"/>
+
+        <!-- Chest Center Console Plate (Brushed Steel) -->
+        <rect x="445" y="300" width="80" height="95" rx="8" fill="#0f172a" stroke="url(#brassGrad)" stroke-width="2.5"/>
+        <rect x="448" y="303" width="74" height="89" rx="6" fill="#1e293b"/>
+
+        <!-- Analog Temperature / Sizzle Gauge -->
+        <circle cx="485" cy="335" r="22" fill="#fef9c3" stroke="url(#brassGrad)" stroke-width="2.5"/>
+        <!-- Gauge Tick Marks -->
+        <g stroke="#78350f" stroke-width="1.2">
+          <line x1="485" y1="316" x2="485" y2="319"/>
+          <line x1="472" y1="320" x2="474" y2="323"/>
+          <line x1="498" y1="320" x2="496" y2="323"/>
+          <line x1="466" y1="335" x2="469" y2="335"/>
+          <line x1="504" y1="335" x2="501" y2="335"/>
+        </g>
+        <!-- Gauge Red "Optimal Breakfast" Arc -->
+        <path d="M 498 320 A 18 18 0 0 1 503 335" stroke="#ef4444" stroke-width="3" fill="none"/>
+        <!-- Gauge Needle pointing in high heat! -->
+        <line x1="485" y1="335" x2="499" y2="324" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="485" cy="335" r="3" fill="#1e293b"/>
+
+        <!-- Three Glowing LED Status Lights -->
+        <!-- Green LED -->
+        <circle cx="463" cy="374" r="5" fill="#22c55e" filter="url(#softGlow)"/>
+        <circle cx="462" cy="373" r="1.5" fill="#ffffff"/>
+        <!-- Amber LED -->
+        <circle cx="485" cy="374" r="5" fill="#f59e0b" filter="url(#softGlow)"/>
+        <circle cx="484" cy="373" r="1.5" fill="#ffffff"/>
+        <!-- Cyan LED -->
+        <circle cx="507" cy="374" r="5" fill="#06b6d4" filter="url(#softGlow)"/>
+        <circle cx="506" cy="373" r="1.5" fill="#ffffff"/>
+
+        <!-- Lower Torso Grill / Speaker Louvers -->
+        <g stroke="#0e7490" stroke-width="2.5" stroke-linecap="round">
+          <line x1="460" y1="412" x2="510" y2="412"/>
+          <line x1="458" y1="420" x2="512" y2="420"/>
+          <line x1="462" y1="428" x2="508" y2="428"/>
+        </g>
+
+        <!-- CHEF APRON tied around waist! -->
+        <g id="apron">
+          <!-- Apron bib front covering lower torso -->
+          <path d="M 440 405 C 440 405 485 412 530 405 L 536 475 C 500 482 470 482 434 475 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+          <!-- Apron big front pocket -->
+          <rect x="460" y="432" width="50" height="32" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+          <!-- Wooden Tasting Spoon in Apron Pocket! -->
+          <line x1="472" y1="438" x2="466" y2="418" stroke="#b45309" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="464" cy="414" rx="5" ry="7" fill="#b45309" transform="rotate(-15 464 414)"/>
+          <!-- Recipe Card sticking out of pocket -->
+          <rect x="488" y="420" width="16" height="20" rx="1" fill="#fef08a" transform="rotate(8 488 420)"/>
+          <line x1="491" y1="426" x2="500" y2="428" stroke="#ca8a04" stroke-width="1.2"/>
+          <line x1="492" y1="430" x2="501" y2="432" stroke="#ca8a04" stroke-width="1.2"/>
+          <!-- Apron Neck Straps -->
+          <path d="M 452 405 L 468 280 M 518 405 L 502 280" stroke="#f8fafc" stroke-width="4"/>
+          <!-- Apron Waist Tie & Bow in Back -->
+          <path d="M 436 415 C 420 420 415 435 422 445 C 426 438 432 430 440 425" fill="#f8fafc"/>
+          <path d="M 534 415 C 550 420 555 435 548 445 C 544 438 538 430 530 425" fill="#f8fafc"/>
+        </g>
+      </g>
+
+      <!-- NECK: Segmented flex collar -->
+      <g id="robotNeck">
+        <ellipse cx="485" cy="272" rx="22" ry="8" fill="#1e293b"/>
+        <ellipse cx="485" cy="265" rx="19" ry="7" fill="url(#steel)"/>
+        <ellipse cx="485" cy="258" rx="16" ry="6" fill="#1e293b"/>
+      </g>
+
+      <!-- HEAD & FACE: Domed retro head with glowing visor -->
+      <g id="robotHeadGroup">
+        <!-- Head Chassis Outer Shell -->
+        <path d="M 435 240 
+                 C 430 180 445 155 485 155 
+                 C 525 155 540 180 535 240 
+                 C 530 262 440 262 435 240 Z" 
+              fill="url(#robotHead)" stroke="#0891b2" stroke-width="2.5"/>
+        
+        <!-- Antenna on top of head -->
+        <line x1="485" y1="155" x2="485" y2="120" stroke="url(#brassGrad)" stroke-width="4.5" stroke-linecap="round"/>
+        <!-- Antenna spring coil -->
+        <path d="M 482 142 Q 488 138 482 134 Q 488 130 482 126" stroke="url(#brassGrad)" stroke-width="2.5" fill="none"/>
+        <!-- Glowing Warm Lightbulb at tip of antenna -->
+        <circle cx="485" cy="116" r="8" fill="#f59e0b" filter="url(#softGlow)"/>
+        <circle cx="485" cy="116" r="5" fill="#fef08a"/>
+        <circle cx="483" cy="114" r="1.8" fill="#ffffff"/>
+
+        <!-- Bolt / Ear Pods on sides of head -->
+        <!-- Left Ear Pod -->
+        <ellipse cx="432" cy="210" rx="6" ry="12" fill="url(#brassGrad)"/>
+        <circle cx="430" cy="210" r="3" fill="#1e293b"/>
+        <!-- Right Ear Pod -->
+        <ellipse cx="538" cy="210" rx="6" ry="12" fill="url(#brassGrad)"/>
+        <circle cx="540" cy="210" r="3" fill="#1e293b"/>
+
+        <!-- Domed CRT Visor Screen -->
+        <rect x="446" y="175" width="78" height="60" rx="16" fill="url(#visorScreen)" stroke="#0e7490" stroke-width="2"/>
+        <!-- Glass reflections on screen -->
+        <path d="M 452 185 C 470 178 500 178 518 185 C 500 182 470 182 452 185 Z" fill="#ffffff" opacity="0.35"/>
+
+        <!-- GLOWING EXPRESSIVE CYAN DIGITAL EYES (Happy cooking expression! ^_^) -->
+        <g stroke="#22d3ee" stroke-width="4" stroke-linecap="round" fill="none" filter="url(#softGlow)">
+          <!-- Left Eye: cheerful inverted arc -->
+          <path d="M 460 206 Q 470 196 480 206"/>
+          <!-- Right Eye: cheerful inverted arc -->
+          <path d="M 490 206 Q 500 196 510 206"/>
+          <!-- Cheerful digital blush dots -->
+          <circle cx="458" cy="216" r="2.5" fill="#f43f5e" stroke="none"/>
+          <circle cx="512" cy="216" r="2.5" fill="#f43f5e" stroke="none"/>
+          <!-- Cute digital smile -->
+          <path d="M 480 220 Q 485 225 490 220" stroke-width="2.5"/>
+        </g>
+
+        <!-- CRISP WHITE PUFFY CHEF'S TOQUE (Jauntily tilted on head!) -->
+        <g id="chefHat" transform="translate(485, 155) rotate(-8) translate(-485, -155)">
+          <!-- Hat band -->
+          <rect x="452" y="142" width="66" height="15" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+          <!-- Pleats on hat band -->
+          <line x1="462" y1="144" x2="462" y2="155" stroke="#cbd5e1" stroke-width="1"/>
+          <line x1="474" y1="144" x2="474" y2="155" stroke="#cbd5e1" stroke-width="1"/>
+          <line x1="485" y1="144" x2="485" y2="155" stroke="#cbd5e1" stroke-width="1"/>
+          <line x1="496" y1="144" x2="496" y2="155" stroke="#cbd5e1" stroke-width="1"/>
+          <line x1="506" y1="144" x2="506" y2="155" stroke="#cbd5e1" stroke-width="1"/>
+          <!-- Puffy Toque Crown -->
+          <path d="M 454 142 
+                   C 432 130 428 95 452 82 
+                   C 460 65 495 62 510 78 
+                   C 530 68 554 90 544 115 
+                   C 552 135 530 145 516 142 Z" 
+                fill="#ffffff" stroke="#cbd5e1" stroke-width="2" filter="url(#softGlow)"/>
+          <!-- Soft shading inside toque folds -->
+          <path d="M 465 140 C 460 115 470 95 480 90" stroke="#e2e8f0" stroke-width="3" fill="none"/>
+          <path d="M 505 140 C 510 115 505 95 495 90" stroke="#e2e8f0" stroke-width="3" fill="none"/>
+        </g>
+      </g>
+
+      <!-- MULTI-TASKING ROBOTIC ARMS (Articulated chrome tubes with brass ball joints) -->
+
+      <!-- ARM 1 (Left Low): Holding Pan Handle / Adjusting Burner Dial -->
+      <!-- Shoulder: (428, 320) -->
+      <g id="arm1_cook">
+        <circle cx="426" cy="320" r="10" fill="url(#brassGrad)"/>
+        <!-- Upper arm -->
+        <line x1="426" y1="320" x2="365" y2="350" stroke="url(#steel)" stroke-width="11" stroke-linecap="round"/>
+        <circle cx="365" cy="350" r="8" fill="url(#brassGrad)"/>
+        <!-- Forearm down to burner dial -->
+        <line x1="365" y1="350" x2="320" y2="375" stroke="url(#steel)" stroke-width="9" stroke-linecap="round"/>
+        <!-- Gripper claw turning dial -->
+        <circle cx="320" cy="375" r="5" fill="url(#brassGrad)"/>
+        <path d="M 320 375 Q 314 372 312 376 M 320 375 Q 314 380 315 383" stroke="#0f172a" stroke-width="3.5" fill="none"/>
+      </g>
+
+      <!-- ARM 2 (Left High): FLIPPING PANCAKE IN MID-AIR! -->
+      <!-- Shoulder: (430, 295) -->
+      <g id="arm2_flipper">
+        <circle cx="430" cy="295" r="11" fill="url(#brassGrad)"/>
+        <!-- Upper arm reaching up and left -->
+        <line x1="430" y1="295" x2="370" y2="240" stroke="url(#steel)" stroke-width="11" stroke-linecap="round"/>
+        <circle cx="370" cy="240" r="8" fill="url(#brassGrad)"/>
+        <!-- Forearm holding spatula handle -->
+        <line x1="370" y1="240" x2="310" y2="215" stroke="url(#steel)" stroke-width="9" stroke-linecap="round"/>
+        <circle cx="310" cy="215" r="5" fill="url(#brassGrad)"/>
+        <!-- Spatula / Turner -->
+        <!-- Wood handle -->
+        <line x1="310" y1="215" x2="265" y2="195" stroke="#92400e" stroke-width="7" stroke-linecap="round"/>
+        <!-- Steel blade tilted up under pancake -->
+        <polygon points="265,195 235,182 225,200 255,213" fill="url(#steel)" stroke="#475569" stroke-width="1.5"/>
+        <!-- Slots in spatula -->
+        <line x1="250" y1="192" x2="238" y2="198" stroke="#334155" stroke-width="2"/>
+        <line x1="255" y1="197" x2="243" y2="203" stroke="#334155" stroke-width="2"/>
+
+        <!-- GOLDEN FLUFFY PANCAKE IN MID-AIR FLIP! (Rotated somersault!) -->
+        <g transform="translate(240, 140) rotate(-22)">
+          <!-- Pancake Body -->
+          <ellipse cx="0" cy="0" rx="34" ry="12" fill="url(#pancakeGrad)"/>
+          <ellipse cx="0" cy="-2" rx="32" ry="10" fill="#fde68a"/>
+          <!-- Golden Brown cooked underside spots -->
+          <ellipse cx="-8" cy="-2" rx="14" ry="5" fill="#d97706" opacity="0.8"/>
+          <circle cx="8" cy="-3" r="4" fill="#b45309" opacity="0.7"/>
+          <circle cx="-18" cy="0" r="3" fill="#b45309" opacity="0.6"/>
+          <!-- Melting cube of butter on top of pancake -->
+          <polygon points="-4,-6 4,-8 8,-3 0,-1" fill="#fef08a"/>
+          <polygon points="4,-8 8,-3 8,2 4,-3" fill="#fde047"/>
+          <polygon points="-4,-6 0,-1 0,4 -4,-1" fill="#facc15"/>
+          <!-- Dripping golden maple syrup trails -->
+          <path d="M 0 0 Q 3 10 5 18" stroke="#b45309" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="5" cy="22" r="2.5" fill="#b45309"/>
+        </g>
+        <!-- Motion Flip Arc lines -->
+        <path d="M 230 190 A 40 40 0 0 1 255 120" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="4,4" fill="none"/>
+        <polygon points="257,118 259,126 251,123" fill="#f59e0b"/>
+      </g>
+
+      <!-- ARM 3 (Right High): Holding Salt / Pepper Shaker over Skillet -->
+      <!-- Shoulder: (540, 295) -->
+      <g id="arm3_seasoning">
+        <circle cx="540" cy="295" r="11" fill="url(#brassGrad)"/>
+        <!-- Upper arm extending forward/down -->
+        <line x1="540" y1="295" x2="475" y2="280" stroke="url(#steel)" stroke-width="11" stroke-linecap="round"/>
+        <circle cx="475" cy="280" r="8" fill="url(#brassGrad)"/>
+        <!-- Forearm reaching over to seasoning point -->
+        <line x1="475" y1="280" x2="390" y2="295" stroke="url(#steel)" stroke-width="9" stroke-linecap="round"/>
+        <!-- Gripper holding pepper mill -->
+        <circle cx="390" cy="295" r="5" fill="url(#brassGrad)"/>
+        <!-- Wooden Pepper Mill tilted down -->
+        <g transform="translate(385, 295) rotate(40)">
+          <rect x="-8" y="-15" width="16" height="30" rx="4" fill="#78350f"/>
+          <circle cx="0" cy="-18" r="5" fill="url(#brassGrad)"/>
+          <rect x="-6" y="-12" width="12" height="4" fill="#92400e"/>
+        </g>
+        <!-- Pepper specs falling into skillet -->
+        <g fill="#1e293b" opacity="0.8">
+          <circle cx="370" cy="315" r="1.5"/>
+          <circle cx="365" cy="324" r="1.2"/>
+          <circle cx="375" cy="328" r="1.4"/>
+          <circle cx="368" cy="336" r="1.3"/>
+          <circle cx="360" cy="338" r="1.1"/>
+        </g>
+      </g>
+
+      <!-- ARM 4 (Right Low): Holding Syrup / Sauce Pitcher ready -->
+      <!-- Shoulder: (542, 335) -->
+      <g id="arm4_kettle">
+        <circle cx="542" cy="335" r="10" fill="url(#brassGrad)"/>
+        <!-- Upper arm -->
+        <line x1="542" y1="335" x2="590" y2="350" stroke="url(#steel)" stroke-width="11" stroke-linecap="round"/>
+        <circle cx="590" cy="350" r="8" fill="url(#brassGrad)"/>
+        <!-- Forearm -->
+        <line x1="590" y1="350" x2="570" y2="385" stroke="url(#steel)" stroke-width="9" stroke-linecap="round"/>
+        <!-- Gripper holding plate with fresh butter -->
+        <circle cx="570" cy="385" r="5" fill="url(#brassGrad)"/>
+        <!-- Ceramic Plate in hand -->
+        <ellipse cx="560" cy="392" rx="22" ry="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+        <rect x="552" y="385" width="16" height="8" rx="2" fill="#fef08a" stroke="#facc15" stroke-width="1.5"/>
+      </g>
+    </g>
+    
+</svg>

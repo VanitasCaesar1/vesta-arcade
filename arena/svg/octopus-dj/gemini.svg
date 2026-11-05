@@ -1,0 +1,705 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+<defs>
+
+    <!-- Club Dark Background -->
+    <radialGradient id="clubBg" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#2e1065"/>
+      <stop offset="45%" stop-color="#1e1b4b"/>
+      <stop offset="80%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+
+    <!-- Laser Beams -->
+    <linearGradient id="laserCyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="laserPink" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#e11d48" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="laserGreen" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#4ade80" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#16a34a" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Disco Ball Gradient -->
+    <radialGradient id="discoBall" cx="0.35" cy="0.35" r="0.65">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#cbd5e1"/>
+      <stop offset="80%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </radialGradient>
+
+    <!-- Octopus Skin Gradients -->
+    <linearGradient id="octoHead" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f472b6"/>
+      <stop offset="40%" stop-color="#d946ef"/>
+      <stop offset="85%" stop-color="#a21caf"/>
+      <stop offset="100%" stop-color="#701a75"/>
+    </linearGradient>
+    <linearGradient id="octoTentacle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="50%" stop-color="#c026d3"/>
+      <stop offset="100%" stop-color="#581c87"/>
+    </linearGradient>
+
+    <!-- Suction Cups (Glowing Neon Gold / Teal) -->
+    <radialGradient id="suckerGrad" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="45%" stop-color="#38bdf8"/>
+      <stop offset="85%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </radialGradient>
+
+    <!-- Sunglasses Mirror Visor -->
+    <linearGradient id="sunShades" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="30%" stop-color="#fb923c"/>
+      <stop offset="70%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+
+    <!-- DJ Booth Desk Gradient -->
+    <linearGradient id="boothGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="20%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </linearGradient>
+
+    <!-- Vinyl Record Gradient (Radial Sheen) -->
+    <radialGradient id="vinylSheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="25%" stop-color="#0f172a"/>
+      <stop offset="45%" stop-color="#334155"/>
+      <stop offset="70%" stop-color="#0f172a"/>
+      <stop offset="90%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+
+    <!-- Neon Glow Filter -->
+    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="laserGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+</defs>
+<rect width="800" height="600" fill="url(#clubBg)"/>
+
+    <!-- Laser Show Cones & Beams -->
+    <g filter="url(#laserGlow)">
+      <!-- Top Left Cyan Cone -->
+      <polygon points="0,0 280,600 420,600" fill="url(#laserCyan)" opacity="0.35"/>
+      <line x1="0" y1="0" x2="350" y2="600" stroke="#67e8f9" stroke-width="2.5" opacity="0.8"/>
+      <!-- Top Right Pink/Magenta Cone -->
+      <polygon points="800,0 520,600 380,600" fill="url(#laserPink)" opacity="0.35"/>
+      <line x1="800" y1="0" x2="450" y2="600" stroke="#f472b6" stroke-width="2.5" opacity="0.8"/>
+      <!-- Green Cross-Laser -->
+      <line x1="120" y1="0" x2="720" y2="480" stroke="#4ade80" stroke-width="2" opacity="0.6"/>
+      <line x1="680" y1="0" x2="80" y2="480" stroke="#a855f7" stroke-width="2" opacity="0.6"/>
+      <!-- Horizontal strobe bar -->
+      <line x1="0" y1="220" x2="800" y2="220" stroke="#38bdf8" stroke-width="1.5" opacity="0.4"/>
+    </g>
+    
+
+    <!-- Hanging Jellyfish Disco Ball -->
+    <g id="discoBallGroup" transform="translate(400, 70)">
+      <!-- Hanging chain / wire -->
+      <line x1="0" y1="-70" x2="0" y2="0" stroke="#94a3b8" stroke-width="2"/>
+      
+      <!-- Disco Ball Sphere -->
+      <circle cx="0" cy="0" r="42" fill="url(#discoBall)"/>
+      <!-- Mirrored Facets grid -->
+      <g stroke="#1e293b" stroke-width="1" fill="none" opacity="0.6">
+        <ellipse cx="0" cy="0" rx="42" ry="12"/>
+        <ellipse cx="0" cy="0" rx="42" ry="24"/>
+        <ellipse cx="0" cy="0" rx="42" ry="34"/>
+        <line x1="-36" y1="-20" x2="-36" y2="20"/>
+        <line x1="-22" y1="-35" x2="-22" y2="35"/>
+        <line x1="0" y1="-42" x2="0" y2="42"/>
+        <line x1="22" y1="-35" x2="22" y2="35"/>
+        <line x1="36" y1="-20" x2="36" y2="20"/>
+      </g>
+      <!-- Facet glint sparkles -->
+      <polygon points="-12,-8 -9,-9 -8,-12 -7,-9 -4,-8 -7,-7 -8,-4 -9,-7" fill="#ffffff"/>
+      <polygon points="16,10 18,9 19,7 20,9 22,10 20,11 19,13 18,11" fill="#ffffff"/>
+      <polygon points="4,-22 6,-23 7,-25 8,-23 10,-22 8,-21 7,-19 6,-21" fill="#ffffff"/>
+
+      <!-- Bioluminescent Jellyfish Disco Tentacles hanging down -->
+      <g stroke-linecap="round" fill="none" opacity="0.75" filter="url(#neonGlow)">
+        <path d="M -25 35 Q -32 65 -20 95 T -28 135" stroke="#38bdf8" stroke-width="2.5"/>
+        <path d="M -12 40 Q -5 70 -16 100 T -10 145" stroke="#ec4899" stroke-width="2.2"/>
+        <path d="M 0 42 Q 10 75 0 110 T 8 150" stroke="#a855f7" stroke-width="3"/>
+        <path d="M 12 40 Q 20 70 8 100 T 20 145" stroke="#ec4899" stroke-width="2.2"/>
+        <path d="M 25 35 Q 35 65 22 95 T 32 135" stroke="#38bdf8" stroke-width="2.5"/>
+      </g>
+    </g>
+
+    <!-- Light reflections / sparkles scattered around room -->
+    <g fill="#ffffff" opacity="0.7" filter="url(#neonGlow)">
+      <circle cx="150" cy="180" r="3"/>
+      <circle cx="240" cy="90" r="4"/>
+      <circle cx="560" cy="110" r="3.5"/>
+      <circle cx="670" cy="190" r="4"/>
+      <circle cx="310" cy="240" r="2.5"/>
+      <circle cx="510" cy="230" r="3"/>
+      <!-- Glowing floating bubbles -->
+      <circle cx="120" cy="310" r="7" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+      <circle cx="122" cy="308" r="2" fill="#ffffff"/>
+      <circle cx="690" cy="320" r="9" fill="none" stroke="#f472b6" stroke-width="1.5"/>
+      <circle cx="693" cy="317" r="2.5" fill="#ffffff"/>
+      <circle cx="730" cy="220" r="5" fill="none" stroke="#a855f7" stroke-width="1.2"/>
+      <circle cx="80" cy="140" r="6" fill="none" stroke="#38bdf8" stroke-width="1.2"/>
+    </g>
+    
+
+    <!-- Stage Loudspeakers -->
+    <!-- Left Speaker Tower -->
+    <g id="speakerLeft" transform="translate(20, 240)">
+      <rect x="0" y="0" width="85" height="190" rx="6" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+      <circle cx="42" cy="45" r="24" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+      <circle cx="42" cy="45" r="10" fill="#0f172a"/>
+      <!-- Bass Woofer with sound vibrations -->
+      <circle cx="42" cy="120" r="38" fill="#1e293b" stroke="#d946ef" stroke-width="3"/>
+      <circle cx="42" cy="120" r="16" fill="#0f172a"/>
+      <!-- Soundwave Rings radiating -->
+      <path d="M 90 90 A 45 45 0 0 1 90 150" fill="none" stroke="#06b6d4" stroke-width="2.5" opacity="0.7" filter="url(#neonGlow)"/>
+      <path d="M 105 75 A 65 65 0 0 1 105 165" fill="none" stroke="#d946ef" stroke-width="2" opacity="0.5" filter="url(#neonGlow)"/>
+    </g>
+    <!-- Right Speaker Tower -->
+    <g id="speakerRight" transform="translate(695, 240)">
+      <rect x="0" y="0" width="85" height="190" rx="6" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+      <circle cx="42" cy="45" r="24" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+      <circle cx="42" cy="45" r="10" fill="#0f172a"/>
+      <!-- Bass Woofer -->
+      <circle cx="42" cy="120" r="38" fill="#1e293b" stroke="#d946ef" stroke-width="3"/>
+      <circle cx="42" cy="120" r="16" fill="#0f172a"/>
+      <!-- Soundwave Rings radiating -->
+      <path d="M -5 90 A 45 45 0 0 0 -5 150" fill="none" stroke="#06b6d4" stroke-width="2.5" opacity="0.7" filter="url(#neonGlow)"/>
+      <path d="M -20 75 A 65 65 0 0 0 -20 165" fill="none" stroke="#d946ef" stroke-width="2" opacity="0.5" filter="url(#neonGlow)"/>
+    </g>
+    
+
+    <!-- DJ BOOTH -->
+    <g id="djBooth">
+      <!-- Booth Front Panel -->
+      <polygon points="120,440 680,440 660,560 140,560" fill="url(#boothGrad)" stroke="#1e293b" stroke-width="3"/>
+      
+      <!-- Neon Edge Contour on Booth -->
+      <path d="M 120 440 L 680 440 L 660 560 L 140 560 Z" fill="none" stroke="#06b6d4" stroke-width="2" filter="url(#neonGlow)" opacity="0.8"/>
+
+      <!-- FRONT SPECTRUM ANALYZER / EQUALIZER (Glowing LED Bars jumping to the beat!) -->
+      <g id="equalizer" transform="translate(200, 465)">
+      
+  <rect x="0" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="0" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="0" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="0" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="0" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="25" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="25" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="25" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="25" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="25" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="25" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="25" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="50" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="50" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="50" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="50" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="75" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="75" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="75" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="75" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="75" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="75" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="75" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="75" y="14" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="75" y="6" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="100" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="100" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="100" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="100" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="100" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="100" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="125" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="125" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="125" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="125" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="125" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="125" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="125" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="125" y="14" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="125" y="6" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="125" y="-2" width="16" height="6" rx="1.5" fill="#f43f5e" opacity="0.9"/>
+  <rect x="150" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="150" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="150" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="150" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="150" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="175" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="175" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="175" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="175" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="175" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="175" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="175" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="175" y="14" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="200" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="200" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="200" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="200" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="200" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="200" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="200" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="200" y="14" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="200" y="6" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="200" y="-2" width="16" height="6" rx="1.5" fill="#f43f5e" opacity="0.9"/>
+  <rect x="225" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="225" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="225" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="225" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="225" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="225" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="250" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="250" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="250" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="250" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="250" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="250" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="250" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="250" y="14" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="250" y="6" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="275" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="275" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="275" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="275" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="300" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="300" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="300" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="300" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="300" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="300" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="300" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="325" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="325" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="325" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="325" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="325" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="325" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="325" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="325" y="14" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="325" y="6" width="16" height="6" rx="1.5" fill="#facc15" opacity="0.9"/>
+  <rect x="350" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="350" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="350" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="350" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="350" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="350" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="375" y="70" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="375" y="62" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="375" y="54" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="375" y="46" width="16" height="6" rx="1.5" fill="#22c55e" opacity="0.9"/>
+  <rect x="375" y="38" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="375" y="30" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+  <rect x="375" y="22" width="16" height="6" rx="1.5" fill="#06b6d4" opacity="0.9"/>
+
+      </g>
+
+      <!-- DJ Booth Desktop Surface (Perspective Trapeze) -->
+      <polygon points="100,440 700,440 670,395 130,395" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+
+      <!-- EQUIPMENT ON DJ DESK: Left Turntable, Center Mixer & Sampler, Right Turntable -->
+
+      <!-- LEFT TURNTABLE (x=210, y=418) -->
+      <g id="turntableLeft" transform="translate(210, 418)">
+        <!-- Turntable Deck Base -->
+        <rect x="-70" y="-22" width="140" height="42" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+        <!-- Spinning Vinyl Platter -->
+        <ellipse cx="-10" cy="-1" rx="52" ry="18" fill="url(#vinylSheen)" stroke="#475569" stroke-width="1.5"/>
+        <!-- Vinyl Grooves -->
+        <ellipse cx="-10" cy="-1" rx="44" ry="15" fill="none" stroke="#334155" stroke-width="1" opacity="0.8"/>
+        <ellipse cx="-10" cy="-1" rx="36" ry="12" fill="none" stroke="#475569" stroke-width="1" opacity="0.8"/>
+        <ellipse cx="-10" cy="-1" rx="28" ry="9" fill="none" stroke="#334155" stroke-width="1" opacity="0.8"/>
+        <!-- Record Label Center -->
+        <ellipse cx="-10" cy="-1" rx="18" ry="6" fill="#f43f5e"/>
+        <circle cx="-10" cy="-1" r="2.5" fill="#ffffff"/>
+        <!-- Pitch Fader & Start/Stop button -->
+        <rect x="48" y="-14" width="6" height="26" rx="2" fill="#1e293b"/>
+        <rect x="46" y="-4" width="10" height="5" rx="1" fill="#facc15"/>
+        <circle cx="-54" cy="10" r="5" fill="#22c55e"/> <!-- Start button -->
+        <!-- S-Shaped Tonearm -->
+        <path d="M 45 -12 Q 35 5 22 2" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="45" cy="-12" r="4" fill="#94a3b8"/>
+        <rect x="18" y="0" width="6" height="4" rx="1" fill="#ef4444"/> <!-- Cartridge / needle -->
+        <!-- Scratch motion arcs -->
+        <path d="M -35 -15 A 25 10 0 0 1 15 -15" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="3,3" opacity="0.8"/>
+      </g>
+
+      <!-- RIGHT TURNTABLE (x=590, y=418) -->
+      <g id="turntableRight" transform="translate(590, 418)">
+        <!-- Turntable Deck Base -->
+        <rect x="-70" y="-22" width="140" height="42" rx="6" fill="#0f172a" stroke="#d946ef" stroke-width="1.5"/>
+        <!-- Vinyl Platter -->
+        <ellipse cx="10" cy="-1" rx="52" ry="18" fill="url(#vinylSheen)" stroke="#475569" stroke-width="1.5"/>
+        <!-- Grooves -->
+        <ellipse cx="10" cy="-1" rx="44" ry="15" fill="none" stroke="#334155" stroke-width="1" opacity="0.8"/>
+        <ellipse cx="10" cy="-1" rx="36" ry="12" fill="none" stroke="#475569" stroke-width="1" opacity="0.8"/>
+        <ellipse cx="10" cy="-1" rx="28" ry="9" fill="none" stroke="#334155" stroke-width="1" opacity="0.8"/>
+        <!-- Record Label Center -->
+        <ellipse cx="10" cy="-1" rx="18" ry="6" fill="#06b6d4"/>
+        <circle cx="10" cy="-1" r="2.5" fill="#ffffff"/>
+        <!-- Pitch Fader & Start button -->
+        <rect x="-54" y="-14" width="6" height="26" rx="2" fill="#1e293b"/>
+        <rect x="-56" y="2" width="10" height="5" rx="1" fill="#facc15"/>
+        <circle cx="54" cy="10" r="5" fill="#22c55e"/>
+        <!-- Tonearm -->
+        <path d="M -45 -12 Q -35 5 -22 2" fill="none" stroke="#cbd5e1" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="-45" cy="-12" r="4" fill="#94a3b8"/>
+        <rect x="-24" y="0" width="6" height="4" rx="1" fill="#ef4444"/>
+      </g>
+
+      <!-- CENTER DJ MIXER & PAD CONTROLLER (x=400, y=418) -->
+      <g id="centerMixer" transform="translate(400, 418)">
+        <rect x="-95" y="-22" width="190" height="42" rx="6" fill="#0f172a" stroke="#cbd5e1" stroke-width="1.5"/>
+
+        <!-- Laptop / Sound Display Screen in center back -->
+        <polygon points="-35,-22 35,-22 32,-38 -32,-38" fill="#020617" stroke="#38bdf8" stroke-width="1.5"/>
+        <!-- Audio waveform on screen -->
+        <path d="M -28 -30 L -22 -35 L -16 -26 L -10 -34 L -4 -28 L 2 -36 L 8 -25 L 14 -33 L 20 -28 L 26 -31" stroke="#22d3ee" stroke-width="1.5" fill="none"/>
+
+        <!-- 8 Performance Drum Pads (4x2 grid, glowing neon colors!) -->
+        <g id="drumPads">
+          <rect x="-75" y="-15" width="10" height="8" rx="1.5" fill="#ec4899" filter="url(#neonGlow)"/>
+          <rect x="-62" y="-15" width="10" height="8" rx="1.5" fill="#38bdf8" filter="url(#neonGlow)"/>
+          <rect x="-49" y="-15" width="10" height="8" rx="1.5" fill="#facc15" filter="url(#neonGlow)"/>
+          <rect x="-36" y="-15" width="10" height="8" rx="1.5" fill="#4ade80" filter="url(#neonGlow)"/>
+          <rect x="-75" y="-4" width="10" height="8" rx="1.5" fill="#a855f7"/>
+          <rect x="-62" y="-4" width="10" height="8" rx="1.5" fill="#ec4899"/>
+          <rect x="-49" y="-4" width="10" height="8" rx="1.5" fill="#38bdf8"/>
+          <rect x="-36" y="-4" width="10" height="8" rx="1.5" fill="#facc15"/>
+        </g>
+
+        <!-- EQ Rotary Knobs (High, Mid, Low) -->
+        <g id="eqKnobs">
+          <!-- Channel 1 EQ -->
+          <circle cx="-16" cy="-14" r="3.5" fill="#38bdf8"/>
+          <circle cx="-16" cy="-4" r="3.5" fill="#38bdf8"/>
+          <circle cx="-16" cy="6" r="3.5" fill="#38bdf8"/>
+          <!-- Channel 2 EQ -->
+          <circle cx="16" cy="-14" r="3.5" fill="#ec4899"/>
+          <circle cx="16" cy="-4" r="3.5" fill="#ec4899"/>
+          <circle cx="16" cy="6" r="3.5" fill="#ec4899"/>
+          <!-- Master / Gain -->
+          <circle cx="0" cy="-10" r="4.5" fill="#facc15"/>
+          <circle cx="0" cy="2" r="4" fill="#a855f7"/>
+        </g>
+
+        <!-- Right Sound Effects Grid -->
+        <g id="fxGrid">
+          <rect x="36" y="-15" width="10" height="8" rx="1.5" fill="#06b6d4"/>
+          <rect x="49" y="-15" width="10" height="8" rx="1.5" fill="#ec4899"/>
+          <rect x="62" y="-15" width="10" height="8" rx="1.5" fill="#4ade80"/>
+          <rect x="75" y="-15" width="10" height="8" rx="1.5" fill="#facc15"/>
+          <rect x="36" y="-4" width="10" height="8" rx="1.5" fill="#f43f5e"/>
+          <rect x="49" y="-4" width="10" height="8" rx="1.5" fill="#38bdf8"/>
+          <rect x="62" y="-4" width="10" height="8" rx="1.5" fill="#a855f7"/>
+          <rect x="75" y="-4" width="10" height="8" rx="1.5" fill="#22c55e"/>
+        </g>
+
+        <!-- Crossfader Slot & Knob (Sliding in action!) -->
+        <rect x="-30" y="12" width="60" height="4" rx="2" fill="#1e293b"/>
+        <rect x="-8" y="9" width="14" height="10" rx="2" fill="#ffffff" stroke="#0f172a" stroke-width="1"/>
+      </g>
+    </g>
+    
+
+    <!-- THE OCTOPUS DJ -->
+    <g id="octopusDJ">
+      <!-- TENTACLES IN BACKGROUND (Behind Mantle) -->
+      
+      <!-- Tentacle 7 (Top Left): Raising a glowing green/yellow glowstick high in the air! -->
+      <g id="tentacle7_glowstick">
+        <!-- Tentacle curve reaching up to (260, 100) -->
+        <path d="M 370 240 
+                 C 320 200 270 180 250 140 
+                 C 235 110 260 85 275 95 
+                 C 285 102 270 120 260 135" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="26" stroke-linecap="round"/>
+        <!-- Tapering stroke -->
+        <path d="M 370 240 C 320 200 270 180 250 140 C 235 110 260 85 275 95" 
+              fill="none" stroke="url(#octoHead)" stroke-width="16" stroke-linecap="round"/>
+        <!-- Suction Cups along tentacle -->
+        <circle cx="285" cy="185" r="7" fill="url(#suckerGrad)"/>
+        <circle cx="265" cy="160" r="6" fill="url(#suckerGrad)"/>
+        <circle cx="250" cy="130" r="5" fill="url(#suckerGrad)"/>
+        <circle cx="252" cy="105" r="4" fill="url(#suckerGrad)"/>
+        <!-- Tentacle tip curling around glowing glowstick -->
+        <path d="M 268 92 C 275 88 285 92 284 102 C 280 110 270 108 266 98" fill="none" stroke="#d946ef" stroke-width="10" stroke-linecap="round"/>
+        <!-- Glowing Green Glowstick -->
+        <rect x="270" y="55" width="8" height="60" rx="4" fill="#4ade80" transform="rotate(25 274 85)" filter="url(#neonGlow)"/>
+        <line x1="262" y1="62" x2="286" y2="108" stroke="#ffffff" stroke-width="2" opacity="0.9"/>
+      </g>
+
+      <!-- Tentacle 8 (Top Right): Waving to hype the crowd / holding a glowing tropical bubble drink! -->
+      <g id="tentacle8_drink">
+        <!-- Tentacle reaching up and right to (540, 110) -->
+        <path d="M 430 240 
+                 C 480 200 520 180 545 140 
+                 C 560 110 540 85 525 95" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="26" stroke-linecap="round"/>
+        <path d="M 430 240 C 480 200 520 180 545 140 C 560 110 540 85 525 95" 
+              fill="none" stroke="url(#octoHead)" stroke-width="16" stroke-linecap="round"/>
+        <!-- Suction cups -->
+        <circle cx="510" cy="185" r="7" fill="url(#suckerGrad)"/>
+        <circle cx="530" cy="160" r="6" fill="url(#suckerGrad)"/>
+        <circle cx="545" cy="130" r="5" fill="url(#suckerGrad)"/>
+        <!-- Tip curled around fancy cocktail glass -->
+        <path d="M 532 92 C 525 88 515 92 516 102 C 520 110 530 108 534 98" fill="none" stroke="#d946ef" stroke-width="10" stroke-linecap="round"/>
+        <!-- Tropical Cocktail Glass with glowing blue beverage -->
+        <g transform="translate(525, 65)">
+          <polygon points="0,0 24,0 12,22" fill="#38bdf8" opacity="0.8" stroke="#ffffff" stroke-width="1.2"/>
+          <line x1="12" y1="22" x2="12" y2="38" stroke="#ffffff" stroke-width="2"/>
+          <ellipse cx="12" cy="38" rx="10" ry="3" fill="#ffffff" opacity="0.7"/>
+          <!-- Orange slice garnish -->
+          <path d="M 22 -4 A 8 8 0 0 1 26 4 Z" fill="#f97316"/>
+          <!-- Tiny paper party umbrella -->
+          <polygon points="12,-18 2,-8 22,-8" fill="#f43f5e"/>
+          <line x1="12" y1="-18" x2="12" y2="4" stroke="#ca8a04" stroke-width="1.5"/>
+          <!-- Sparkles from drink -->
+          <circle cx="8" cy="-5" r="1.5" fill="#ffffff"/>
+          <circle cx="16" cy="-2" r="1.2" fill="#ffffff"/>
+        </g>
+      </g>
+
+      <!-- Tentacle 4 (Upper Left Ear): Pressing pro headphone earcup to ear / head to cue the mix! -->
+      <g id="tentacle4_headphone">
+        <path d="M 370 260 
+                 C 310 270 290 240 315 200 
+                 C 325 185 345 195 348 215" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="22" stroke-linecap="round"/>
+        <path d="M 370 260 C 310 270 290 240 315 200 C 325 185 345 195 348 215" 
+              fill="none" stroke="url(#octoHead)" stroke-width="14" stroke-linecap="round"/>
+        <!-- Suction cups pressing headphone cushion -->
+        <circle cx="310" cy="235" r="6" fill="url(#suckerGrad)"/>
+        <circle cx="325" cy="210" r="5" fill="url(#suckerGrad)"/>
+        <circle cx="340" cy="205" r="4.5" fill="url(#suckerGrad)"/>
+      </g>
+
+      <!-- Tentacle 3 (Upper Right Ear): Coiling near right headphone -->
+      <g id="tentacle3_cue">
+        <path d="M 430 260 
+                 C 490 270 510 240 485 200 
+                 C 475 185 455 195 452 215" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="22" stroke-linecap="round"/>
+        <path d="M 430 260 C 490 270 510 240 485 200 C 475 185 455 195 452 215" 
+              fill="none" stroke="url(#octoHead)" stroke-width="14" stroke-linecap="round"/>
+        <circle cx="490" cy="235" r="6" fill="url(#suckerGrad)"/>
+        <circle cx="475" cy="210" r="5" fill="url(#suckerGrad)"/>
+      </g>
+
+      <!-- OCTOPUS MANTLE (HEAD) & FACE -->
+      <g id="octopusHead">
+        <!-- Bulbous smooth mantle -->
+        <path d="M 350 250 
+                 C 330 190 355 140 400 140 
+                 C 445 140 470 190 450 250 
+                 C 435 285 365 285 350 250 Z" 
+              fill="url(#octoHead)" filter="url(#neonGlow)"/>
+        <!-- Skin texture highlights & spots -->
+        <g fill="#f472b6" opacity="0.6">
+          <ellipse cx="380" cy="165" rx="8" ry="5"/>
+          <ellipse cx="420" cy="170" rx="7" ry="4"/>
+          <ellipse cx="395" cy="155" rx="5" ry="3"/>
+          <circle cx="370" cy="180" r="3"/>
+          <circle cx="430" cy="185" r="3.5"/>
+        </g>
+
+        <!-- LARGE PRO DJ HEADPHONES over Mantle -->
+        <g id="headphones">
+          <!-- Headband arched over top of mantle -->
+          <path d="M 325 220 C 330 135 470 135 475 220" fill="none" stroke="#1e293b" stroke-width="12" stroke-linecap="round"/>
+          <path d="M 328 220 C 333 140 467 140 472 220" fill="none" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+          <!-- Headband top leather padding -->
+          <path d="M 360 148 C 385 140 415 140 440 148" fill="none" stroke="#475569" stroke-width="14" stroke-linecap="round"/>
+          
+          <!-- Left Ear Cushion & Can -->
+          <ellipse cx="330" cy="225" rx="15" ry="24" fill="#0f172a" stroke="#06b6d4" stroke-width="3"/>
+          <ellipse cx="330" cy="225" rx="9" ry="16" fill="#1e293b"/>
+          <circle cx="330" cy="225" r="5" fill="#f43f5e"/>
+          
+          <!-- Right Ear Cushion & Can -->
+          <ellipse cx="470" cy="225" rx="15" ry="24" fill="#0f172a" stroke="#06b6d4" stroke-width="3"/>
+          <ellipse cx="470" cy="225" rx="9" ry="16" fill="#1e293b"/>
+          <circle cx="470" cy="225" r="5" fill="#f43f5e"/>
+          
+          <!-- Coiled Headphone Cord draping down to mixer -->
+          <path d="M 330 248 C 320 280 340 310 325 340 S 350 380 340 415" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        </g>
+
+        <!-- COOL NEON RETRO SUNGLASSES / MIRROR SHADES -->
+        <g id="sunglasses" transform="translate(400, 235)">
+          <!-- Black frame -->
+          <path d="M -55 -10 L 55 -10 L 48 14 C 40 22 15 24 5 16 L 0 14 L -5 16 C -15 24 -40 22 -48 14 Z" fill="#0f172a" stroke="#cbd5e1" stroke-width="1.5"/>
+          <!-- Left Lens (Gradient Mirror) -->
+          <path d="M -50 -7 L -4 -7 C -4 4 -12 18 -27 18 C -42 18 -48 6 -50 -7 Z" fill="url(#sunShades)"/>
+          <!-- Right Lens (Gradient Mirror) -->
+          <path d="M 4 -7 L 50 -7 C 48 6 42 18 27 18 C 12 18 4 4 4 -7 Z" fill="url(#sunShades)"/>
+          <!-- White specular shine across lenses -->
+          <polygon points="-46,-5 -35,-5 -42,12 -46,12" fill="#ffffff" opacity="0.6"/>
+          <polygon points="8,-5 19,-5 12,12 8,12" fill="#ffffff" opacity="0.6"/>
+        </g>
+
+        <!-- Cheerful Octopus Smile below shades -->
+        <path d="M 388 266 Q 400 275 412 266" stroke="#581c87" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Cute suction cup freckles on cheeks -->
+        <circle cx="370" cy="265" r="3" fill="url(#suckerGrad)"/>
+        <circle cx="430" cy="265" r="3" fill="url(#suckerGrad)"/>
+      </g>
+
+      <!-- FOREGROUND TENTACLES (Actively operating the DJ decks!) -->
+
+      <!-- Tentacle 1 (Lower Far Left): SCRATCHING THE LEFT VINYL RECORD! -->
+      <g id="tentacle1_scratch">
+        <path d="M 360 280 
+                 C 300 300 230 320 200 370 
+                 C 185 395 195 415 220 415 
+                 C 235 415 245 405 238 395" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="26" stroke-linecap="round"/>
+        <path d="M 360 280 C 300 300 230 320 200 370 C 185 395 195 415 220 415" 
+              fill="none" stroke="url(#octoHead)" stroke-width="17" stroke-linecap="round"/>
+        <!-- Suction cups firmly touching the vinyl grooves! -->
+        <circle cx="280" cy="320" r="8" fill="url(#suckerGrad)"/>
+        <circle cx="240" cy="345" r="7.5" fill="url(#suckerGrad)"/>
+        <circle cx="205" cy="380" r="7" fill="url(#suckerGrad)"/>
+        <circle cx="202" cy="405" r="6" fill="url(#suckerGrad)"/>
+        <circle cx="218" cy="415" r="5.5" fill="url(#suckerGrad)"/>
+        <!-- Suction cup contact glow on record -->
+        <circle cx="218" cy="415" r="10" fill="#38bdf8" opacity="0.3" filter="url(#neonGlow)"/>
+      </g>
+
+      <!-- Tentacle 2 (Mid Left): TAPPING SAMPLER BEAT PADS! -->
+      <g id="tentacle2_pads">
+        <path d="M 375 285 
+                 C 345 320 330 350 345 385 
+                 C 348 395 352 405 348 412" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="22" stroke-linecap="round"/>
+        <path d="M 375 285 C 345 320 330 350 345 385 C 348 395 352 405 348 412" 
+              fill="none" stroke="url(#octoHead)" stroke-width="14" stroke-linecap="round"/>
+        <circle cx="348" cy="340" r="7" fill="url(#suckerGrad)"/>
+        <circle cx="340" cy="370" r="6.5" fill="url(#suckerGrad)"/>
+        <!-- Tip tapping pad at (345, 410) with neon impact shockwave -->
+        <circle cx="348" cy="412" r="5" fill="url(#suckerGrad)"/>
+        <circle cx="348" cy="412" r="10" fill="none" stroke="#ec4899" stroke-width="2" opacity="0.8" filter="url(#neonGlow)"/>
+      </g>
+
+      <!-- Tentacle 5 (Center): SLIDING THE CROSSFADER SMOOTHLY! -->
+      <g id="tentacle5_crossfader">
+        <path d="M 395 285 
+                 C 390 330 405 365 392 410 
+                 C 390 418 396 426 404 424" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="20" stroke-linecap="round"/>
+        <path d="M 395 285 C 390 330 405 365 392 410" 
+              fill="none" stroke="url(#octoHead)" stroke-width="13" stroke-linecap="round"/>
+        <circle cx="394" cy="330" r="6.5" fill="url(#suckerGrad)"/>
+        <circle cx="400" cy="365" r="6" fill="url(#suckerGrad)"/>
+        <!-- Tip gripping crossfader knob -->
+        <circle cx="396" cy="418" r="5" fill="url(#suckerGrad)"/>
+      </g>
+
+      <!-- Tentacle 6 (Mid Right): TWISTING AN EQ FILTER KNOB! -->
+      <g id="tentacle6_eq">
+        <path d="M 410 285 
+                 C 435 320 440 355 422 390 
+                 C 418 398 412 406 416 414" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="21" stroke-linecap="round"/>
+        <path d="M 410 285 C 435 320 440 355 422 390" 
+              fill="none" stroke="url(#octoHead)" stroke-width="13.5" stroke-linecap="round"/>
+        <circle cx="430" cy="335" r="6.5" fill="url(#suckerGrad)"/>
+        <circle cx="432" cy="370" r="6" fill="url(#suckerGrad)"/>
+        <circle cx="416" cy="414" r="5" fill="url(#suckerGrad)"/>
+        <!-- Knob rotation gleam -->
+        <path d="M 410 406 A 8 8 0 0 1 424 406" stroke="#facc15" stroke-width="1.8" fill="none"/>
+      </g>
+
+      <!-- Tentacle 9/Right (Lower Far Right): CUEING & SPINNING RIGHT VINYL! -->
+      <g id="tentacle_rightVinyl">
+        <path d="M 440 280 
+                 C 500 300 570 320 600 370 
+                 C 615 395 605 415 580 415 
+                 C 565 415 555 405 562 395" 
+              fill="none" stroke="url(#octoTentacle)" stroke-width="26" stroke-linecap="round"/>
+        <path d="M 440 280 C 500 300 570 320 600 370 C 615 395 605 415 580 415" 
+              fill="none" stroke="url(#octoHead)" stroke-width="17" stroke-linecap="round"/>
+        <circle cx="520" cy="320" r="8" fill="url(#suckerGrad)"/>
+        <circle cx="560" cy="345" r="7.5" fill="url(#suckerGrad)"/>
+        <circle cx="595" cy="380" r="7" fill="url(#suckerGrad)"/>
+        <circle cx="598" cy="405" r="6" fill="url(#suckerGrad)"/>
+        <circle cx="582" cy="415" r="5.5" fill="url(#suckerGrad)"/>
+        <circle cx="582" cy="415" r="10" fill="#d946ef" opacity="0.3" filter="url(#neonGlow)"/>
+      </g>
+    </g>
+    
+
+    <!-- DANCING PARTY CROWD SILHOUETTES -->
+    <g id="partyCrowd" fill="#020617">
+      <!-- Silhouette of dancing crowd waving hands / claws / fins -->
+      <path d="M 0 600 L 0 540 
+               Q 20 520 40 540 Q 60 515 80 545 
+               Q 110 500 130 535 Q 160 525 180 550 
+               Q 210 510 230 540 Q 260 520 280 555 
+               Q 310 505 330 545 Q 360 520 380 550 
+               Q 410 515 430 545 Q 460 505 480 540 
+               Q 510 520 530 550 Q 560 510 580 545 
+               Q 610 500 630 535 Q 660 520 680 550 
+               Q 710 515 730 540 Q 760 510 780 540 
+               Q 790 525 800 535 L 800 600 Z"/>
+
+      <!-- Raised Arms & Claws of dancing creatures! -->
+      <!-- Crab claw raised rocking out on left -->
+      <path d="M 60 530 Q 50 490 65 470 Q 75 485 68 530" fill="#020617"/>
+      <path d="M 65 470 Q 55 455 70 450 Q 75 465 65 470" fill="#020617"/>
+      <path d="M 65 470 Q 78 455 85 465 Q 75 475 65 470" fill="#020617"/>
+
+      <!-- Dancing human hands / paws -->
+      <path d="M 220 530 Q 215 480 230 460 Q 238 480 232 530" fill="#020617"/>
+      <path d="M 320 525 Q 330 475 320 455 Q 312 475 316 525" fill="#020617"/>
+      <path d="M 520 530 Q 515 470 535 450 Q 540 475 532 530" fill="#020617"/>
+      <path d="M 630 520 Q 640 465 625 445 Q 620 475 624 520" fill="#020617"/>
+      <path d="M 740 525 Q 750 480 735 460 Q 730 485 734 525" fill="#020617"/>
+    </g>
+
+    <!-- Glowing Waving Glowsticks in the Crowd -->
+    <g filter="url(#neonGlow)">
+      <!-- Neon Pink Glowstick -->
+      <line x1="228" y1="462" x2="215" y2="430" stroke="#f43f5e" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="228" y1="462" x2="215" y2="430" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+      
+      <!-- Neon Cyan Glowstick -->
+      <line x1="322" y1="458" x2="335" y2="425" stroke="#22d3ee" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="322" y1="458" x2="335" y2="425" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Neon Lime Glowstick -->
+      <line x1="532" y1="454" x2="548" y2="420" stroke="#4ade80" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="532" y1="454" x2="548" y2="420" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Neon Yellow Glowstick -->
+      <line x1="626" y1="448" x2="612" y2="415" stroke="#facc15" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="626" y1="448" x2="612" y2="415" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Neon Purple Glowstick -->
+      <line x1="736" y1="462" x2="750" y2="428" stroke="#c084fc" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="736" y1="462" x2="750" y2="428" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    
+</svg>

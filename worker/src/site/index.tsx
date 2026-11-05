@@ -7,10 +7,11 @@ import { api, VERSION } from "./api.ts";
 import { APP_JS, FAVICON_SVG, fontFiles, STYLE } from "./assets.ts";
 import { mascotSvg } from "./mascot.ts";
 import { OG_PNG } from "./og.ts";
-import { ARENA_OG_JPG } from "./arenaOg.ts";
+import { ARENA_OG_JPG, ARENA_SVG_OG_JPG } from "./arenaOg.ts";
 
 let ogBytes: Uint8Array<ArrayBuffer> | null = null;
 let arenaOgBytes: Uint8Array<ArrayBuffer> | null = null;
+let arenaSvgOgBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
 import { feedbackReport, getChallenge, getGame, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
@@ -170,6 +171,9 @@ async function arenaRoute(c: Context<AppEnv>, kind: ArenaKind) {
   );
 }
 
+site.get("/arena/svg/og.jpg", (c) =>
+  c.body((arenaSvgOgBytes ??= Uint8Array.from(atob(ARENA_SVG_OG_JPG), (x) => x.charCodeAt(0))), 200, { "content-type": "image/jpeg", "cache-control": "public, max-age=86400" }),
+);
 site.get("/arena", (c) => arenaRoute(c, "game"));
 site.get("/arena/svg", (c) => arenaRoute(c, "svg"));
 
