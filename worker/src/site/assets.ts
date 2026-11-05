@@ -222,6 +222,9 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .challenges { margin: 40px 0 10px; }
 .hot { margin: 10px 0 0; font-weight: 800; }
 .lib { margin: 10px 0 36px; }
+.row-3d { margin: 40px 0 10px; }
+.row-3d .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.row-3d .head a { font-weight: 700; }
 .art-3d { aspect-ratio: 16/9; display: grid; place-items: center; background: radial-gradient(circle at 30% 30%, #3a2f6b, #0d0d1a 70%); }
 .art-3d span { font: 900 46px var(--display); color: var(--pop); letter-spacing: .05em; text-shadow: 3px 3px 0 #000; }
 .follow { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; margin-left: 8px; }

@@ -90,15 +90,16 @@ site.get("/", async (c) => {
   const sort: Sort = sortQ === "new" || sortQ === "top" || sortQ === "rated" ? sortQ : "trending";
   const q = c.req.query("q")?.trim().slice(0, 60) || undefined;
   const tool = c.req.query("made_with")?.slice(0, 32) || undefined;
-  const [games, tools, loop, arenaRow, featured] = await Promise.all([
+  const [games, tools, loop, arenaRow, featured, threeD] = await Promise.all([
     listGames(c.env, { sort, tool, q }),
     madeWithCounts(c.env),
     loopData(c.env),
     arenaNames(c.env),
     featuredChallenge(c.env),
+    list3d(c.env),
   ]);
   c.header("cache-control", "public, max-age=30");
-  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} q={q} open={c.env.OPEN_PUBLISHING === "1"} arena={arenaRow || undefined} featured={featured} playOrigin={playOrigin(c)} />);
+  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} q={q} open={c.env.OPEN_PUBLISHING === "1"} arena={arenaRow || undefined} featured={featured} threeD={threeD.filter((g) => g.hasCover)} playOrigin={playOrigin(c)} />);
 });
 
 async function loadGame(c: Context<AppEnv>) {

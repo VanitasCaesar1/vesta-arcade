@@ -180,7 +180,7 @@ function Loop({ d, siteUrl }: { d: LoopData; siteUrl: string }) {
   );
 }
 
-export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null; open?: boolean; q?: string; arena?: string; featured?: { id: string; prompt: string; n: number; community: number; author: string; top: { slug: string; model: string; file_key: string }[] } | null; playOrigin?: string }) {
+export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null; open?: boolean; q?: string; threeD?: Game[]; arena?: string; featured?: { id: string; prompt: string; n: number; community: number; author: string; top: { slug: string; model: string; file_key: string }[] } | null; playOrigin?: string }) {
   const qs = (sort: Sort, tool?: string) => {
     const q = new URLSearchParams();
     if (sort !== "trending") q.set("sort", sort);
@@ -295,6 +295,26 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
             <Slot i={p.games.length} />
           </div>
         </section>
+
+        {p.threeD?.length ? (
+          <section class="row-3d">
+            <div class="head">
+              <h2 class="display">3D worlds</h2>
+              <a href="/3d">See all 3D</a>
+            </div>
+            <div class="grid">
+              {p.threeD.slice(0, 4).map((g, i) => (
+                <a class="card rise" style={`--i:${i}`} href={`/g/${g.slug}`}>
+                  <div class="art">{g.hasCover ? <img src={cover(g)} alt="" loading="lazy" width={640} height={360} /> : null}</div>
+                  <h3>{g.title}</h3>
+                  <div class="meta">
+                    <span>3D · three.js</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {p.loop ? <Loop d={p.loop} siteUrl={p.siteUrl} /> : null}
 
