@@ -149,6 +149,11 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
               <a class="btn pop lg" data-react href={p.games.length > 1 ? "/random" : featured ? `/g/${featured.slug}?play=1` : "#publish"}>
                 <Icon name="play" /> {featured ? "Play something" : "Publish the first game"}
               </a>
+              {p.arena ? (
+                <a class="btn lg" href="/arena/svg">
+                  Judge AIs blind
+                </a>
+              ) : null}
               <a class="text" href="#publish">
                 Or make one
               </a>
