@@ -157,13 +157,15 @@ async function arenaRoute(c: Context<AppEnv>, kind: ArenaKind, dailyInfo?: { dat
     votesLastHour(c.env),
   ]);
   const counts = Object.fromEntries(countRows.results.map((r) => [r.prompt, r.n]));
+  // The daily page only ever shows today's prompt; with fewer than two drawings it asks for more instead.
+  const matchup = dailyInfo && m && m.prompt.id !== dailyInfo.id ? null : m;
   c.header("cache-control", "no-store");
   return c.html(
     <ArenaPage
       arcade={arcade(c)}
       siteUrl={origin(c)}
       kind={kind}
-      m={m}
+      m={matchup}
       votes={votes?.n ?? 0}
       names={names}
       prompts={prompts}

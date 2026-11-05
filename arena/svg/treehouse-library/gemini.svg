@@ -1,0 +1,413 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <!-- Sky & Dusk Gradients -->
+    <linearGradient id="duskSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="25%" stop-color="#1e1b4b"/>
+      <stop offset="55%" stop-color="#4c1d95"/>
+      <stop offset="75%" stop-color="#831843"/>
+      <stop offset="90%" stop-color="#c2410c"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <!-- Warm Library Interior Glow -->
+    <radialGradient id="interiorWarmth" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.9"/>
+      <stop offset="45%" stop-color="#f59e0b" stop-opacity="0.5"/>
+      <stop offset="80%" stop-color="#b45309" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#78350f" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="fairyGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#fef08a"/>
+      <stop offset="80%" stop-color="#f59e0b" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Tree Bark & Wood Gradients -->
+    <linearGradient id="trunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#180e07"/>
+      <stop offset="35%" stop-color="#3d2212"/>
+      <stop offset="70%" stop-color="#2a170b"/>
+      <stop offset="100%" stop-color="#120a05"/>
+    </linearGradient>
+    <linearGradient id="plankWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#543018"/>
+      <stop offset="50%" stop-color="#7c4623"/>
+      <stop offset="100%" stop-color="#412411"/>
+    </linearGradient>
+    <linearGradient id="roofShingles" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#047857"/>
+      <stop offset="50%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </linearGradient>
+    <linearGradient id="foliageGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a1e"/>
+      <stop offset="60%" stop-color="#0f2411"/>
+      <stop offset="100%" stop-color="#071308"/>
+    </linearGradient>
+
+    <filter id="softFairy" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Twilight Sky -->
+  <rect width="800" height="600" fill="url(#duskSky)"/>
+
+  <!-- Distant Dusk Mountain Silhouettes -->
+  <path d="M 0 450 L 80 400 L 220 440 L 380 390 L 520 430 L 680 380 L 800 420 L 800 600 L 0 600 Z" fill="#1b122c" opacity="0.8"/>
+  <path d="M 0 490 L 120 450 L 300 480 L 480 430 L 640 470 L 800 440 L 800 600 L 0 600 Z" fill="#0d091a"/>
+
+  <!-- Golden Crescent Moon & Evening Stars -->
+  <g transform="translate(110, 80)">
+    <path d="M 25 0 A 25 25 0 1 0 25 50 A 20 20 0 1 1 25 0 Z" fill="#fef08a" opacity="0.9"/>
+    <!-- Moon glow aura -->
+    <circle cx="22" cy="25" r="32" fill="#fef08a" opacity="0.12"/>
+  </g>
+
+  <!-- Twinkling Evening Stars in the twilight sky -->
+  <g fill="#ffffff">
+    <circle cx="60" cy="50" r="1.5" opacity="0.8"/>
+    <circle cx="180" cy="65" r="1.2" opacity="0.7"/>
+    <circle cx="260" cy="40" r="2" opacity="0.9"/>
+    <circle cx="340" cy="75" r="1.5" opacity="0.8"/>
+    <circle cx="480" cy="45" r="1.8" opacity="0.9"/>
+    <circle cx="620" cy="55" r="1.2" opacity="0.7"/>
+    <circle cx="730" cy="35" r="2" opacity="0.9"/>
+    <circle cx="770" cy="80" r="1.5" opacity="0.8"/>
+  </g>
+
+  <!-- DISTANT FOREST CANOPY SILHOUETTE -->
+  <path d="M 0 540 C 60 510 140 525 210 505 C 290 535 370 515 450 535 C 550 510 650 525 730 500 C 770 515 800 505 800 540 L 800 600 L 0 600 Z" fill="#060c07"/>
+
+  <!-- THE MASSIVE ANCIENT OAK TREE -->
+  <!-- Left major roots & trunk -->
+  <path d="M 120 600 C 130 520 180 440 220 380 C 250 330 250 250 220 180 C 200 130 180 90 160 0 L 260 0 C 280 80 300 140 330 210 C 370 280 380 340 360 410 C 330 480 340 550 380 600 Z" fill="url(#trunkGrad)"/>
+
+  <!-- Giant horizontal supporting branch where treehouse rests -->
+  <path d="M 230 360 C 320 370 420 380 540 370 C 660 360 760 330 820 310 L 820 390 C 740 420 620 445 490 435 C 390 425 290 415 210 405 Z" fill="url(#trunkGrad)"/>
+
+  <!-- Secondary upper arching branch framing the roof -->
+  <path d="M 220 190 C 310 170 420 150 550 140 C 640 135 740 150 820 180 L 820 140 C 720 110 600 95 490 105 C 380 115 290 140 210 165 Z" fill="url(#trunkGrad)"/>
+
+  <!-- Tree Bark Grooves & Lichen Texture -->
+  <g stroke="#180e07" stroke-width="3" fill="none" opacity="0.6">
+    <path d="M 170 550 Q 210 480 230 410"/>
+    <path d="M 220 580 Q 260 510 275 430"/>
+    <path d="M 280 590 Q 315 520 325 440"/>
+    <path d="M 310 375 Q 430 385 530 380"/>
+    <path d="M 340 400 Q 450 415 570 405"/>
+  </g>
+
+  <!-- Tree Foliage Clumps in Background (Deep lush forest moss tones) -->
+  <path d="M 100 120 C 60 70 80 10 150 20 C 180 -20 250 -10 280 40 C 330 0 420 10 440 60 C 490 20 580 40 590 90 C 640 60 720 80 740 130 C 790 110 830 150 820 200 L 780 210 C 700 180 620 190 560 170 C 480 180 390 170 310 180 C 240 170 170 180 120 160 Z" fill="url(#foliageGrad)"/>
+
+  <!-- THE TREEHOUSE STRUCTURE (Cozy Cross-Section & Cutaway View) -->
+  <!-- Main Platform Wooden Piles & Sturdy Diagonal Support Struts -->
+  <polygon points="280,390 320,470 305,475 270,395" fill="url(#plankWood)"/>
+  <polygon points="460,395 500,480 485,485 450,400" fill="url(#plankWood)"/>
+  <polygon points="620,380 660,460 645,465 610,385" fill="url(#plankWood)"/>
+
+  <!-- Main Treehouse Floor Slab (Cross beams) -->
+  <rect x="290" y="380" width="410" height="18" rx="3" fill="#2d170a" stroke="#180c05" stroke-width="2"/>
+  <line x1="290" y1="384" x2="700" y2="384" stroke="#7c4623" stroke-width="2"/>
+
+  <!-- Back Wall of the Cozy Library Interior -->
+  <rect x="310" y="200" width="370" height="180" fill="#271406"/>
+
+  <!-- Warm Golden Glow Radiating from within the Library -->
+  <rect x="310" y="200" width="370" height="180" fill="url(#interiorWarmth)"/>
+  <circle cx="480" cy="280" r="140" fill="url(#interiorWarmth)" opacity="0.7"/>
+
+  <!-- GRAND OAK BOOKSHELVES (Packed with rich leather-bound books) -->
+  <!-- Main Shelf Frame (3 Tiers, multiple bays) -->
+  <!-- Vertical shelf uprights -->
+  <rect x="320" y="205" width="10" height="175" fill="#45230c"/>
+  <rect x="440" y="205" width="8" height="175" fill="#45230c"/>
+  <rect x="560" y="205" width="8" height="175" fill="#45230c"/>
+  <rect x="670" y="205" width="10" height="175" fill="#45230c"/>
+  <!-- Horizontal shelf tiers -->
+  <rect x="320" y="205" width="360" height="8" fill="#5a2e10"/>
+  <rect x="320" y="260" width="360" height="8" fill="#5a2e10"/>
+  <rect x="320" y="315" width="360" height="8" fill="#5a2e10"/>
+  <rect x="320" y="372" width="360" height="8" fill="#5a2e10"/>
+
+  <!-- BOOKS ON SHELVES (Rich vibrant jewel tones: crimson, royal blue, forest green, gold, aubergine) -->
+  <!-- Bay 1 (x: 330 to 440) - Top Tier -->
+  <g transform="translate(330, 213)">
+    <rect x="0" y="5" width="8" height="42" rx="1" fill="#991b1b"/>
+    <rect x="9" y="2" width="11" height="45" rx="1" fill="#1e3a8a"/>
+    <line x1="10" y1="12" x2="19" y2="12" stroke="#fef08a" stroke-width="1.2"/>
+    <rect x="21" y="8" width="7" height="39" rx="1" fill="#065f46"/>
+    <rect x="29" y="0" width="13" height="47" rx="1" fill="#854d0e"/>
+    <rect x="43" y="6" width="9" height="41" rx="1" fill="#581c87"/>
+    <rect x="53" y="4" width="12" height="43" rx="1" fill="#b91c1c"/>
+    <rect x="66" y="9" width="8" height="38" rx="1" fill="#0f766e"/>
+    <!-- Stack of horizontal books -->
+    <rect x="76" y="33" width="30" height="7" rx="1" fill="#78350f"/>
+    <rect x="78" y="25" width="27" height="7" rx="1" fill="#1e40af"/>
+    <rect x="80" y="17" width="23" height="7" rx="1" fill="#991b1b"/>
+  </g>
+
+  <!-- Bay 1 - Middle Tier -->
+  <g transform="translate(330, 268)">
+    <rect x="0" y="3" width="12" height="44" rx="1" fill="#15803d"/>
+    <rect x="13" y="0" width="10" height="47" rx="1" fill="#a16207"/>
+    <rect x="24" y="6" width="8" height="41" rx="1" fill="#6b21a8"/>
+    <rect x="33" y="8" width="14" height="39" rx="1" fill="#991b1b"/>
+    <rect x="48" y="4" width="9" height="43" rx="1" fill="#1e3a8a"/>
+    <!-- Leaning book -->
+    <polygon points="59,10 68,12 80,47 71,47" fill="#b45309"/>
+    <polygon points="70,12 79,15 90,47 81,47" fill="#047857"/>
+    <rect x="94" y="2" width="12" height="45" rx="1" fill="#831843"/>
+  </g>
+
+  <!-- Bay 2 (x: 448 to 560) - Top Tier -->
+  <g transform="translate(448, 213)">
+    <!-- Giant ancient tome / Atlas -->
+    <rect x="0" y="0" width="16" height="47" rx="2" fill="#7c2d12"/>
+    <line x1="2" y1="10" x2="14" y2="10" stroke="#fef08a" stroke-width="1.5"/>
+    <line x1="2" y1="16" x2="14" y2="16" stroke="#fef08a" stroke-width="1"/>
+    <rect x="18" y="4" width="10" height="43" rx="1" fill="#0369a1"/>
+    <rect x="29" y="8" width="8" height="39" rx="1" fill="#15803d"/>
+    <rect x="38" y="2" width="12" height="45" rx="1" fill="#a21caf"/>
+    <rect x="51" y="6" width="9" height="41" rx="1" fill="#b91c1c"/>
+    <rect x="61" y="10" width="11" height="37" rx="1" fill="#854d0e"/>
+    <rect x="73" y="4" width="13" height="43" rx="1" fill="#1e3a8a"/>
+    <rect x="87" y="1" width="10" height="46" rx="1" fill="#065f46"/>
+    <rect x="98" y="7" width="10" height="40" rx="1" fill="#9f1239"/>
+  </g>
+
+  <!-- Bay 2 - Middle Tier (Center focus) -->
+  <g transform="translate(448, 268)">
+    <rect x="0" y="4" width="10" height="43" rx="1" fill="#1e40af"/>
+    <rect x="11" y="7" width="12" height="40" rx="1" fill="#991b1b"/>
+    <rect x="24" y="2" width="9" height="45" rx="1" fill="#ca8a04"/>
+    <!-- Brass Orrery / Globe on shelf! -->
+    <ellipse cx="52" cy="30" rx="12" ry="12" fill="none" stroke="#f59e0b" stroke-width="2"/>
+    <ellipse cx="52" cy="30" rx="12" ry="4" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+    <line x1="52" y1="16" x2="52" y2="45" stroke="#f59e0b" stroke-width="2"/>
+    <circle cx="52" cy="45" r="4" fill="#a16207"/>
+    <!-- More books -->
+    <rect x="70" y="5" width="11" height="42" rx="1" fill="#047857"/>
+    <rect x="82" y="2" width="14" height="45" rx="1" fill="#6b21a8"/>
+    <rect x="97" y="8" width="10" height="39" rx="1" fill="#b45309"/>
+  </g>
+
+  <!-- Bay 3 (x: 568 to 670) - Top Tier -->
+  <g transform="translate(568, 213)">
+    <rect x="0" y="4" width="10" height="43" rx="1" fill="#854d0e"/>
+    <rect x="11" y="1" width="12" height="46" rx="1" fill="#1e3a8a"/>
+    <rect x="24" y="6" width="9" height="41" rx="1" fill="#15803d"/>
+    <rect x="34" y="3" width="14" height="44" rx="1" fill="#991b1b"/>
+    <!-- Stack of dusty scrolls tied with ribbons -->
+    <rect x="52" y="34" width="36" height="6" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="0.8"/>
+    <line x1="68" y1="34" x2="68" y2="40" stroke="#ef4444" stroke-width="1.5"/>
+    <rect x="55" y="26" width="32" height="6" rx="3" fill="#fde68a" stroke="#d97706" stroke-width="0.8"/>
+    <line x1="72" y1="26" x2="72" y2="32" stroke="#ef4444" stroke-width="1.5"/>
+    <rect x="92" y="5" width="8" height="42" rx="1" fill="#065f46"/>
+  </g>
+
+  <!-- Rolling Brass Library Ladder with wheels leaning on shelves -->
+  <g transform="translate(420, 200) rotate(9)">
+    <!-- Ladder rails -->
+    <rect x="0" y="0" width="4" height="185" fill="#f59e0b" stroke="#b45309" stroke-width="0.8"/>
+    <rect x="22" y="0" width="4" height="185" fill="#f59e0b" stroke="#b45309" stroke-width="0.8"/>
+    <!-- Rungs -->
+    <line x1="0" y1="25" x2="26" y2="25" stroke="#f59e0b" stroke-width="2.5"/>
+    <line x1="0" y1="55" x2="26" y2="55" stroke="#f59e0b" stroke-width="2.5"/>
+    <line x1="0" y1="85" x2="26" y2="85" stroke="#f59e0b" stroke-width="2.5"/>
+    <line x1="0" y1="115" x2="26" y2="115" stroke="#f59e0b" stroke-width="2.5"/>
+    <line x1="0" y1="145" x2="26" y2="145" stroke="#f59e0b" stroke-width="2.5"/>
+    <line x1="0" y1="175" x2="26" y2="175" stroke="#f59e0b" stroke-width="2.5"/>
+    <!-- Brass wheels at base -->
+    <circle cx="2" cy="186" r="3.5" fill="#ca8a04"/>
+    <circle cx="24" cy="186" r="3.5" fill="#ca8a04"/>
+  </g>
+
+  <!-- THE COZY READING NOOK & ARMCHAIR IN THE FOREGROUND OF LIBRARY -->
+  <g id="readingNook" transform="translate(530, 280)">
+    <!-- Persian / Floral Pattern Rug under the chair -->
+    <ellipse cx="50" cy="98" rx="60" ry="12" fill="#881337" stroke="#d97706" stroke-width="2"/>
+    <ellipse cx="50" cy="98" rx="46" ry="8" fill="#1e3a8a"/>
+    <ellipse cx="50" cy="98" rx="30" ry="5" fill="#fef08a" opacity="0.6"/>
+
+    <!-- Wingback Velvet Armchair (Plush, deep emerald green or rich crimson) -->
+    <!-- Chair back & wings -->
+    <path d="M 20 20 C 15 -10 85 -10 80 20 L 85 70 L 15 70 Z" fill="#991b1b" stroke="#7f1d1d" stroke-width="2"/>
+    <!-- Wing flaps -->
+    <path d="M 16 10 C 8 20 12 50 20 60" fill="#7f1d1d"/>
+    <path d="M 84 10 C 92 20 88 50 80 60" fill="#7f1d1d"/>
+    <!-- Button tufting dots -->
+    <circle cx="35" cy="15" r="2" fill="#450a0a"/>
+    <circle cx="50" cy="15" r="2" fill="#450a0a"/>
+    <circle cx="65" cy="15" r="2" fill="#450a0a"/>
+    <circle cx="42" cy="30" r="2" fill="#450a0a"/>
+    <circle cx="58" cy="30" r="2" fill="#450a0a"/>
+
+    <!-- Plush seat cushion -->
+    <ellipse cx="50" cy="68" rx="32" ry="12" fill="#b91c1c"/>
+
+    <!-- Draped hand-knitted patchwork quilt over the armrest -->
+    <path d="M 12 50 Q 8 75 14 88 Q 28 88 26 62 Z" fill="#ca8a04"/>
+    <polygon points="12,55 24,55 22,70 10,70" fill="#047857"/>
+    <polygon points="10,70 22,70 24,85 12,85" fill="#1e40af"/>
+
+    <!-- Turned wooden chair legs -->
+    <line x1="25" y1="78" x2="20" y2="98" stroke="#3d2212" stroke-width="4" stroke-linecap="round"/>
+    <line x1="75" y1="78" x2="80" y2="98" stroke="#3d2212" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Little Round Wooden Side Table -->
+    <g transform="translate(-40, 20)">
+      <!-- Table top -->
+      <ellipse cx="15" cy="45" rx="20" ry="7" fill="#78350f" stroke="#451a03" stroke-width="1.5"/>
+      <!-- Pedestal leg -->
+      <line x1="15" y1="52" x2="15" y2="76" stroke="#451a03" stroke-width="4"/>
+      <polygon points="5,78 25,78 15,74" fill="#311204"/>
+
+      <!-- Stack of open books on table -->
+      <polygon points="0,44 14,41 28,44 26,47 14,44 2,47" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.8"/>
+      <!-- Steaming ceramic teacup -->
+      <ellipse cx="14" cy="38" rx="5" ry="2.5" fill="#e2e8f0"/>
+      <path d="M 9 38 C 9 44 19 44 19 38 Z" fill="#f1f5f9"/>
+      <!-- Steam plume -->
+      <path d="M 14 36 Q 11 26 15 20" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+
+      <!-- Classic Brass Bankers Lamp with Emerald Glass Shade -->
+      <path d="M 28 44 C 36 30 30 18 22 15" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+      <rect x="14" y="10" width="16" height="8" rx="3" fill="#047857" stroke="#064e3b" stroke-width="1"/>
+      <ellipse cx="22" cy="18" r="4" fill="#fef08a" filter="url(#softFairy)"/>
+      <polygon points="12,18 32,18 42,42 2,42" fill="#fef08a" opacity="0.15"/>
+    </g>
+  </g>
+
+  <!-- Potted Fiddle Leaf Fig Plant by the shelf -->
+  <g transform="translate(330, 310)">
+    <polygon points="6,45 24,45 21,70 9,70" fill="#b45309"/>
+    <!-- Leaves -->
+    <path d="M 15 45 C 8 35 2 20 12 12 C 22 20 18 35 15 45 Z" fill="#15803d"/>
+    <path d="M 15 40 C 22 30 32 25 30 15 C 20 15 16 28 15 40 Z" fill="#22c55e"/>
+    <path d="M 15 30 C 10 18 15 5 22 2 C 25 12 22 22 15 30 Z" fill="#16a34a"/>
+  </g>
+
+  <!-- TREEHOUSE ARCHITECTURE: WALLS, ROOF & WINDOWS -->
+  <!-- Stately Timber Gabled Roof Covered in Cedar Moss Shingles -->
+  <!-- Left Roof Rafter -->
+  <polygon points="270,220 480,110 500,122 285,235" fill="url(#roofShingles)"/>
+  <!-- Right Roof Rafter -->
+  <polygon points="480,110 730,225 715,240 475,125" fill="url(#roofShingles)"/>
+  <!-- Ridge crest timber -->
+  <polygon points="460,115 500,115 480,100" fill="#3d2212"/>
+
+  <!-- Hanging Decorative Timber Gable Finial -->
+  <polygon points="480,120 474,150 486,150" fill="#543018"/>
+  <circle cx="480" cy="155" r="5" fill="#a16207"/>
+
+  <!-- Left Wall Plank Siding & Window -->
+  <polygon points="290,230 320,215 320,380 290,380" fill="url(#plankWood)"/>
+
+  <!-- Right Outdoor Balcony / Look-Out Deck -->
+  <g id="balconyDeck">
+    <!-- Balcony Floor Extension -->
+    <polygon points="660,380 770,380 760,395 660,395" fill="url(#plankWood)"/>
+    <!-- Balcony Railing Posts & Rope -->
+    <rect x="680" y="325" width="6" height="55" fill="#543018"/>
+    <rect x="715" y="325" width="6" height="55" fill="#543018"/>
+    <rect x="750" y="325" width="6" height="55" fill="#543018"/>
+    <!-- Wooden top rail -->
+    <polygon points="675,325 758,325 758,331 675,331" fill="#7c4623"/>
+    <!-- Crossed rope balustrade -->
+    <line x1="680" y1="335" x2="715" y2="375" stroke="#ca8a04" stroke-width="2"/>
+    <line x1="715" y1="335" x2="680" y2="375" stroke="#ca8a04" stroke-width="2"/>
+    <line x1="715" y1="335" x2="750" y2="375" stroke="#ca8a04" stroke-width="2"/>
+    <line x1="750" y1="335" x2="715" y2="375" stroke="#ca8a04" stroke-width="2"/>
+
+    <!-- Brass Stargazing Telescope mounted on the balcony railing pointing at stars -->
+    <g transform="translate(730, 310) rotate(-30)">
+      <!-- Tripod pivot -->
+      <rect x="0" y="20" width="4" height="25" fill="#f59e0b"/>
+      <!-- Brass telescope tube -->
+      <polygon points="-8,10 32,8 30,22 -8,20" fill="#ca8a04" stroke="#854d0e" stroke-width="1"/>
+      <ellipse cx="31" cy="15" rx="3" ry="7" fill="#fef08a"/>
+      <rect x="-14" y="13" width="7" height="4" fill="#3d2212"/> <!-- Eyepiece -->
+    </g>
+  </g>
+
+  <!-- ROPE SUSPENSION BRIDGE stretching across the canopy to the right -->
+  <g id="ropeBridge" transform="translate(755, 360)">
+    <!-- Main suspension sagging ropes -->
+    <path d="M 0 0 Q 30 25 70 20" fill="none" stroke="#a16207" stroke-width="3"/>
+    <path d="M 0 30 Q 30 45 70 42" fill="none" stroke="#a16207" stroke-width="3"/>
+    <!-- Vertical rope ties -->
+    <line x1="15" y1="12" x2="15" y2="36" stroke="#ca8a04" stroke-width="1.8"/>
+    <line x1="35" y1="22" x2="35" y2="44" stroke="#ca8a04" stroke-width="1.8"/>
+    <line x1="55" y1="21" x2="55" y2="42" stroke="#ca8a04" stroke-width="1.8"/>
+    <!-- Wooden walkway planks -->
+    <polygon points="10,35 22,35 20,40 8,40" fill="#543018"/>
+    <polygon points="30,42 42,42 40,47 28,47" fill="#543018"/>
+    <polygon points="50,41 62,41 60,46 48,46" fill="#543018"/>
+  </g>
+
+  <!-- WARM GLOWING FAIRY STRING LIGHTS SWAGGED ACROSS THE TREEHOUSE -->
+  <!-- Garland 1: Under the eave -->
+  <path d="M 280 235 Q 380 260 480 230 Q 580 260 670 235" fill="none" stroke="#1c1917" stroke-width="1.5"/>
+  <g filter="url(#softFairy)">
+    <circle cx="310" cy="245" r="4.5" fill="url(#fairyGlow)"/>
+    <circle cx="350" cy="252" r="4.5" fill="url(#fairyGlow)"/>
+    <circle cx="390" cy="253" r="4.5" fill="url(#fairyGlow)"/>
+    <circle cx="430" cy="248" r="4.5" fill="url(#fairyGlow)"/>
+    <circle cx="510" cy="245" r="4.5" fill="url(#fairyGlow)"/>
+    <circle cx="550" cy="252" r="4.5" fill="url(#fairyGlow)"/>
+    <circle cx="590" cy="253" r="4.5" fill="url(#fairyGlow)"/>
+    <circle cx="630" cy="248" r="4.5" fill="url(#fairyGlow)"/>
+  </g>
+
+  <!-- Garland 2: Wrapped around balcony rail -->
+  <path d="M 675 330 Q 715 345 755 330" fill="none" stroke="#1c1917" stroke-width="1.5"/>
+  <g filter="url(#softFairy)">
+    <circle cx="695" cy="336" r="4" fill="url(#fairyGlow)"/>
+    <circle cx="715" cy="341" r="4" fill="url(#fairyGlow)"/>
+    <circle cx="735" cy="336" r="4" fill="url(#fairyGlow)"/>
+  </g>
+
+  <!-- Hanging Wooden Lantern dangling from branch on left -->
+  <g transform="translate(240, 390)">
+    <line x1="0" y1="0" x2="0" y2="40" stroke="#1c1917" stroke-width="2"/>
+    <polygon points="-12,40 12,40 8,32 -8,32" fill="#543018"/>
+    <!-- Glass lantern body -->
+    <rect x="-10" y="40" width="20" height="28" fill="#fef08a" stroke="#3d2212" stroke-width="2" filter="url(#softFairy)"/>
+    <circle cx="0" cy="54" r="5" fill="#ffffff"/>
+    <polygon points="-14,68 14,68 10,74 -10,74" fill="#3d2212"/>
+    <!-- Big warm radial aura from lantern -->
+    <circle cx="0" cy="54" r="50" fill="url(#fairyGlow)" opacity="0.5"/>
+  </g>
+
+  <!-- ENCHANTED FIREFLIES / WILL-O-THE-WISPS DRIFTING THROUGH THE TWILIGHT -->
+  <g filter="url(#softFairy)">
+    <circle cx="210" cy="480" r="3" fill="#bef264"/>
+    <circle cx="160" cy="360" r="2.5" fill="#bef264"/>
+    <circle cx="270" cy="320" r="3.5" fill="#bef264"/>
+    <circle cx="480" cy="460" r="3" fill="#bef264"/>
+    <circle cx="600" cy="470" r="2.5" fill="#bef264"/>
+    <circle cx="720" cy="430" r="3" fill="#bef264"/>
+    <circle cx="760" cy="270" r="3.5" fill="#bef264"/>
+    <circle cx="630" cy="160" r="2.5" fill="#bef264"/>
+  </g>
+
+  <!-- Foreground lush oak leaves hanging from top branches -->
+  <g fill="#071a0c" opacity="0.95">
+    <ellipse cx="60" cy="20" rx="45" ry="18" transform="rotate(25, 60, 20)"/>
+    <ellipse cx="140" cy="35" rx="50" ry="20" transform="rotate(-15, 140, 35)"/>
+    <ellipse cx="230" cy="15" rx="40" ry="16" transform="rotate(10, 230, 15)"/>
+    <ellipse cx="710" cy="30" rx="55" ry="22" transform="rotate(-20, 710, 30)"/>
+    <ellipse cx="780" cy="15" rx="45" ry="18" transform="rotate(15, 780, 15)"/>
+  </g>
+
+  <!-- Subtle vignette -->
+  <rect width="800" height="600" fill="none" stroke="#000000" stroke-width="2" opacity="0.4"/>
+</svg>

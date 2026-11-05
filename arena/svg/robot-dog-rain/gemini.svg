@@ -1,0 +1,391 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="cyberSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#05070f"/>
+      <stop offset="40%" stop-color="#0c1024"/>
+      <stop offset="80%" stop-color="#191338"/>
+      <stop offset="100%" stop-color="#241438"/>
+    </linearGradient>
+    <linearGradient id="wetStreet" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="30%" stop-color="#111827"/>
+      <stop offset="70%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+
+    <!-- Streetlamp Warm Glow -->
+    <radialGradient id="lampCone" cx="0%" cy="0%" r="100%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.8"/>
+      <stop offset="30%" stop-color="#fef08a" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Neon Reflections in Puddle -->
+    <linearGradient id="neonCyan" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="neonPink" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="lampReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Robot Material Gradients -->
+    <linearGradient id="robotMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="40%" stop-color="#94a3b8"/>
+      <stop offset="80%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <linearGradient id="robotDarkMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="robotCore" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <!-- Umbrella Translucent Glow -->
+    <linearGradient id="umbrellaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#d97706" stop-opacity="0.85"/>
+    </linearGradient>
+
+    <!-- Dog Fur Gradient -->
+    <linearGradient id="dogFur" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="40%" stop-color="#fba444"/>
+      <stop offset="80%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+
+    <filter id="softNeon" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Nighttime Rain Atmosphere & Cityscape Backdrop -->
+  <rect width="800" height="600" fill="url(#cyberSky)"/>
+
+  <!-- Distant City Buildings Silhouette -->
+  <g fill="#0b0e1b" opacity="0.9">
+    <rect x="20" y="180" width="80" height="240"/>
+    <rect x="120" y="120" width="110" height="300"/>
+    <rect x="250" y="210" width="90" height="210"/>
+    <rect x="360" y="150" width="130" height="270"/>
+    <rect x="520" y="100" width="100" height="320"/>
+    <rect x="640" y="170" width="140" height="250"/>
+  </g>
+
+  <!-- Glowing Neon Graphic Signs on Buildings (Abstract shapes/symbols, NO text!) -->
+  <!-- Cyan abstract ramen/coffee glyph -->
+  <g transform="translate(145, 160)" filter="url(#softNeon)">
+    <path d="M 10 25 C 10 45 50 45 50 25 Z" fill="none" stroke="#06b6d4" stroke-width="3"/>
+    <path d="M 20 18 Q 17 8 23 2" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 30 18 Q 33 8 27 2" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 40 18 Q 37 8 43 2" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Magenta diamond beacon symbol -->
+  <g transform="translate(555, 140)" filter="url(#softNeon)">
+    <polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="#ec4899" stroke-width="3"/>
+    <circle cx="25" cy="25" r="7" fill="#ec4899"/>
+  </g>
+
+  <!-- Amber bar icon sign -->
+  <g transform="translate(400, 190)" filter="url(#softNeon)">
+    <circle cx="15" cy="15" r="10" fill="none" stroke="#f59e0b" stroke-width="3"/>
+    <line x1="8" y1="15" x2="22" y2="15" stroke="#f59e0b" stroke-width="2.5"/>
+    <line x1="15" y1="8" x2="15" y2="22" stroke="#f59e0b" stroke-width="2.5"/>
+  </g>
+
+  <!-- Pavement / Sidewalk & Wet Asphalt Road -->
+  <polygon points="0,410 800,410 800,600 0,600" fill="url(#wetStreet)"/>
+  <!-- Curb stone edge -->
+  <polygon points="0,410 800,410 800,422 0,422" fill="#334155"/>
+  <line x1="0" y1="410" x2="800" y2="410" stroke="#64748b" stroke-width="2"/>
+  <line x1="0" y1="422" x2="800" y2="422" stroke="#1e293b" stroke-width="2"/>
+
+  <!-- Puddle & Wet Road Surface Light Reflections (Mirrored shimmers on ground) -->
+  <!-- Cyan reflection -->
+  <ellipse cx="175" cy="480" rx="45" ry="12" fill="url(#neonCyan)"/>
+  <ellipse cx="170" cy="510" rx="35" ry="8" fill="url(#neonCyan)" opacity="0.6"/>
+  <!-- Magenta reflection -->
+  <ellipse cx="585" cy="470" rx="40" ry="10" fill="url(#neonPink)"/>
+  <ellipse cx="590" cy="505" rx="55" ry="14" fill="url(#neonPink)" opacity="0.6"/>
+  <!-- Streetlamp reflection -->
+  <ellipse cx="690" cy="460" rx="60" ry="16" fill="url(#lampReflection)"/>
+  <ellipse cx="685" cy="520" rx="75" ry="20" fill="url(#lampReflection)" opacity="0.7"/>
+
+  <!-- Concentric Ripples in Puddles from raindrops -->
+  <g fill="none" stroke="#38bdf8" stroke-width="1.2" opacity="0.6">
+    <ellipse cx="130" cy="470" rx="14" ry="4"/>
+    <ellipse cx="130" cy="470" rx="26" ry="7"/>
+    <ellipse cx="380" cy="540" rx="18" ry="5"/>
+    <ellipse cx="380" cy="540" rx="32" ry="9"/>
+    <ellipse cx="620" cy="480" rx="15" ry="4"/>
+    <ellipse cx="620" cy="480" rx="28" ry="7"/>
+    <ellipse cx="260" cy="520" rx="12" ry="3.5"/>
+    <ellipse cx="260" cy="520" rx="22" ry="6"/>
+  </g>
+
+  <!-- Ornate Cyber/Vintage Streetlamp on Right -->
+  <g id="streetLamp" transform="translate(680, 110)">
+    <!-- Base & Pole -->
+    <rect x="-8" y="270" width="16" height="40" rx="3" fill="#1e293b"/>
+    <rect x="-4" y="30" width="8" height="240" fill="#334155"/>
+    <!-- Decorative brackets -->
+    <path d="M -4 80 C -25 75 -35 50 -25 30 L -4 30" fill="none" stroke="#1e293b" stroke-width="4"/>
+    <!-- Lamp Head Lantern -->
+    <polygon points="-35,30 -5,30 -12,5 -28,5" fill="#1e293b"/>
+    <polygon points="-32,5 -8,5 -15,-2 -25,-2" fill="#0f172a"/>
+    <!-- Glowing glass enclosure -->
+    <polygon points="-33,30 -7,30 -10,12 -30,12" fill="#fef08a" filter="url(#softNeon)"/>
+    <circle cx="-20" cy="22" r="6" fill="#ffffff"/>
+
+    <!-- Dramatic Light Cone spilling onto robot & dog -->
+    <polygon points="-20,25 -250,380 40,380" fill="url(#lampCone)" style="mix-blend-mode: screen;"/>
+  </g>
+
+  <!-- ROBOT AND DOG DUO -->
+
+  <!-- 1. THE ADORABLE DOG -->
+  <g id="happyDog" transform="translate(430, 395)">
+    <!-- Dog puddle cast shadow -->
+    <ellipse cx="50" cy="65" rx="42" ry="12" fill="#020617" opacity="0.75"/>
+
+    <!-- Wagging Tail (Expressive motion lines) -->
+    <path d="M 95 30 C 115 15 125 5 118 -5 C 112 -12 105 -2 100 12" fill="url(#dogFur)"/>
+    <!-- Motion swish lines for wagging tail -->
+    <path d="M 125 -10 Q 132 5 125 20" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+    <path d="M 132 -5 Q 138 8 132 18" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+
+    <!-- Back Paws & Legs -->
+    <rect x="75" y="42" width="12" height="22" rx="6" fill="#ca8a04"/>
+    <rect x="62" y="44" width="12" height="20" rx="6" fill="#b45309"/>
+    <!-- Little rubber rain booties on paws! -->
+    <ellipse cx="81" cy="64" rx="8" ry="5" fill="#06b6d4"/>
+    <ellipse cx="68" cy="64" rx="8" ry="5" fill="#06b6d4"/>
+
+    <!-- Dog Torso in bright yellow raincoat! -->
+    <ellipse cx="55" cy="30" rx="38" ry="24" fill="#eab308" stroke="#ca8a04" stroke-width="2"/>
+    <!-- Raincoat hood pushed down on neck -->
+    <path d="M 28 15 C 32 8 45 8 48 16" fill="none" stroke="#ca8a04" stroke-width="4"/>
+    <!-- Reflective safety stripe on coat -->
+    <path d="M 32 30 Q 55 42 78 30" fill="none" stroke="#38bdf8" stroke-width="3"/>
+
+    <!-- Front Legs & Booties -->
+    <rect x="25" y="40" width="12" height="24" rx="6" fill="#d97706"/>
+    <rect x="38" y="40" width="12" height="24" rx="6" fill="#f59e0b"/>
+    <ellipse cx="31" cy="64" rx="8" ry="5" fill="#06b6d4"/>
+    <ellipse cx="44" cy="64" rx="8" ry="5" fill="#06b6d4"/>
+
+    <!-- Dog Head & Joyous Expression -->
+    <!-- Head silhouette -->
+    <circle cx="22" cy="14" r="18" fill="url(#dogFur)"/>
+    <!-- Fluffy Golden Snout -->
+    <ellipse cx="8" cy="18" rx="14" ry="11" fill="#fed7aa"/>
+    <!-- Wet Black Doggy Nose with highlight -->
+    <ellipse cx="0" cy="13" rx="5" ry="4" fill="#0f172a"/>
+    <circle cx="-1" cy="11.5" r="1.5" fill="#ffffff"/>
+
+    <!-- Happy Open Mouth & Pink Tongue out! -->
+    <path d="M 0 19 C 4 28 14 28 16 19 Z" fill="#450a0a"/>
+    <path d="M 5 21 C 5 32 13 32 13 21 Z" fill="#fb7185"/>
+
+    <!-- Floppy Retriever Ear -->
+    <path d="M 22 5 C 32 5 38 15 36 26 C 34 32 26 30 24 22 Z" fill="#b45309"/>
+
+    <!-- Joyful Loving Dog Eye (Looking up adore-fully at the robot!) -->
+    <ellipse cx="14" cy="9" rx="4.5" ry="4.5" fill="#1c1917"/>
+    <circle cx="12.5" cy="7.5" r="2" fill="#ffffff"/> <!-- Big puppy shine -->
+    <circle cx="15.5" cy="10.5" r="1" fill="#ffffff"/>
+    <path d="M 8 5 Q 14 2 18 6" fill="none" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Dog Collar & Leash Ring -->
+    <path d="M 18 26 C 22 30 30 28 32 24" fill="none" stroke="#ef4444" stroke-width="4"/>
+    <circle cx="25" cy="30" r="3" fill="#fbbf24"/>
+  </g>
+
+  <!-- 2. THE TENDER HUMANOID ROBOT -->
+  <g id="tenderRobot" transform="translate(230, 160)">
+    <!-- Robot ground shadow in puddle -->
+    <ellipse cx="70" cy="295" rx="55" ry="14" fill="#020617" opacity="0.8"/>
+
+    <!-- Robot Legs & Joint Actuators -->
+    <!-- Left Leg -->
+    <rect x="35" y="200" width="16" height="50" rx="6" fill="url(#robotMetal)"/>
+    <circle cx="43" cy="250" r="9" fill="url(#robotDarkMetal)" stroke="#0284c7" stroke-width="1.5"/> <!-- Knee joint -->
+    <rect x="37" y="255" width="12" height="40" rx="5" fill="url(#robotMetal)"/>
+    <!-- Feet/Peds planted on wet sidewalk -->
+    <polygon points="28,295 55,295 58,302 24,302" fill="url(#robotDarkMetal)" stroke="#64748b" stroke-width="1"/>
+
+    <!-- Right Leg (Stepping forward gently) -->
+    <rect x="68" y="200" width="16" height="50" rx="6" fill="url(#robotMetal)"/>
+    <circle cx="76" cy="250" r="9" fill="url(#robotDarkMetal)" stroke="#0284c7" stroke-width="1.5"/>
+    <rect x="70" y="255" width="12" height="40" rx="5" fill="url(#robotMetal)"/>
+    <polygon points="62,295 89,295 92,302 58,302" fill="url(#robotDarkMetal)" stroke="#64748b" stroke-width="1"/>
+
+    <!-- Robot Pelvis / Hip Module -->
+    <rect x="30" y="185" width="60" height="20" rx="6" fill="url(#robotDarkMetal)"/>
+    <circle cx="43" cy="195" r="5" fill="#38bdf8"/>
+    <circle cx="77" cy="195" r="5" fill="#38bdf8"/>
+
+    <!-- Robot Torso Chassis -->
+    <path d="M 25 90 C 25 80 95 80 95 90 L 88 185 L 32 185 Z" fill="url(#robotMetal)" stroke="#334155" stroke-width="2"/>
+    <!-- Carbon fiber inlay side panels -->
+    <polygon points="30,95 40,95 42,175 34,175" fill="#1e293b"/>
+    <polygon points="90,95 80,95 78,175 86,175" fill="#1e293b"/>
+
+    <!-- Glowing Heart Core / Battery Dial (Warm tender cyan pulse) -->
+    <circle cx="60" cy="125" r="14" fill="#0f172a" stroke="#0284c7" stroke-width="2"/>
+    <circle cx="60" cy="125" r="9" fill="url(#robotCore)" filter="url(#softNeon)"/>
+    <!-- Cute heart icon cutout in glowing chest -->
+    <path d="M 60 127 C 58 123 54 123 54 126 C 54 128 60 131 60 131 C 60 131 66 128 66 126 C 66 123 62 123 60 127 Z" fill="#ffffff"/>
+
+    <!-- Robot Neck & Collar Gimbal -->
+    <rect x="52" y="70" width="16" height="15" rx="3" fill="url(#robotDarkMetal)"/>
+    <!-- Wire bundle conduits around neck -->
+    <path d="M 50 74 Q 54 78 50 82" fill="none" stroke="#38bdf8" stroke-width="2"/>
+    <path d="M 70 74 Q 66 78 70 82" fill="none" stroke="#f59e0b" stroke-width="2"/>
+
+    <!-- Robot Head (Charming, curved, gentle rounded aesthetic, tilted down toward dog) -->
+    <g transform="translate(60, 48) rotate(12)">
+      <!-- Head casing -->
+      <rect x="-24" y="-24" width="48" height="42" rx="16" fill="url(#robotMetal)" stroke="#334155" stroke-width="2"/>
+      <!-- Cute little antennae with signal lights -->
+      <line x1="-16" y1="-24" x2="-22" y2="-36" stroke="#64748b" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="-22" cy="-36" r="3.5" fill="#38bdf8" filter="url(#softNeon)"/>
+      <line x1="16" y1="-24" x2="22" y2="-36" stroke="#64748b" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="22" cy="-36" r="3.5" fill="#38bdf8" filter="url(#softNeon)"/>
+
+      <!-- Sleek Curved Glass Visor / Face Display -->
+      <rect x="-20" y="-14" width="40" height="22" rx="10" fill="#090d16" stroke="#1e293b" stroke-width="1.5"/>
+
+      <!-- Expressive Cyan LED Eyes (Curved in affectionate smile arcs: ^ ^) -->
+      <path d="M -15 -2 Q -10 -9 -5 -2" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" filter="url(#softNeon)"/>
+      <path d="M 5 -2 Q 10 -9 15 -2" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" filter="url(#softNeon)"/>
+
+      <!-- Cute digital pink blush tick marks on visor cheek -->
+      <line x1="-14" y1="4" x2="-10" y2="4" stroke="#f43f5e" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="10" y1="4" x2="14" y2="4" stroke="#f43f5e" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+
+    <!-- Raindrops trickling down the robot chassis (sacrificing itself in the rain!) -->
+    <path d="M 36 95 Q 38 115 36 135" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
+    <path d="M 85 105 Q 83 125 85 145" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
+
+    <!-- Left Arm: Down by side, gently holding the leash -->
+    <!-- Shoulder -->
+    <circle cx="22" cy="100" r="10" fill="url(#robotDarkMetal)"/>
+    <path d="M 22 100 Q 15 140 30 180" fill="none" stroke="url(#robotMetal)" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="30" cy="180" r="7" fill="url(#robotDarkMetal)"/>
+    <path d="M 30 180 Q 42 195 55 205" fill="none" stroke="url(#robotMetal)" stroke-width="12" stroke-linecap="round"/>
+    <!-- Articulated mechanical hand holding the leash handle -->
+    <ellipse cx="58" cy="208" rx="8" ry="6" fill="url(#robotDarkMetal)"/>
+    <circle cx="62" cy="208" r="4" fill="#38bdf8"/>
+
+    <!-- Right Arm: Stretched WAY out forward and up, holding the umbrella high OVER THE DOG! -->
+    <!-- Shoulder -->
+    <circle cx="98" cy="100" r="10" fill="url(#robotDarkMetal)"/>
+    <path d="M 98 100 Q 140 85 180 80" fill="none" stroke="url(#robotMetal)" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="180" cy="80" r="8" fill="url(#robotDarkMetal)"/>
+    <!-- Forearm reaching over to shelter the dog -->
+    <path d="M 180 80 Q 210 75 240 68" fill="none" stroke="url(#robotMetal)" stroke-width="12" stroke-linecap="round"/>
+    <!-- Robot Hand gripping the umbrella shaft -->
+    <ellipse cx="242" cy="68" rx="8" ry="7" fill="url(#robotDarkMetal)"/>
+    <rect x="238" y="62" width="7" height="12" rx="3" fill="#cbd5e1"/>
+  </g>
+
+  <!-- THE GLOWING LEASH connecting Robot hand to Dog collar -->
+  <!-- Robot hand is at (230+58, 160+208) = (288, 368). Dog collar ring is at (430+25, 395+30) = (455, 425) -->
+  <path d="M 288 368 Q 360 440 455 425" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 288 368 Q 360 440 455 425" fill="none" stroke="#fca5a5" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- THE PROTECTIVE GLOWING UMBRELLA (Centering perfectly over the little dog) -->
+  <!-- Robot hand holding umbrella handle is at (230+242, 160+68) = (472, 228) -->
+  <g id="umbrellaShelter" transform="translate(472, 228)">
+    <!-- Shaft running up from handle -->
+    <line x1="0" y1="0" x2="5" y2="-95" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="-6" y2="8" stroke="#cbd5e1" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- Curved umbrella hook handle -->
+    <path d="M -6 8 C -14 16 -6 26 2 20" fill="none" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Umbrella Canopy Top (Sheltering dog completely below) -->
+    <!-- Canopy origin at (5, -95) -->
+    <g transform="translate(5, -95)">
+      <!-- Top ferrule / spire tip -->
+      <polygon points="-3,-10 3,-10 0,-20" fill="#94a3b8"/>
+
+      <!-- Translucent Glowing Dome of Umbrella -->
+      <path d="M -115 15 C -90 -45 90 -45 115 15 C 90 2 60 2 40 10 C 20 2 -20 2 -40 10 C -60 2 -90 2 -115 15 Z" 
+            fill="url(#umbrellaGrad)" stroke="#ca8a04" stroke-width="2.5" filter="url(#softNeon)"/>
+
+      <!-- Umbrella ribs / ribs spines -->
+      <path d="M 0 -10 Q -40 -5 -40 10" fill="none" stroke="#ca8a04" stroke-width="1.8"/>
+      <path d="M 0 -10 Q 40 -5 40 10" fill="none" stroke="#ca8a04" stroke-width="1.8"/>
+      <path d="M 0 -10 Q -75 0 -115 15" fill="none" stroke="#ca8a04" stroke-width="1.8"/>
+      <path d="M 0 -10 Q 75 0 115 15" fill="none" stroke="#ca8a04" stroke-width="1.8"/>
+
+      <!-- Raindrops hitting the umbrella canopy and bouncing/splashing off! -->
+      <!-- Water splash crowns on top of umbrella -->
+      <path d="M -50 -18 L -55 -25 M -50 -18 L -48 -27 M -50 -18 L -43 -24" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M 20 -24 L 15 -32 M 20 -24 L 22 -34 M 20 -24 L 27 -30" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M 70 -12 L 66 -20 M 70 -12 L 73 -22 M 70 -12 L 78 -18" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Water droplets dripping down off the umbrella edges -->
+      <circle cx="-114" cy="22" r="2" fill="#38bdf8"/>
+      <circle cx="-113" cy="32" r="1.5" fill="#38bdf8"/>
+      <circle cx="114" cy="22" r="2" fill="#38bdf8"/>
+      <circle cx="115" cy="34" r="1.5" fill="#38bdf8"/>
+    </g>
+  </g>
+
+  <!-- DIAGONAL FALLING RAIN STREAKS ACROSS THE NIGHT SCENE -->
+  <g stroke="#93c5fd" stroke-width="1.3" stroke-linecap="round" opacity="0.45">
+    <line x1="50" y1="20" x2="35" y2="90"/><line x1="120" y1="40" x2="105" y2="110"/><line x1="190" y1="10" x2="175" y2="80"/>
+    <line x1="260" y1="30" x2="245" y2="100"/><line x1="330" y1="15" x2="315" y2="85"/><line x1="400" y1="35" x2="385" y2="105"/>
+    <line x1="470" y1="20" x2="455" y2="90"/><line x1="540" y1="40" x2="525" y2="110"/><line x1="610" y1="10" x2="595" y2="80"/>
+    <line x1="680" y1="30" x2="665" y2="100"/><line x1="750" y1="15" x2="735" y2="85"/>
+
+    <line x1="40" y1="140" x2="25" y2="210"/><line x1="110" y1="160" x2="95" y2="230"/><line x1="180" y1="130" x2="165" y2="200"/>
+    <line x1="250" y1="150" x2="235" y2="220"/><line x1="320" y1="135" x2="305" y2="205"/><line x1="390" y1="155" x2="375" y2="225"/>
+    <line x1="460" y1="140" x2="445" y2="210"/><line x1="530" y1="160" x2="515" y2="230"/><line x1="600" y1="130" x2="585" y2="200"/>
+    <line x1="670" y1="150" x2="655" y2="220"/><line x1="740" y1="135" x2="725" y2="205"/>
+
+    <line x1="30" y1="260" x2="15" y2="330"/><line x1="100" y1="280" x2="85" y2="350"/><line x1="170" y1="250" x2="155" y2="320"/>
+    <line x1="610" y1="250" x2="595" y2="320"/><line x1="680" y1="270" x2="665" y2="340"/><line x1="750" y1="255" x2="735" y2="325"/>
+
+    <line x1="45" y1="380" x2="30" y2="450"/><line x1="115" y1="400" x2="100" y2="470"/><line x1="185" y1="370" x2="170" y2="440"/>
+    <line x1="255" y1="390" x2="240" y2="460"/><line x1="625" y1="370" x2="610" y2="440"/><line x1="695" y1="390" x2="680" y2="460"/>
+    <line x1="765" y1="375" x2="750" y2="445"/>
+
+    <line x1="55" y1="500" x2="40" y2="570"/><line x1="125" y1="520" x2="110" y2="590"/><line x1="195" y1="490" x2="180" y2="560"/>
+    <line x1="265" y1="510" x2="250" y2="580"/><line x1="335" y1="495" x2="320" y2="565"/><line x1="635" y1="490" x2="620" y2="560"/>
+    <line x1="705" y1="510" x2="690" y2="580"/><line x1="775" y1="495" x2="760" y2="565"/>
+  </g>
+
+  <!-- Pavement splashes from raindrops hitting ground -->
+  <g stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity="0.6">
+    <path d="M 80 430 L 76 424 M 80 430 L 84 424"/>
+    <path d="M 210 445 L 206 439 M 210 445 L 214 439"/>
+    <path d="M 330 460 L 326 454 M 330 460 L 334 454"/>
+    <path d="M 640 440 L 636 434 M 640 440 L 644 434"/>
+    <path d="M 750 455 L 746 449 M 750 455 L 754 449"/>
+  </g>
+
+  <!-- Framing edge -->
+  <rect width="800" height="600" fill="none" stroke="#000000" stroke-width="2" opacity="0.4"/>
+</svg>

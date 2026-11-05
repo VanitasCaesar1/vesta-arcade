@@ -1,0 +1,394 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <!-- Ocean Water Gradients -->
+    <linearGradient id="oceanDepth" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="20%" stop-color="#0284c7"/>
+      <stop offset="55%" stop-color="#0369a1"/>
+      <stop offset="85%" stop-color="#0f3b61"/>
+      <stop offset="100%" stop-color="#082038"/>
+    </linearGradient>
+
+    <!-- Sunbeams streaming down from surface -->
+    <linearGradient id="sunbeamGrad" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="40%" stop-color="#e0f2fe" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Submarine Floodlight Cone -->
+    <linearGradient id="subBeam" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.9"/>
+      <stop offset="30%" stop-color="#fde047" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#fef08a" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Submarine Hull Gradient (Bright Sunshine Yellow) -->
+    <linearGradient id="subHull" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="25%" stop-color="#facc15"/>
+      <stop offset="70%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#a16207"/>
+    </linearGradient>
+    <linearGradient id="subDome" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="30%" stop-color="#7dd3fc" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#0284c7" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#075985" stop-opacity="0.7"/>
+    </linearGradient>
+
+    <!-- Seabed Sand Gradient -->
+    <linearGradient id="seaFloor" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="35%" stop-color="#fde68a"/>
+      <stop offset="75%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+
+    <!-- Coral & Flora Gradients -->
+    <linearGradient id="coralOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="60%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#9a3412"/>
+    </linearGradient>
+    <linearGradient id="coralPink" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f472b6"/>
+      <stop offset="60%" stop-color="#db2777"/>
+      <stop offset="100%" stop-color="#831843"/>
+    </linearGradient>
+    <linearGradient id="coralPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="60%" stop-color="#9333ea"/>
+      <stop offset="100%" stop-color="#581c87"/>
+    </linearGradient>
+    <linearGradient id="seaKelp" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="50%" stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#14532d"/>
+    </linearGradient>
+
+    <filter id="underwaterGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Deep Tropical Azure Water -->
+  <rect width="800" height="600" fill="url(#oceanDepth)"/>
+
+  <!-- Water Surface Ripples & Light Waves at the top -->
+  <path d="M 0 0 C 80 15 160 5 240 12 C 320 20 400 8 480 15 C 560 22 640 10 720 18 C 760 22 800 15 800 0 Z" fill="#bae6fd" opacity="0.6"/>
+
+  <!-- Shimmering Sunbeams / Crepuscular Rays piercing the ocean from above -->
+  <g style="mix-blend-mode: screen;">
+    <polygon points="60,0 120,0 260,600 140,600" fill="url(#sunbeamGrad)"/>
+    <polygon points="180,0 260,0 480,600 320,600" fill="url(#sunbeamGrad)" opacity="0.8"/>
+    <polygon points="340,0 440,0 720,600 560,600" fill="url(#sunbeamGrad)" opacity="0.9"/>
+    <polygon points="520,0 600,0 850,550 750,600" fill="url(#sunbeamGrad)" opacity="0.65"/>
+    <polygon points="680,0 760,0 880,450 820,500" fill="url(#sunbeamGrad)" opacity="0.5"/>
+  </g>
+
+  <!-- Distant Oceanic Silhouette Backdrop (Distant reef cliffs) -->
+  <path d="M 0 460 C 80 440 180 450 260 430 C 350 410 460 425 560 400 C 660 380 740 395 800 380 L 800 600 L 0 600 Z" fill="#0c4a6e" opacity="0.6"/>
+
+  <!-- Distant Schools of Fish Swimming in Synchrony -->
+  <g fill="#38bdf8" opacity="0.5">
+    <ellipse cx="650" cy="180" rx="9" ry="3.5" transform="rotate(-10, 650, 180)"/>
+    <polygon points="658,180 665,176 665,184" transform="rotate(-10, 650, 180)"/>
+    <ellipse cx="675" cy="195" rx="8" ry="3" transform="rotate(-10, 675, 195)"/>
+    <polygon points="682,195 688,191 688,199" transform="rotate(-10, 675, 195)"/>
+    <ellipse cx="690" cy="175" rx="9" ry="3.5" transform="rotate(-10, 690, 175)"/>
+    <polygon points="698,175 705,171 705,179" transform="rotate(-10, 690, 175)"/>
+    <ellipse cx="715" cy="190" rx="8" ry="3" transform="rotate(-10, 715, 190)"/>
+    <polygon points="722,190 728,186 728,194" transform="rotate(-10, 715, 190)"/>
+    <ellipse cx="730" cy="170" rx="7" ry="2.8" transform="rotate(-10, 730, 170)"/>
+    <polygon points="736,170 742,167 742,173" transform="rotate(-10, 730, 170)"/>
+  </g>
+
+  <!-- Graceful Translucent Bioluminescent Jellyfish Floating on Left -->
+  <g transform="translate(90, 140)" filter="url(#underwaterGlow)">
+    <!-- Jellyfish bell -->
+    <path d="M 0 35 C -30 35 -35 0 0 -10 C 35 0 30 35 0 35 Z" fill="#f472b6" opacity="0.5"/>
+    <path d="M 0 32 C -20 32 -22 8 0 0 C 22 8 20 32 0 32 Z" fill="#ffffff" opacity="0.7"/>
+    <!-- Frilly oral arms & tentacles -->
+    <path d="M -15 35 Q -10 65 -18 95" fill="none" stroke="#f472b6" stroke-width="1.5" opacity="0.6"/>
+    <path d="M -5 35 Q 2 70 -5 105" fill="none" stroke="#fbcfe8" stroke-width="2" opacity="0.8"/>
+    <path d="M 5 35 Q -2 70 8 105" fill="none" stroke="#fbcfe8" stroke-width="2" opacity="0.8"/>
+    <path d="M 15 35 Q 22 65 14 95" fill="none" stroke="#f472b6" stroke-width="1.5" opacity="0.6"/>
+  </g>
+
+  <!-- SEABED OCEAN FLOOR (Sandy dunes with ripples) -->
+  <path d="M 0 510 Q 140 480 300 520 Q 460 550 620 500 Q 720 480 800 510 L 800 600 L 0 600 Z" fill="url(#seaFloor)"/>
+  <!-- Sand ripple shadows -->
+  <path d="M 80 530 Q 180 510 260 535" fill="none" stroke="#d97706" stroke-width="2" opacity="0.6"/>
+  <path d="M 340 545 Q 440 525 520 540" fill="none" stroke="#d97706" stroke-width="2" opacity="0.6"/>
+  <path d="M 580 525 Q 680 505 760 525" fill="none" stroke="#d97706" stroke-width="2" opacity="0.6"/>
+
+  <!-- CORAL REEF ECOSYSTEM (Foreground & Midground spectacular vector formations) -->
+
+  <!-- 1. Giant Purple Sea Fan Coral (Right backdrop) -->
+  <g transform="translate(640, 290)">
+    <!-- Base stem -->
+    <path d="M 50 160 L 50 120" stroke="#581c87" stroke-width="8" stroke-linecap="round"/>
+    <!-- Delicate filigree lace fan -->
+    <path d="M 50 120 C 10 90 -20 40 20 10 C 60 -15 110 -5 130 30 C 150 70 110 110 50 120 Z" fill="url(#coralPurple)" opacity="0.85"/>
+    <!-- Intricate lattice veins -->
+    <g stroke="#e9d5ff" stroke-width="1.5" fill="none" opacity="0.6">
+      <path d="M 50 120 Q 40 70 30 20"/>
+      <path d="M 50 120 Q 65 60 80 15"/>
+      <path d="M 50 120 Q 85 75 115 45"/>
+      <path d="M 40 80 Q 20 60 5 45"/>
+      <path d="M 60 70 Q 80 50 95 30"/>
+    </g>
+  </g>
+
+  <!-- 2. Vivid Orange Staghorn Branching Coral (Right midground) -->
+  <g transform="translate(560, 340)" stroke="url(#coralOrange)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main thick trunks -->
+    <path d="M 60 170 L 60 110 L 30 70 L 15 20" stroke-width="14" fill="none"/>
+    <path d="M 30 70 L 45 30" stroke-width="11" fill="none"/>
+    <path d="M 60 110 L 95 65 L 85 15" stroke-width="13" fill="none"/>
+    <path d="M 95 65 L 125 35 L 140 5" stroke-width="11" fill="none"/>
+    <path d="M 125 35 L 115 5" stroke-width="9" fill="none"/>
+    <path d="M 60 140 L 105 115 L 135 95" stroke-width="11" fill="none"/>
+    <!-- Polyp tips in bright coral yellow/white -->
+    <circle cx="15" cy="20" r="4" fill="#fef08a" stroke="none"/>
+    <circle cx="45" cy="30" r="3.5" fill="#fef08a" stroke="none"/>
+    <circle cx="85" cy="15" r="4" fill="#fef08a" stroke="none"/>
+    <circle cx="115" cy="5" r="3" fill="#fef08a" stroke="none"/>
+    <circle cx="140" cy="5" r="3.5" fill="#fef08a" stroke="none"/>
+    <circle cx="135" cy="95" r="3.5" fill="#fef08a" stroke="none"/>
+  </g>
+
+  <!-- 3. Brain Coral Boulder (Right foreground) -->
+  <g transform="translate(680, 440)">
+    <!-- Base dome -->
+    <path d="M 10 90 C 0 30 40 10 80 15 C 120 20 140 50 130 90 Z" fill="#84cc16" stroke="#4d7c0f" stroke-width="3"/>
+    <!-- Brain coral labyrinth meandering grooves -->
+    <g stroke="#365314" stroke-width="2.5" fill="none" stroke-linecap="round">
+      <path d="M 35 75 Q 30 50 50 45 Q 70 40 60 25"/>
+      <path d="M 55 75 Q 60 60 75 55 Q 90 50 80 30"/>
+      <path d="M 75 80 Q 85 65 105 60 Q 115 50 105 35"/>
+      <path d="M 20 60 Q 35 40 30 30"/>
+      <path d="M 95 80 Q 115 75 120 55"/>
+    </g>
+  </g>
+
+  <!-- 4. Sea Anemone & Cute Clownfish (Left / center foreground) -->
+  <g id="seaAnemoneCluster" transform="translate(420, 470)">
+    <!-- Anemone fleshy base -->
+    <ellipse cx="40" cy="50" rx="35" ry="12" fill="#be185d"/>
+    <!-- Flowing wavy tentacles -->
+    <g stroke="url(#coralPink)" stroke-width="5" fill="none" stroke-linecap="round">
+      <path d="M 20 48 Q 12 30 18 10"/>
+      <path d="M 28 46 Q 24 25 35 8"/>
+      <path d="M 36 45 Q 38 20 32 -2"/>
+      <path d="M 44 45 Q 52 20 46 -4"/>
+      <path d="M 52 46 Q 60 25 58 5"/>
+      <path d="M 60 48 Q 72 30 68 12"/>
+      <!-- Fluorescent tips -->
+      <circle cx="18" cy="10" r="3" fill="#f472b6" stroke="none"/>
+      <circle cx="35" cy="8" r="3" fill="#f472b6" stroke="none"/>
+      <circle cx="32" cy="-2" r="3" fill="#f472b6" stroke="none"/>
+      <circle cx="46" cy="-4" r="3" fill="#f472b6" stroke="none"/>
+      <circle cx="58" cy="5" r="3" fill="#f472b6" stroke="none"/>
+      <circle cx="68" cy="12" r="3" fill="#f472b6" stroke="none"/>
+    </g>
+
+    <!-- Cute Clownfish nestled playfully among the tentacles -->
+    <g transform="translate(32, 10) scale(0.85)">
+      <!-- Orange Fish Body -->
+      <ellipse cx="20" cy="10" rx="18" ry="11" fill="#ea580c"/>
+      <!-- Tail fin -->
+      <polygon points="36,10 48,0 48,20" fill="#ea580c"/>
+      <path d="M 48 0 C 45 10 45 10 48 20" stroke="#000000" stroke-width="2" fill="none"/>
+      <!-- Dorsal & pectoral fins -->
+      <path d="M 12 0 Q 18 -8 24 -1" fill="#ea580c" stroke="#000000" stroke-width="1.5"/>
+      <ellipse cx="16" cy="14" rx="6" ry="3" fill="#ea580c" stroke="#000000" stroke-width="1.2" transform="rotate(25, 16, 14)"/>
+      <!-- Iconic White Vertical Bands with black borders -->
+      <path d="M 14 0 C 12 5 12 15 14 20" stroke="#ffffff" stroke-width="4.5" fill="none"/>
+      <path d="M 14 0 C 12 5 12 15 14 20" stroke="#000000" stroke-width="1" fill="none"/>
+      <path d="M 26 2 C 24 7 24 13 26 18" stroke="#ffffff" stroke-width="4" fill="none"/>
+      <!-- Cute black eye with white shine -->
+      <circle cx="8" cy="8" r="3" fill="#ffffff"/>
+      <circle cx="7.5" cy="8" r="2" fill="#000000"/>
+      <circle cx="7" cy="7.2" r="0.8" fill="#ffffff"/>
+    </g>
+  </g>
+
+  <!-- 5. Undulating Emerald Sea Kelp / Seagrass (Left side) -->
+  <g fill="none" stroke="url(#seaKelp)" stroke-linecap="round">
+    <path d="M 50 600 Q 30 500 70 420 T 40 300 T 80 180" stroke-width="16" opacity="0.9"/>
+    <path d="M 20 600 Q 0 480 35 390 T 15 280 T 50 160" stroke-width="12" opacity="0.85"/>
+    <path d="M 85 600 Q 115 520 80 430 T 110 320 T 75 220" stroke-width="14" opacity="0.9"/>
+  </g>
+
+  <!-- 6. Colorful Pillar / Tube Coral Sponges (Left midground) -->
+  <g transform="translate(130, 420)">
+    <!-- Tube 1 (Tall Yellow-orange) -->
+    <path d="M 15 110 L 15 30 A 12 6 0 0 1 39 30 L 39 110 Z" fill="#d97706"/>
+    <ellipse cx="27" cy="30" rx="12" ry="6" fill="#78350f" stroke="#ca8a04" stroke-width="1.5"/>
+    <ellipse cx="27" cy="30" rx="8" ry="4" fill="#1c1917"/>
+    <!-- Tube 2 (Medium Purple) -->
+    <path d="M 40 120 L 40 50 A 10 5 0 0 1 60 50 L 60 120 Z" fill="#7e22ce"/>
+    <ellipse cx="50" cy="50" rx="10" ry="5" fill="#3b0764" stroke="#a855f7" stroke-width="1.5"/>
+    <ellipse cx="50" cy="50" rx="6" ry="3" fill="#1c1917"/>
+    <!-- Tube 3 (Short Cyan) -->
+    <path d="M -2 120 L -2 65 A 9 5 0 0 1 16 65 L 16 120 Z" fill="#0284c7"/>
+    <ellipse cx="7" cy="65" rx="9" ry="5" fill="#082f49" stroke="#38bdf8" stroke-width="1.5"/>
+  </g>
+
+  <!-- Red Sea Star / Starfish on sandy bottom -->
+  <g transform="translate(320, 535) rotate(15) scale(0.9)">
+    <polygon points="20,0 25,12 38,14 28,23 31,36 20,29 9,36 12,23 2,14 15,12" fill="#ef4444" stroke="#991b1b" stroke-width="1.5"/>
+    <circle cx="20" cy="19" r="2.5" fill="#fef08a"/>
+  </g>
+
+  <!-- Spiral Conch Shell on sand -->
+  <g transform="translate(480, 545)">
+    <path d="M 0 12 Q 15 2 24 8 Q 30 18 18 20 Q 5 22 0 12 Z" fill="#fed7aa" stroke="#ea580c" stroke-width="1.2"/>
+    <path d="M 6 13 Q 14 6 18 10 Q 22 16 14 17" fill="none" stroke="#ea580c" stroke-width="1"/>
+  </g>
+
+  <!-- THE HERO: THE TINY YELLOW RESEARCH SUBMARINE -->
+  <!-- Floating in the upper/mid water, exploring the reef (approx x: 280, y: 220) -->
+
+  <!-- Submarine Floodlight Beam casting forward illumination onto the coral! -->
+  <!-- Spotlights are at front of sub (approx x: 375, y: 245) -->
+  <polygon points="360,240 760,140 780,480 360,260" fill="url(#subBeam)" style="mix-blend-mode: screen;"/>
+
+  <g id="tinySubmarine" transform="translate(230, 170)">
+    <!-- Submarine Cast Shadow in water below -->
+    <ellipse cx="60" cy="140" rx="65" ry="14" fill="#082f49" opacity="0.35" filter="url(#underwaterGlow)"/>
+
+    <!-- Spinning Brass Propeller & Engine Drive at Stern -->
+    <g transform="translate(-18, 65)">
+      <!-- Propeller shaft / hub -->
+      <rect x="0" y="-5" width="12" height="10" rx="3" fill="#64748b"/>
+      <ellipse cx="0" cy="0" rx="3" ry="6" fill="#ca8a04"/>
+      <!-- Spinning blades -->
+      <ellipse cx="-2" cy="-12" rx="4" ry="10" fill="#f59e0b" stroke="#78350f" stroke-width="1" transform="rotate(-20, -2, -12)"/>
+      <ellipse cx="-2" cy="12" rx="4" ry="10" fill="#f59e0b" stroke="#78350f" stroke-width="1" transform="rotate(-20, -2, 12)"/>
+      <!-- Circular propeller motion blur / shroud -->
+      <ellipse cx="-2" cy="0" rx="5" ry="18" fill="none" stroke="#bae6fd" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.7"/>
+
+      <!-- Effervescent Bubble Wake streaming back from propeller! -->
+      <g fill="#e0f2fe" opacity="0.8">
+        <circle cx="-16" cy="-2" r="3"/>
+        <circle cx="-28" cy="-6" r="4.5"/>
+        <circle cx="-42" cy="-3" r="3"/>
+        <circle cx="-54" cy="-10" r="5"/>
+        <circle cx="-68" cy="-8" r="3.5"/>
+        <circle cx="-82" cy="-16" r="6"/>
+        <circle cx="-98" cy="-22" r="4"/>
+        <circle cx="-112" cy="-18" r="7"/>
+      </g>
+    </g>
+
+    <!-- Submarine Rudder & Horizontal Stabilizer Fins -->
+    <polygon points="-8,45 8,60 -6,65" fill="#eab308" stroke="#a16207" stroke-width="1.5"/>
+    <polygon points="-8,85 8,70 -6,65" fill="#ca8a04" stroke="#a16207" stroke-width="1.5"/>
+
+    <!-- Main Chubby/Bulbous Submersible Hull -->
+    <!-- Base Ellipsoid Shell -->
+    <ellipse cx="75" cy="65" rx="72" ry="46" fill="url(#subHull)" stroke="#a16207" stroke-width="3"/>
+
+    <!-- Hull plating seam rivets & panel lines -->
+    <path d="M 45 22 Q 40 65 45 108" fill="none" stroke="#a16207" stroke-width="2"/>
+    <circle cx="43" cy="35" r="1.5" fill="#78350f"/><circle cx="41" cy="55" r="1.5" fill="#78350f"/>
+    <circle cx="41" cy="75" r="1.5" fill="#78350f"/><circle cx="43" cy="95" r="1.5" fill="#78350f"/>
+
+    <path d="M 105 22 Q 110 65 105 108" fill="none" stroke="#a16207" stroke-width="2"/>
+    <circle cx="107" cy="35" r="1.5" fill="#78350f"/><circle cx="109" cy="55" r="1.5" fill="#78350f"/>
+    <circle cx="109" cy="75" r="1.5" fill="#78350f"/><circle cx="107" cy="95" r="1.5" fill="#78350f"/>
+
+    <!-- High gloss hull reflection highlight -->
+    <path d="M 30 35 C 50 25 100 25 125 35" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+
+    <!-- Upper Conning Tower / Hatch Module -->
+    <rect x="52" y="10" width="42" height="15" rx="5" fill="#eab308" stroke="#a16207" stroke-width="2"/>
+    <rect x="58" y="5" width="30" height="7" rx="3" fill="#ca8a04"/>
+
+    <!-- Periscope & Sensor Mast with Blinking Beacon -->
+    <path d="M 68 5 L 68 -16 L 80 -16" fill="none" stroke="#64748b" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="80" cy="-16" rx="3" ry="2" fill="#38bdf8"/>
+    <!-- Communications ping antenna -->
+    <line x1="60" y1="5" x2="52" y2="-12" stroke="#94a3b8" stroke-width="2"/>
+    <circle cx="52" cy="-12" r="3" fill="#ef4444" filter="url(#underwaterGlow)"/>
+
+    <!-- Dual High-Pressure Air / Ballast Tanks mounted on top -->
+    <rect x="25" y="18" width="24" height="8" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+    <rect x="96" y="18" width="24" height="8" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+
+    <!-- Tubular Skids / Landing Gear underneath -->
+    <path d="M 30 110 L 30 120 L 120 120 L 120 110" fill="none" stroke="#475569" stroke-width="3"/>
+    <path d="M 20 120 L 130 120" stroke="#334155" stroke-width="4.5" stroke-linecap="round"/>
+
+    <!-- GIANT BUBBLE ACRYLIC OBSERVATION DOME (Front Viewport) -->
+    <!-- Heavy metallic bolted rim flange -->
+    <path d="M 120 30 C 135 40 142 52 142 65 C 142 78 135 90 120 100" fill="none" stroke="#475569" stroke-width="6"/>
+    <!-- Rivet bolts on rim -->
+    <circle cx="125" cy="35" r="2" fill="#94a3b8"/><circle cx="136" cy="48" r="2" fill="#94a3b8"/>
+    <circle cx="140" cy="65" r="2" fill="#94a3b8"/><circle cx="136" cy="82" r="2" fill="#94a3b8"/>
+    <circle cx="125" cy="95" r="2" fill="#94a3b8"/>
+
+    <!-- Clear Glass Viewport Bubble Dome -->
+    <path d="M 120 32 C 145 42 155 52 155 65 C 155 78 145 88 120 98 Z" fill="url(#subDome)"/>
+
+    <!-- Inside the Cockpit: A curious, joyful little explorer silhouette looking out! -->
+    <g transform="translate(112, 50)">
+      <!-- Head with diver mask & headset -->
+      <circle cx="14" cy="14" r="10" fill="#1e293b"/>
+      <!-- Glowing dashboard console lights inside cockpit reflecting on pilot -->
+      <circle cx="20" cy="12" r="4" fill="#38bdf8" opacity="0.9"/>
+      <ellipse cx="23" cy="22" rx="5" ry="3" fill="#10b981"/>
+      <ellipse cx="16" cy="22" rx="4" ry="2.5" fill="#f59e0b"/>
+    </g>
+
+    <!-- Glass curved gleam on dome -->
+    <path d="M 130 42 C 145 50 148 58 148 65" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+
+    <!-- Twin Powerful Halogen Search Floodlights Mounted on Nose -->
+    <!-- Top Light -->
+    <polygon points="135,35 148,32 148,46 135,43" fill="#334155"/>
+    <ellipse cx="148" cy="39" rx="3" ry="7" fill="#fef08a" stroke="#ffffff" stroke-width="1.5" filter="url(#underwaterGlow)"/>
+
+    <!-- Bottom Light -->
+    <polygon points="135,87 148,84 148,98 135,95" fill="#334155"/>
+    <ellipse cx="148" cy="91" rx="3" ry="7" fill="#fef08a" stroke="#ffffff" stroke-width="1.5" filter="url(#underwaterGlow)"/>
+
+    <!-- ARTICULATED HYDRAULIC MECHANICAL ROBOTIC ARM reaching out to explore -->
+    <g id="mechanicalArm" transform="translate(125, 95)">
+      <!-- Shoulder gimbal -->
+      <circle cx="0" cy="0" r="7" fill="#475569" stroke="#1e293b" stroke-width="1.5"/>
+      <!-- Bicep boom -->
+      <line x1="0" y1="0" x2="25" y2="25" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+      <line x1="0" y1="0" x2="25" y2="25" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+      <!-- Elbow hinge -->
+      <circle cx="25" cy="25" r="5" fill="#334155"/>
+      <!-- Forearm boom reaching toward sea anemone -->
+      <line x1="25" y1="25" x2="60" y2="35" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <!-- Wrist rotator -->
+      <circle cx="60" cy="35" r="4" fill="#475569"/>
+      <!-- Two-pronged gentle robotic sampling claw -->
+      <path d="M 60 35 Q 70 30 75 33" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 60 35 Q 70 42 75 39" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="75" cy="36" r="1.5" fill="#10b981"/> <!-- Claw sensor laser -->
+    </g>
+  </g>
+
+  <!-- Sparkly Ambient Ocean Micro-Bubbles rising lazily towards surface -->
+  <g fill="#e0f2fe" opacity="0.65">
+    <circle cx="220" cy="450" r="2.5"/><circle cx="230" cy="420" r="1.8"/><circle cx="215" cy="380" r="2.2"/>
+    <circle cx="360" cy="350" r="3"/><circle cx="370" cy="310" r="2"/><circle cx="355" cy="280" r="2.5"/>
+    <circle cx="510" cy="280" r="2"/><circle cx="530" cy="240" r="3"/><circle cx="515" cy="200" r="1.5"/>
+    <circle cx="670" cy="220" r="2.5"/><circle cx="680" cy="180" r="2"/><circle cx="660" cy="140" r="3"/>
+  </g>
+
+  <!-- Subtle Vignette Frame -->
+  <rect width="800" height="600" fill="none" stroke="#021324" stroke-width="3" opacity="0.4"/>
+</svg>

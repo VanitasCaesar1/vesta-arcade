@@ -1,0 +1,390 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <!-- Deep Space Gradients -->
+    <radialGradient id="deepCosmos" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#090a1a"/>
+      <stop offset="70%" stop-color="#03040a"/>
+      <stop offset="100%" stop-color="#000002"/>
+    </radialGradient>
+
+    <!-- Earth Limb & Atmospheric Glow -->
+    <linearGradient id="earthAtmosphere" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67e8f9" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#0284c7" stop-opacity="0.8"/>
+      <stop offset="80%" stop-color="#082f49" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="earthGlobe" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="45%" stop-color="#0284c7"/>
+      <stop offset="75%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+
+    <!-- Space Station Interior Materials -->
+    <linearGradient id="stationHull" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="modulePanel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+
+    <!-- Spacesuit Gradients -->
+    <linearGradient id="suitWhite" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </linearGradient>
+    <linearGradient id="suitShade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+    <linearGradient id="helmetVisor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="35%" stop-color="#38bdf8" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#0284c7" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#0369a1" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <!-- Zero-g Floating Water Blob Gradient -->
+    <radialGradient id="waterBlob" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#7dd3fc" stop-opacity="0.75"/>
+      <stop offset="85%" stop-color="#0284c7" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#0369a1" stop-opacity="0.8"/>
+    </radialGradient>
+
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Station Interior Wall Shell -->
+  <rect width="800" height="600" fill="url(#stationHull)"/>
+
+  <!-- GIANT CIRCULAR CUPOLA OBSERVATION WINDOW INTO DEEP SPACE -->
+  <!-- Cupola outer circular frame -->
+  <circle cx="400" cy="280" r="260" fill="#0f172a" stroke="#475569" stroke-width="14"/>
+  <circle cx="400" cy="280" r="250" fill="#020617" stroke="#1e293b" stroke-width="6"/>
+
+  <!-- Radial Support Mullions / Window Struts of Cupola -->
+  <!-- Deep Space Canvas seen through the glass -->
+  <g id="spaceWindow">
+    <clipPath id="cupolaClip">
+      <circle cx="400" cy="280" r="246"/>
+    </clipPath>
+
+    <g clip-path="url(#cupolaClip)">
+      <!-- Starry Cosmos Background -->
+      <rect x="140" y="20" width="520" height="520" fill="url(#deepCosmos)"/>
+
+      <!-- Distant Twinkling Stars -->
+      <g fill="#ffffff">
+        <circle cx="200" cy="80" r="1.5" opacity="0.9"/>
+        <circle cx="260" cy="110" r="1.2" opacity="0.7"/>
+        <circle cx="320" cy="60" r="1.8" opacity="0.95"/>
+        <circle cx="390" cy="90" r="1" opacity="0.6"/>
+        <circle cx="470" cy="70" r="2" opacity="0.9"/>
+        <circle cx="540" cy="100" r="1.5" opacity="0.8"/>
+        <circle cx="590" cy="60" r="1.2" opacity="0.7"/>
+        <circle cx="230" cy="160" r="1" opacity="0.5"/>
+        <circle cx="610" cy="150" r="1.8" opacity="0.8"/>
+      </g>
+
+      <!-- Distant Colorful Cosmic Nebula Cloud (Magenta/Indigo dust) -->
+      <path d="M 450 60 Q 520 40 580 80 Q 640 120 590 140 Q 520 150 480 110 Z" fill="#c084fc" opacity="0.18" filter="url(#neonGlow)"/>
+
+      <!-- GLORIOUS PLANET EARTH VISIBLE IN THE LOWER WINDOW -->
+      <!-- Earth limb curve rising from bottom right -->
+      <circle cx="460" cy="620" r="390" fill="url(#earthGlobe)"/>
+
+      <!-- Earth Continents & Swirling White Clouds (Zero-g view from orbit) -->
+      <!-- Azure oceans with vibrant cyan shallow atolls -->
+      <path d="M 280 320 C 320 300 380 310 410 330 C 430 345 450 330 460 310 C 470 290 510 280 540 300 C 580 330 620 310 650 330" 
+            fill="none" stroke="#22c55e" stroke-width="14" stroke-linecap="round" opacity="0.85"/>
+      <path d="M 330 360 C 370 340 430 350 470 380 C 510 400 550 390 590 410" 
+            fill="none" stroke="#15803d" stroke-width="12" stroke-linecap="round" opacity="0.8"/>
+
+      <!-- Swirling white weather patterns & cyclone spiral -->
+      <path d="M 240 330 Q 300 310 380 340 Q 430 360 480 330" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+      <path d="M 390 315 Q 430 295 490 310 Q 540 320 600 300" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+      <path d="M 460 360 Q 500 340 550 355 Q 600 370 650 350" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+      <!-- Hurricane cloud spiral -->
+      <path d="M 520 310 C 535 305 545 315 540 325 C 530 335 515 325 518 315 Z" fill="#ffffff" opacity="0.9"/>
+
+      <!-- Glowing Blue Atmospheric Limb (Thin blue line of atmosphere) -->
+      <path d="M 154 390 C 230 270 350 240 480 245 C 570 250 630 280 646 315" fill="none" stroke="#38bdf8" stroke-width="8" opacity="0.8" filter="url(#neonGlow)"/>
+      <path d="M 154 390 C 230 270 350 240 480 245 C 570 250 630 280 646 315" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.9"/>
+
+      <!-- Space Station Solar Array Wings seen outside window -->
+      <g transform="translate(180, 140) rotate(-25)">
+        <rect x="0" y="0" width="110" height="42" fill="#1e3a8a" stroke="#93c5fd" stroke-width="1.5"/>
+        <line x1="27" y1="0" x2="27" y2="42" stroke="#93c5fd" stroke-width="1"/>
+        <line x1="55" y1="0" x2="55" y2="42" stroke="#93c5fd" stroke-width="1"/>
+        <line x1="82" y1="0" x2="82" y2="42" stroke="#93c5fd" stroke-width="1"/>
+        <line x1="0" y1="21" x2="110" y2="21" stroke="#93c5fd" stroke-width="1"/>
+        <!-- Gold foil truss spar -->
+        <line x1="110" y1="21" x2="140" y2="21" stroke="#f59e0b" stroke-width="3"/>
+      </g>
+
+      <!-- Glass Window Hexagonal Struts & Bolt Nodes -->
+      <line x1="400" y1="280" x2="400" y2="34" stroke="#334155" stroke-width="5"/>
+      <line x1="400" y1="280" x2="610" y2="155" stroke="#334155" stroke-width="5"/>
+      <line x1="400" y1="280" x2="610" y2="405" stroke="#334155" stroke-width="5"/>
+      <line x1="400" y1="280" x2="190" y2="405" stroke="#334155" stroke-width="5"/>
+      <line x1="400" y1="280" x2="190" y2="155" stroke="#334155" stroke-width="5"/>
+      <!-- Center hub ring -->
+      <circle cx="400" cy="280" r="16" fill="#1e293b" stroke="#64748b" stroke-width="3"/>
+      <circle cx="400" cy="280" r="6" fill="#0f172a"/>
+    </g>
+  </g>
+
+  <!-- Cupola Outer Ring Rivet Bolts -->
+  <g fill="#94a3b8">
+    <circle cx="400" cy="26" r="3.5"/><circle cx="495" cy="45" r="3.5"/><circle cx="580" cy="98" r="3.5"/>
+    <circle cx="634" cy="183" r="3.5"/><circle cx="654" cy="280" r="3.5"/><circle cx="634" cy="377" r="3.5"/>
+    <circle cx="580" cy="462" r="3.5"/><circle cx="495" cy="515" r="3.5"/><circle cx="400" cy="534" r="3.5"/>
+    <circle cx="305" cy="515" r="3.5"/><circle cx="220" cy="462" r="3.5"/><circle cx="166" cy="377" r="3.5"/>
+    <circle cx="146" cy="280" r="3.5"/><circle cx="166" cy="183" r="3.5"/><circle cx="220" cy="98" r="3.5"/>
+    <circle cx="305" cy="45" r="3.5"/>
+  </g>
+
+  <!-- SPACE STATION CABIN INTERIOR DETAILS -->
+  <!-- Left Avionics Rack & Hatch Controls -->
+  <g id="leftAvionics" transform="translate(10, 80)">
+    <rect x="0" y="0" width="110" height="420" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+    <!-- Module Rack Bays -->
+    <rect x="8" y="15" width="94" height="60" rx="3" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+    <!-- Status LED Arrays -->
+    <circle cx="22" cy="30" r="3" fill="#10b981" filter="url(#neonGlow)"/>
+    <circle cx="34" cy="30" r="3" fill="#10b981" filter="url(#neonGlow)"/>
+    <circle cx="46" cy="30" r="3" fill="#38bdf8" filter="url(#neonGlow)"/>
+    <circle cx="58" cy="30" r="3" fill="#38bdf8" filter="url(#neonGlow)"/>
+    <circle cx="70" cy="30" r="3" fill="#f59e0b" filter="url(#neonGlow)"/>
+    <!-- Telemetry Bar graphs -->
+    <rect x="20" y="45" width="5" height="18" fill="#38bdf8"/>
+    <rect x="28" y="40" width="5" height="23" fill="#38bdf8"/>
+    <rect x="36" y="38" width="5" height="25" fill="#34d399"/>
+    <rect x="44" y="42" width="5" height="21" fill="#34d399"/>
+    <rect x="52" y="48" width="5" height="15" fill="#f59e0b"/>
+
+    <!-- Handrails / Zero-G Handholds (Vital for moving around space station) -->
+    <rect x="85" y="100" width="8" height="65" rx="3" fill="#facc15" stroke="#a16207" stroke-width="1"/>
+    <rect x="85" y="240" width="8" height="65" rx="3" fill="#facc15" stroke="#a16207" stroke-width="1"/>
+
+    <!-- Oxygen / Nitrogen Pressure Gauges -->
+    <circle cx="55" cy="120" r="16" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+    <line x1="55" y1="120" x2="62" y2="114" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="55" cy="120" r="2.5" fill="#cbd5e1"/>
+
+    <!-- Velcro cargo straps holding pouch -->
+    <rect x="15" y="160" width="60" height="50" rx="4" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+    <line x1="15" y1="185" x2="75" y2="185" stroke="#0284c7" stroke-width="3"/>
+  </g>
+
+  <!-- Right Side Bulkhead, Padded Panels & Cabling -->
+  <g id="rightBulkhead" transform="translate(680, 80)">
+    <rect x="0" y="0" width="110" height="420" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+    <!-- Yellow zero-g handrails -->
+    <rect x="18" y="100" width="8" height="65" rx="3" fill="#facc15" stroke="#a16207" stroke-width="1"/>
+    <rect x="18" y="240" width="8" height="65" rx="3" fill="#facc15" stroke="#a16207" stroke-width="1"/>
+
+    <!-- Life support ventilation grille -->
+    <rect x="35" y="20" width="60" height="70" rx="3" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+    <line x1="42" y1="35" x2="88" y2="35" stroke="#334155" stroke-width="2"/>
+    <line x1="42" y1="45" x2="88" y2="45" stroke="#334155" stroke-width="2"/>
+    <line x1="42" y1="55" x2="88" y2="55" stroke="#334155" stroke-width="2"/>
+    <line x1="42" y1="65" x2="88" y2="65" stroke="#334155" stroke-width="2"/>
+
+    <!-- Floating clipboard tethered to wall with coil cord -->
+    <polygon points="35,160 85,155 90,210 40,215" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+    <rect x="50" y="152" width="20" height="7" rx="2" fill="#475569"/>
+    <!-- Coiled cord -->
+    <path d="M 40 215 Q 32 230 42 240 Q 32 250 40 260" fill="none" stroke="#94a3b8" stroke-width="1.8"/>
+  </g>
+
+  <!-- Soft Interior Warm White LED Lighting Strips running along the ceiling -->
+  <rect x="150" y="5" width="500" height="8" rx="3" fill="#f8fafc" filter="url(#neonGlow)"/>
+  <rect x="180" y="587" width="440" height="8" rx="3" fill="#38bdf8" opacity="0.6" filter="url(#neonGlow)"/>
+
+  <!-- THE HERO: THE CAT ASTRONAUT WEIGHTLESSLY FLOATING IN ZERO-G -->
+  <!-- Centered, playfully tilted at a floating zero-g angle, paws outstretched! -->
+  <g id="catAstronaut" transform="translate(370, 270) rotate(-15)">
+    <!-- Spacesuit Backpack / Primary Life Support System (PLSS) -->
+    <rect x="-70" y="-30" width="40" height="75" rx="8" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+    <rect x="-65" y="-25" width="12" height="65" rx="4" fill="#0284c7"/> <!-- Oxygen tank cylinder -->
+    <rect x="-50" y="-25" width="12" height="65" rx="4" fill="#0284c7"/> <!-- Nitrogen tank cylinder -->
+    <!-- Thruster nozzle / cold gas jet -->
+    <polygon points="-70,-15 -80,-18 -80,-8" fill="#94a3b8"/>
+    <!-- Flexible corrugated breathing umbilical hose curving to helmet -->
+    <path d="M -40 25 C -25 35 -10 30 -5 15" fill="none" stroke="#cbd5e1" stroke-width="7" stroke-linecap="round"/>
+    <path d="M -40 25 C -25 35 -10 30 -5 15" fill="none" stroke="#334155" stroke-width="7" stroke-dasharray="2,3" stroke-linecap="round"/>
+
+    <!-- Spacesuit Torso & Body -->
+    <ellipse cx="0" cy="15" rx="44" ry="36" fill="url(#suitWhite)" stroke="#94a3b8" stroke-width="2"/>
+
+    <!-- NASA-style Bold Mission Stripes (Royal blue & vivid orange) -->
+    <path d="M -30 20 Q 0 32 30 20" fill="none" stroke="#2563eb" stroke-width="4"/>
+    <path d="M -32 26 Q 0 38 32 26" fill="none" stroke="#ea580c" stroke-width="3"/>
+
+    <!-- Chest Control Pack / Utility Module with dials -->
+    <rect x="-16" y="5" width="32" height="22" rx="4" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
+    <circle cx="-8" cy="16" r="3.5" fill="#38bdf8" filter="url(#neonGlow)"/>
+    <circle cx="0" cy="16" r="3.5" fill="#10b981" filter="url(#neonGlow)"/>
+    <circle cx="8" cy="16" r="3.5" fill="#ef4444" filter="url(#neonGlow)"/>
+
+    <!-- Space-suited Cat Back Legs & Boots floating in zero-g -->
+    <!-- Left Leg -->
+    <g transform="translate(-25, 40) rotate(20)">
+      <rect x="-8" y="0" width="16" height="30" rx="7" fill="url(#suitWhite)" stroke="#94a3b8" stroke-width="1.5"/>
+      <ellipse cx="0" cy="32" rx="10" ry="7" fill="#475569"/> <!-- Padded boot sole -->
+      <circle cx="0" cy="32" r="3" fill="#38bdf8"/>
+    </g>
+    <!-- Right Leg -->
+    <g transform="translate(15, 42) rotate(-15)">
+      <rect x="-8" y="0" width="16" height="28" rx="7" fill="url(#suitWhite)" stroke="#94a3b8" stroke-width="1.5"/>
+      <ellipse cx="0" cy="30" rx="10" ry="7" fill="#475569"/>
+      <circle cx="0" cy="30" r="3" fill="#38bdf8"/>
+    </g>
+
+    <!-- Articulated Spacesuit Tail Sleeve swishing happily behind in zero-g! -->
+    <path d="M -38 25 C -65 35 -85 10 -95 -10 C -102 -25 -88 -40 -75 -35 C -65 -30 -75 -15 -65 -5" 
+          fill="none" stroke="url(#suitWhite)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M -38 25 C -65 35 -85 10 -95 -10 C -102 -25 -88 -40 -75 -35" 
+          fill="none" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Puffy Spacesuit Arms & Paws floating weightlessly -->
+    <!-- Left Arm outstretched toward floating water blob -->
+    <g transform="translate(-35, -5) rotate(-35)">
+      <rect x="-7" y="0" width="14" height="28" rx="6" fill="url(#suitWhite)" stroke="#94a3b8" stroke-width="1.5"/>
+      <!-- Padded glove with cute paw-pad grip dots! -->
+      <ellipse cx="0" cy="30" rx="8" ry="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+      <circle cx="-3" cy="27" r="1.8" fill="#f43f5e"/>
+      <circle cx="3" cy="27" r="1.8" fill="#f43f5e"/>
+      <circle cx="0" cy="33" r="2.5" fill="#f43f5e"/>
+    </g>
+
+    <!-- Right Arm raised playfully up -->
+    <g transform="translate(35, -10) rotate(45)">
+      <rect x="-7" y="0" width="14" height="28" rx="6" fill="url(#suitWhite)" stroke="#94a3b8" stroke-width="1.5"/>
+      <ellipse cx="0" cy="30" rx="8" ry="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+      <circle cx="-3" cy="27" r="1.8" fill="#f43f5e"/>
+      <circle cx="3" cy="27" r="1.8" fill="#f43f5e"/>
+      <circle cx="0" cy="33" r="2.5" fill="#f43f5e"/>
+    </g>
+
+    <!-- Helmet Neck Flange Ring (Anodized gold aluminum) -->
+    <ellipse cx="0" cy="-22" rx="36" ry="12" fill="#d97706" stroke="#b45309" stroke-width="2"/>
+    <ellipse cx="0" cy="-24" rx="34" ry="10" fill="#f59e0b"/>
+
+    <!-- THE CAT HEAD INSIDE THE HELMET -->
+    <!-- Fluffy Ginger & White Tabby Cat Face -->
+    <g id="catFace" transform="translate(0, -52)">
+      <!-- Cat Head base -->
+      <ellipse cx="0" cy="4" rx="28" ry="24" fill="#f97316"/>
+      <!-- White cheeks and muzzle -->
+      <path d="M -18 8 C -20 22 20 22 18 8 C 12 18 -12 18 -18 8 Z" fill="#ffffff"/>
+
+      <!-- Tabby stripes on forehead -->
+      <polygon points="0,-12 -3,-3 3,-3" fill="#c2410c"/>
+      <polygon points="-7,-10 -9,-2 -5,-2" fill="#c2410c"/>
+      <polygon points="7,-10 9,-2 5,-2" fill="#c2410c"/>
+
+      <!-- Adorable Cat Ears inside helmet! -->
+      <!-- Left ear -->
+      <polygon points="-22,-8 -26,-28 -8,-16" fill="#ea580c"/>
+      <polygon points="-20,-10 -23,-24 -10,-16" fill="#fbcfe8"/>
+      <!-- Right ear -->
+      <polygon points="22,-8 26,-28 8,-16" fill="#ea580c"/>
+      <polygon points="20,-10 23,-24 10,-16" fill="#fbcfe8"/>
+
+      <!-- Cute Tiny Pink Nose -->
+      <polygon points="-3,8 3,8 0,12" fill="#f43f5e"/>
+      <!-- Little smiling kitty mouth :3 -->
+      <path d="M -6 13 Q -2 17 0 13 Q 2 17 6 13" fill="none" stroke="#991b1b" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Enormous, Wonder-struck Emerald Cat Eyes (Marveling at planet Earth!) -->
+      <!-- Left Eye -->
+      <ellipse cx="-11" cy="2" rx="8" ry="9" fill="#10b981" stroke="#047857" stroke-width="1.5"/>
+      <ellipse cx="-11" cy="2" rx="4.5" ry="7.5" fill="#022c22"/>
+      <circle cx="-13" cy="-1" r="2.8" fill="#ffffff"/> <!-- Primary bright highlight -->
+      <circle cx="-9" cy="4" r="1.2" fill="#ffffff"/> <!-- Secondary sparkle -->
+
+      <!-- Right Eye -->
+      <ellipse cx="11" cy="2" rx="8" ry="9" fill="#10b981" stroke="#047857" stroke-width="1.5"/>
+      <ellipse cx="11" cy="2" rx="4.5" ry="7.5" fill="#022c22"/>
+      <circle cx="9" cy="-1" r="2.8" fill="#ffffff"/>
+      <circle cx="13" cy="4" r="1.2" fill="#ffffff"/>
+
+      <!-- Delicate White Whiskers floating in zero gravity! -->
+      <path d="M -14 10 Q -28 6 -36 12" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M -14 12 Q -28 12 -38 18" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M 14 10 Q 28 6 36 12" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M 14 12 Q 28 12 38 18" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+
+    <!-- TRANSPARENT ACRYLIC BUBBLE HELMET (With custom cat ear contours!) -->
+    <!-- Helmet Glass Dome -->
+    <path d="M -35 -24 C -45 -65 -25 -88 0 -88 C 25 -88 45 -65 35 -24 Z" fill="url(#helmetVisor)"/>
+    <ellipse cx="0" cy="-52" rx="42" ry="40" fill="url(#helmetVisor)"/>
+
+    <!-- Spherical Glass Curvature Highlights on Helmet -->
+    <path d="M -28 -74 C -12 -84 16 -84 28 -72" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+    <path d="M -34 -60 C -38 -45 -36 -30 -30 -18" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+
+    <!-- Subtle Earth reflection glint on helmet visor -->
+    <ellipse cx="18" cy="-60" rx="12" ry="8" fill="#38bdf8" opacity="0.4" transform="rotate(-20, 18, -60)" filter="url(#neonGlow)"/>
+  </g>
+
+  <!-- ZERO-G FLOATING OBJECTS NEAR THE CAT -->
+
+  <!-- 1. Floating Perfect Spherical Water Blobs (Surface tension in zero-g) -->
+  <!-- Main water blob floating near cat paw -->
+  <g transform="translate(260, 230)" filter="url(#neonGlow)">
+    <circle cx="0" cy="0" r="14" fill="url(#waterBlob)"/>
+    <!-- Highlight reflections on water bead -->
+    <ellipse cx="-4" cy="-5" rx="5" ry="3" fill="#ffffff" opacity="0.9" transform="rotate(-30, -4, -5)"/>
+    <circle cx="4" cy="5" r="2" fill="#ffffff" opacity="0.6"/>
+  </g>
+  <!-- Mini water droplets drifting nearby -->
+  <circle cx="285" cy="205" r="4" fill="url(#waterBlob)"/>
+  <circle cx="245" cy="265" r="5" fill="url(#waterBlob)"/>
+  <circle cx="310" cy="180" r="3" fill="url(#waterBlob)"/>
+  <circle cx="490" cy="380" r="6" fill="url(#waterBlob)"/>
+
+  <!-- 2. Little Floating Astronaut Plush Toy Mouse in Zero-G! -->
+  <g transform="translate(485, 210) rotate(35) scale(0.9)">
+    <!-- Mouse body -->
+    <ellipse cx="0" cy="0" rx="14" ry="9" fill="#94a3b8" stroke="#64748b" stroke-width="1"/>
+    <!-- Big round felt ears -->
+    <circle cx="-8" cy="-8" r="5" fill="#fbcfe8" stroke="#94a3b8" stroke-width="1"/>
+    <circle cx="4" cy="-8" r="5" fill="#fbcfe8" stroke="#94a3b8" stroke-width="1"/>
+    <!-- Pink bead nose & whiskers -->
+    <circle cx="15" cy="0" r="2" fill="#f43f5e"/>
+    <line x1="12" y1="-2" x2="20" y2="-5" stroke="#475569" stroke-width="1"/>
+    <line x1="12" y1="2" x2="20" y2="5" stroke="#475569" stroke-width="1"/>
+    <!-- Little stitched eye -->
+    <circle cx="8" cy="-2" r="1.5" fill="#1e293b"/>
+    <!-- Tail curling weightlessly -->
+    <path d="M -14 0 Q -24 -10 -20 -20 Q -14 -25 -22 -30" fill="none" stroke="#fbcfe8" stroke-width="2" stroke-linecap="round"/>
+    <!-- Mini spacesuit backpack on the toy mouse! -->
+    <rect x="-6" y="-6" width="8" height="12" rx="2" fill="#e2e8f0" stroke="#0284c7" stroke-width="1"/>
+  </g>
+
+  <!-- 3. Floating Space Pen / Stylus drifting in air -->
+  <g transform="translate(300, 390) rotate(-40)">
+    <rect x="0" y="0" width="38" height="5" rx="2" fill="#94a3b8" stroke="#475569" stroke-width="0.8"/>
+    <polygon points="38,0 45,2.5 38,5" fill="#ca8a04"/>
+    <rect x="5" y="0" width="4" height="5" fill="#0284c7"/>
+    <line x1="10" y1="0" x2="18" y2="0" stroke="#f8fafc" stroke-width="1"/> <!-- Pocket clip -->
+  </g>
+
+  <!-- Subtle Vignette Border -->
+  <rect width="800" height="600" fill="none" stroke="#000000" stroke-width="2" opacity="0.4"/>
+</svg>
