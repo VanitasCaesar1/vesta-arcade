@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>3 AM Debug Desk</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#05060c;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eef;-webkit-user-select:none;user-select:none}
+canvas{display:block;touch-action:none;outline:none}
+.glass{background:rgba(14,16,28,.62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.4)}
+#hint{position:fixed;left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);padding:10px 18px;font-size:14px;line-height:1.45;text-align:center;transition:opacity 1.4s;pointer-events:none;max-width:88vw;z-index:5}
+#hint.hide{opacity:0}
+#bubble{position:fixed;left:0;top:0;max-width:min(270px,70vw);padding:11px 14px;font-size:14px;line-height:1.4;background:#fffdf2;color:#262016;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.45);opacity:0;transition:opacity .25s;pointer-events:none;z-index:4;will-change:transform}
+#bubble.show{opacity:1}
+#bubble::after{content:"";position:absolute;left:var(--tail,50%);bottom:-9px;width:18px;height:18px;background:#fffdf2;transform:translateX(-50%) rotate(45deg);border-radius:3px}
+#bubble b{color:#b5650d}
+#bar{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:4px;padding:6px;z-index:5}
+#bar button{all:unset;cursor:pointer;padding:7px 12px;border-radius:10px;font-size:13px;white-space:nowrap}
+#bar button:hover{background:rgba(255,255,255,.1)}
+#score{position:fixed;right:12px;top:max(12px,env(safe-area-inset-top));padding:8px 12px;font-size:13px;z-index:5}
+#toast{position:fixed;left:50%;top:24%;transform:translate(-50%,-50%) scale(.94);padding:12px 20px;font-size:15px;opacity:0;transition:opacity .45s,transform .45s;pointer-events:none;text-align:center;max-width:86vw;z-index:6}
+#toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+@media (max-width:560px){#hint{top:auto;bottom:70px;font-size:13px}}
+</style>
+</head>
+<body>
+<div id="hint" class="glass">Drag to look around · scroll or pinch to zoom<br><span style="opacity:.85">It's 3 AM and the tests are red. <b>Tap the rubber duck</b> and explain your code to it.</span></div>
+<div id="bubble"></div>
+<div id="score" class="glass">🐛 Bugs fixed 0 / 4</div>
+<div id="bar" class="glass"><button id="vDesk">🦆 Desk</button><button id="vScreen">🖥️ Screen</button><button id="vSound">🔊 Sound</button></div>
+<div id="toast" class="glass"></div>
+<script type="module">
+import * as THREE from "/lib/three/three.module.js";
+import { OrbitControls } from "/lib/three/OrbitControls.js";
+
+const $ = id => document.getElementById(id);
+const vesta = (fn, ...a) => { try { window.vesta?.[fn]?.(...a); } catch (e) {} };
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+let seed = 314;
+const rand = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+let toastTimer = 0;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3400); }
+const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const MONO = '"SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace';
+
+// ---------- renderer ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.25;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#05060c');
+scene.fog = new THREE.Fog('#05060c', 4, 9);
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.02, 30);
+const portrait = () => innerWidth < innerHeight;
+const HOME = { pos: new THREE.Vector3(0.3, 0.8, 1.6), tgt: new THREE.Vector3(-0.05, 0.3, -0.12) };
+const SCREEN_VIEW = { pos: new THREE.Vector3(0, 0.6, 0.42), tgt: new THREE.Vector3(0, 0.57, -0.42) };
+function homePos() { return portrait() ? HOME.pos.clone().sub(HOME.tgt).multiplyScalar(1.55).add(HOME.tgt) : HOME.pos.clone(); }
+camera.position.copy(homePos());
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.tgt);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.enablePan = false;
+controls.minDistance = 0.45; controls.maxDistance = 3.4;
+controls.minPolarAngle = 0.25; controls.maxPolarAngle = 1.55;
+controls.minAzimuthAngle = -1.25; controls.maxAzimuthAngle = 1.25;
+
+// ---------- canvas helpers ----------
+function canvasTex(w, h, draw, srgb = true) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); draw(g, w, h);
+  const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+const woodTex = canvasTex(1024, 512, (g, w, h) => {
+  g.fillStyle = '#4a2e1c'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 260; i++) {
+    const y = rand() * h, amp = 2 + rand() * 6, fr = 0.002 + rand() * 0.006, ph = rand() * 6;
+    g.strokeStyle = rand() < 0.5 ? `rgba(20,10,4,${0.12 + rand() * 0.2})` : `rgba(140,90,55,${0.08 + rand() * 0.14})`;
+    g.lineWidth = 0.6 + rand() * 2.2; g.beginPath();
+    for (let x = 0; x <= w; x += 16) { const yy = y + Math.sin(x * fr + ph) * amp + Math.sin(x * fr * 3.1 + ph) * amp * 0.3; x === 0 ? g.moveTo(x, yy) : g.lineTo(x, yy); }
+    g.stroke();
+  }
+  for (let i = 0; i < 4; i++) { const x = rand() * w, y = rand() * h; const gr = g.createRadialGradient(x, y, 0, x, y, 26); gr.addColorStop(0, 'rgba(30,15,6,0.5)'); gr.addColorStop(1, 'rgba(30,15,6,0)'); g.fillStyle = gr; g.beginPath(); g.ellipse(x, y, 40, 14, 0, 0, 7); g.fill(); }
+  // a coffee ring, of course
+  g.strokeStyle = 'rgba(25,12,4,0.35)'; g.lineWidth = 5; g.beginPath(); g.arc(w * 0.82, h * 0.42, 34, 0.3, 5.6); g.stroke();
+});
+const windowTex = canvasTex(512, 420, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#050a24'); gr.addColorStop(0.65, '#1c1846'); gr.addColorStop(1, '#3a2450');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(255,255,255,${0.3 + rand() * 0.7})`; const s = rand() < 0.1 ? 2 : 1; g.fillRect(rand() * w, rand() * h * 0.6, s, s); }
+  const mg = g.createRadialGradient(380, 90, 0, 380, 90, 90); mg.addColorStop(0, 'rgba(210,220,255,0.55)'); mg.addColorStop(1, 'rgba(210,220,255,0)'); g.fillStyle = mg; g.fillRect(250, 0, 262, 200);
+  g.fillStyle = '#f2f2ff'; g.beginPath(); g.arc(380, 90, 30, 0, 7); g.fill();
+  g.fillStyle = 'rgba(180,185,215,0.6)'; [[370, 82, 6], [392, 98, 5], [376, 104, 3.5]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); });
+  for (let layer = 0; layer < 2; layer++) {
+    let x = 0;
+    while (x < w) {
+      const bw = 26 + rand() * 50, bh = (layer ? 70 : 120) + rand() * (layer ? 120 : 150);
+      g.fillStyle = layer ? '#0a0b18' : '#141632'; g.fillRect(x, h - bh, bw, bh);
+      for (let yy = h - bh + 8; yy < h - 6; yy += 11) for (let xx = x + 5; xx < x + bw - 6; xx += 9) {
+        if (rand() < (layer ? 0.22 : 0.12)) { g.fillStyle = rand() < 0.8 ? `rgba(255,${190 + rand() * 50 | 0},110,${0.6 + rand() * 0.4})` : 'rgba(140,200,255,0.8)'; g.fillRect(xx, yy, 4, 5); }
+      }
+      if (layer && rand() < 0.3) { g.fillStyle = '#ff3040'; g.fillRect(x + bw / 2, h - bh - 6, 2, 2); }
+      x += bw + (layer ? 0 : 8);
+    }
+  }
+});
+function noteTex(bg, lines, rot = 0) {
+  return canvasTex(160, 160, (g, w, h) => {
+    g.fillStyle = bg; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,0.06)'; g.fillRect(0, 0, w, 22);
+    g.fillStyle = '#2a2a40'; g.font = `24px "Marker Felt", "Comic Sans MS", "Segoe Print", ${SANS}`; g.textAlign = 'center';
+    lines.forEach((l, i) => g.fillText(l, w / 2, 62 + i * 32));
+  });
+}
+const posterTex = canvasTex(300, 420, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#1a1f4a'); gr.addColorStop(1, '#3a1a4a'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#ffcf3a'; g.font = `900 64px ${SANS}`; g.textAlign = 'center'; g.fillText('SHIP', w / 2, 300); g.fillText('IT', w / 2, 364);
+  g.save(); g.translate(w / 2, 150); g.rotate(-0.5);
+  g.fillStyle = '#e8ecff'; g.beginPath(); g.ellipse(0, 0, 26, 70, 0, 0, 7); g.fill();
+  g.fillStyle = '#ff5a5a'; g.beginPath(); g.moveTo(-26, 30); g.lineTo(-46, 70); g.lineTo(-18, 56); g.fill(); g.beginPath(); g.moveTo(26, 30); g.lineTo(46, 70); g.lineTo(18, 56); g.fill();
+  g.fillStyle = '#5ab0ff'; g.beginPath(); g.arc(0, -14, 12, 0, 7); g.fill();
+  g.fillStyle = '#ff9a3a'; g.beginPath(); g.moveTo(-14, 66); g.lineTo(0, 110); g.lineTo(14, 66); g.fill();
+  g.restore();
+  g.fillStyle = 'rgba(255,255,255,0.5)'; g.font = `14px ${MONO}`; g.fillText('// on a friday, obviously', w / 2, 400);
+});
+
+// ---------- room ----------
+const std = (color, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.8 }, o));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), std('#15110e', { roughness: 0.95 }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -0.76; floor.receiveShadow = true; scene.add(floor);
+const wallMat = std('#1c2132', { roughness: 0.95 });
+const backWall = new THREE.Mesh(new THREE.PlaneGeometry(10, 5), wallMat); backWall.position.set(0, 1.5, -0.95); backWall.receiveShadow = true; scene.add(backWall);
+const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(6, 5), wallMat); leftWall.rotation.y = Math.PI / 2; leftWall.position.set(-2.4, 1.5, 1.5); scene.add(leftWall);
+// window
+const WIN = { x: -0.95, y: 1.02, w: 1.1, h: 0.9 };
+const winPane = new THREE.Mesh(new THREE.PlaneGeometry(WIN.w, WIN.h), new THREE.MeshBasicMaterial({ map: windowTex }));
+winPane.position.set(WIN.x, WIN.y, -0.945); scene.add(winPane);
+const frameMat = std('#2a2c38', { roughness: 0.6 });
+[[WIN.w + 0.08, 0.05, 0, WIN.h / 2], [WIN.w + 0.08, 0.05, 0, -WIN.h / 2], [0.05, WIN.h, -WIN.w / 2, 0], [0.05, WIN.h, WIN.w / 2, 0], [0.03, WIN.h, 0, 0], [WIN.w, 0.03, 0, 0.05]].forEach(([w, h, x, y]) => {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.04), frameMat); m.position.set(WIN.x + x, WIN.y + y, -0.93); scene.add(m);
+});
+const sill = new THREE.Mesh(new THREE.BoxGeometry(WIN.w + 0.2, 0.03, 0.12), frameMat); sill.position.set(WIN.x, WIN.y - WIN.h / 2 - 0.03, -0.9); scene.add(sill);
+const poster = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.63), std('#ffffff', { map: posterTex, roughness: 0.7 }));
+poster.position.set(1.3, 1.2, -0.945); poster.rotation.z = 0.03; scene.add(poster);
+
+// ---------- desk ----------
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping;
+const deskMat = std('#ffffff', { map: woodTex, roughness: 0.55 });
+const desk = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.05, 1.3), deskMat); desk.position.y = -0.025; desk.receiveShadow = true; desk.castShadow = true; scene.add(desk);
+const legMat = std('#1a1a1f', { metalness: 0.6, roughness: 0.4 });
+[[-1.38, -0.58], [1.38, -0.58], [-1.38, 0.58], [1.38, 0.58]].forEach(([x, z]) => { const l = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.71, 0.05), legMat); l.position.set(x, -0.405, z); scene.add(l); });
+
+// ---------- monitor ----------
+const darkMetal = std('#15161b', { metalness: 0.5, roughness: 0.45 });
+const monitor = new THREE.Group(); scene.add(monitor);
+{
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.018, 40), darkMetal); base.position.set(0, 0.009, -0.44);
+  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.025), darkMetal); neck.position.set(0, 0.16, -0.46);
+  const bezel = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.66, 0.035), std('#0d0e12', { roughness: 0.35, metalness: 0.2 })); bezel.position.set(0, 0.58, -0.42);
+  [base, neck, bezel].forEach(m => { m.castShadow = true; m.receiveShadow = true; monitor.add(m); });
+}
+const SW = 1024, SH = 580;
+const scv = document.createElement('canvas'); scv.width = SW; scv.height = SH; const sx = scv.getContext('2d');
+const screenTex = new THREE.CanvasTexture(scv); screenTex.colorSpace = THREE.SRGBColorSpace; screenTex.anisotropy = 8;
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.06, 0.6), new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false }));
+screen.position.set(0, 0.58, -0.4015); screen.userData.kind = 'screen'; scene.add(screen);
+const screenGlow = new THREE.PointLight(0x7aa0ff, 0.55, 3, 2); screenGlow.position.set(0, 0.55, -0.22); scene.add(screenGlow);
+// sticky notes
+[[noteTex('#ffe66a', ['it works', 'on my', 'machine']), -0.5, 0.86, 0.12], [noteTex('#ff9ec4', ['TODO:', 'sleep']), 0.52, 0.32, -0.15], [noteTex('#9ef0c0', ['git push', '--force?', 'NO.']), 0.5, 0.84, -0.08]].forEach(([tex, x, y, r]) => {
+  const n = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), std('#ffffff', { map: tex, roughness: 0.9, side: THREE.DoubleSide }));
+  n.position.set(x, y, -0.401); n.rotation.z = r; scene.add(n);
+});
+
+// ---------- keyboard ----------
+const ROWS = ['`1234567890-=', 'QWERTYUIOP[]', "ASDFGHJKL;'", 'ZXCVBNM,./'];
+const KB = { x: 0, z: 0.14 };
+const kbBase = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.022, 0.3), std('#1b1c22', { metalness: 0.4, roughness: 0.5 }));
+kbBase.position.set(KB.x, 0.011, KB.z); kbBase.castShadow = true; kbBase.receiveShadow = true; scene.add(kbBase);
+const kbGlow = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.27), new THREE.MeshBasicMaterial({ color: '#2a54ff' }));
+kbGlow.rotation.x = -Math.PI / 2; kbGlow.position.set(KB.x, 0.0225, KB.z); scene.add(kbGlow);
+const keyChars = [];
+const keyBase = [];
+ROWS.forEach((row, r) => { for (let i = 0; i < row.length; i++) { keyChars.push(row[i]); keyBase.push([KB.x - 0.36 + r * 0.018 + i * 0.058, KB.z - 0.105 + r * 0.058]); } });
+const KEYN = keyChars.length;
+const keys = new THREE.InstancedMesh(new THREE.BoxGeometry(0.05, 0.016, 0.05), std('#ffffff', { roughness: 0.6 }), KEYN + 1);
+keyBase.push([KB.x, KB.z + 0.127]); keyChars.push(' ');
+const keyPress = new Float32Array(KEYN + 1);
+const kmat = new THREE.Matrix4(), kq = new THREE.Quaternion(), kp = new THREE.Vector3(), ks = new THREE.Vector3();
+function setKey(i) { const [x, z] = keyBase[i]; kp.set(x, 0.03 - keyPress[i] * 0.008, z); ks.set(i === KEYN ? 6 : 1, 1, i === KEYN ? 0.9 : 1); kmat.compose(kp, kq, ks); keys.setMatrixAt(i, kmat); }
+const keyCol = new THREE.Color();
+for (let i = 0; i <= KEYN; i++) { setKey(i); keys.setColorAt(i, keyCol.set('WASD'.includes(keyChars[i]) && keyChars[i] !== ' ' ? '#3a3f55' : (i === 0 ? '#d06a2a' : '#25272f'))); }
+keys.castShadow = true; keys.userData.kind = 'key'; scene.add(keys);
+// mouse + pad
+const pad = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.004, 0.27), std('#20243a', { roughness: 1 })); pad.position.set(0.62, 0.002, 0.16); pad.receiveShadow = true; scene.add(pad);
+const mouse = new THREE.Mesh(new THREE.SphereGeometry(0.034, 24, 16), std('#2a2c34', { roughness: 0.35, metalness: 0.2 })); mouse.scale.set(1, 0.5, 1.55); mouse.position.set(0.62, 0.012, 0.17); mouse.castShadow = true; scene.add(mouse);
+
+// ---------- mug ----------
+const mug = new THREE.Group(); mug.position.set(0.92, 0, -0.06); scene.add(mug);
+const mugMat = std('#c4553a', { roughness: 0.45 });
+let coffee;
+{
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.044, 0.11, 32, 1, true), new THREE.MeshStandardMaterial({ color: '#c4553a', roughness: 0.45, side: THREE.DoubleSide }));
+  body.position.y = 0.055;
+  const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.044, 32), mugMat); bottom.rotation.x = -Math.PI / 2; bottom.position.y = 0.004;
+  coffee = new THREE.Mesh(new THREE.CircleGeometry(0.045, 32), std('#2a1408', { roughness: 0.15 })); coffee.rotation.x = -Math.PI / 2; coffee.position.y = 0.088;
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.028, 0.008, 10, 20, Math.PI), mugMat); handle.rotation.z = -Math.PI / 2; handle.position.set(0.048, 0.058, 0);
+  const label = new THREE.Mesh(new THREE.CylinderGeometry(0.0485, 0.0465, 0.035, 32, 1, true, -0.6, 1.2), std('#f2e8d8', { roughness: 0.5 }));
+  label.position.y = 0.06; label.rotation.y = 0.35;
+  [body, bottom, handle].forEach(m => { m.castShadow = true; });
+  mug.add(body, bottom, coffee, handle, label);
+}
+mug.userData = { kind: 'mug', sip: -1, sips: 0 };
+const steamTex = canvasTex(64, 64, (g) => { const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,0.5)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); });
+const steam = [];
+for (let i = 0; i < 14; i++) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: steamTex, transparent: true, depthWrite: false, opacity: 0, color: 0xc8d0e0 }));
+  s.userData = { t: i / 14 * 3, ph: rand() * 6 }; scene.add(s); steam.push(s);
+}
+
+// ---------- lamp ----------
+const lamp = new THREE.Group(); scene.add(lamp);
+const lampMat = std('#2f6b5a', { metalness: 0.5, roughness: 0.35 });
+const LB = new THREE.Vector3(-1.05, 0.02, -0.4), LE = new THREE.Vector3(-1.1, 0.44, -0.52), LH = new THREE.Vector3(-0.84, 0.62, -0.14), LT = new THREE.Vector3(-0.52, 0, 0.06);
+function rod(a, b, r, mat) {
+  const d = new THREE.Vector3().subVectors(b, a), len = d.length();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 12), mat);
+  m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); m.castShadow = true; return m;
+}
+const lampDir = new THREE.Vector3().subVectors(LT, LH).normalize();
+let bulbMat;
+{
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.025, 32), lampMat); base.position.copy(LB); base.castShadow = true;
+  lamp.add(base, rod(LB, LE, 0.009, lampMat), rod(LE, LH, 0.009, lampMat));
+  [LE, LH].forEach(p => { const j = new THREE.Mesh(new THREE.SphereGeometry(0.016, 12, 8), darkMetal); j.position.copy(p); lamp.add(j); });
+  const shade = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.13, 28, 1, true), new THREE.MeshStandardMaterial({ color: '#2f6b5a', metalness: 0.5, roughness: 0.35, side: THREE.DoubleSide }));
+  shade.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), lampDir); shade.position.copy(LH).addScaledVector(lampDir, 0.04); shade.castShadow = true;
+  bulbMat = new THREE.MeshStandardMaterial({ color: '#fff2d0', emissive: '#ffc47a', emissiveIntensity: 3 });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.026, 16, 12), bulbMat); bulb.position.copy(LH).addScaledVector(lampDir, 0.07);
+  lamp.add(shade, bulb);
+}
+const spot = new THREE.SpotLight(0xffb873, 2.6, 4, 0.68, 0.65, 2);
+spot.position.copy(LH).addScaledVector(lampDir, 0.08);
+spot.target.position.copy(LT);
+spot.castShadow = true; spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -0.0004; spot.shadow.normalBias = 0.01; spot.shadow.camera.near = 0.05; spot.shadow.camera.far = 4;
+scene.add(spot, spot.target);
+lamp.userData = { kind: 'lamp', on: true };
+const lampGlow = new THREE.PointLight(0xffa860, 0.12, 1.5, 2); lampGlow.position.copy(LH).addScaledVector(lampDir, 0.1); scene.add(lampGlow);
+
+// ---------- misc props ----------
+{
+  const bookCols = ['#3a5a9a', '#9a3a3a', '#3a7a5a'];
+  let y = 0;
+  bookCols.forEach((c, i) => {
+    const h = 0.03 + i * 0.006, b = new THREE.Mesh(new THREE.BoxGeometry(0.24 - i * 0.02, h, 0.17 - i * 0.01), std(c, { roughness: 0.8 }));
+    b.position.set(1.18, y + h / 2, 0.3); b.rotation.y = 0.25 - i * 0.18; y += h; b.castShadow = b.receiveShadow = true; scene.add(b);
+    const pages = new THREE.Mesh(new THREE.BoxGeometry(0.225 - i * 0.02, h * 0.8, 0.005), std('#e8e0cc')); pages.position.set(0, 0, (0.17 - i * 0.01) / 2); b.add(pages);
+  });
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.055, 0.1, 24), std('#b8603a', { roughness: 0.9 })); pot.position.set(1.22, 0.05, -0.52); pot.castShadow = true; scene.add(pot);
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(0.066, 24), std('#2a1a10')); soil.rotation.x = -Math.PI / 2; soil.position.set(1.22, 0.095, -0.52); scene.add(soil);
+  const leafMat = std('#3f8a4a', { roughness: 0.6, flatShading: true });
+  for (let i = 0; i < 11; i++) {
+    const l = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.16 + rand() * 0.06, 6), leafMat);
+    const a = i / 11 * Math.PI * 2, tilt = 0.25 + rand() * 0.45;
+    l.position.set(1.22 + Math.cos(a) * 0.025, 0.16, -0.52 + Math.sin(a) * 0.025);
+    l.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt); l.castShadow = true; scene.add(l);
+  }
+  const can = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.125, 28), std('#18c06a', { metalness: 0.75, roughness: 0.3 })); can.position.set(0.44, 0.0625, -0.3); can.castShadow = true; scene.add(can);
+  const canTop = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.033, 0.008, 28), std('#c8ccd4', { metalness: 0.9, roughness: 0.25 })); canTop.position.set(0.44, 0.129, -0.3); scene.add(canTop);
+  const phone = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.008, 0.15), std('#101014', { roughness: 0.3, metalness: 0.3 })); phone.position.set(-0.33, 0.004, -0.2); phone.rotation.y = 0.3; phone.castShadow = true; scene.add(phone);
+}
+
+// ---------- the duck ----------
+const duck = new THREE.Group(); duck.position.set(-0.6, 0, 0.04); duck.rotation.y = 0.55; scene.add(duck);
+const duckBody = new THREE.Group(); duck.add(duckBody);
+const yellow = new THREE.MeshPhysicalMaterial({ color: '#ffcc1a', roughness: 0.3, clearcoat: 0.7, clearcoatRoughness: 0.15 });
+const orange = new THREE.MeshPhysicalMaterial({ color: '#ff7a14', roughness: 0.35, clearcoat: 0.5 });
+const black = new THREE.MeshStandardMaterial({ color: '#0a0a0a', roughness: 0.2 });
+const duckHead = new THREE.Group();
+{
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.075, 40, 28), yellow); body.scale.set(0.95, 0.78, 1.18); body.position.y = 0.058;
+  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.03, 20, 12), yellow); tail.scale.set(1, 0.7, 1.4); tail.position.set(0, 0.088, -0.08); tail.rotation.x = 0.7;
+  const wingGeo = new THREE.SphereGeometry(0.05, 24, 16);
+  const wl = new THREE.Mesh(wingGeo, yellow); wl.scale.set(0.3, 0.55, 0.95); wl.position.set(0.066, 0.065, -0.008); wl.rotation.x = -0.2;
+  const wr = wl.clone(); wr.position.x = -0.066;
+  duckHead.position.set(0, 0.128, 0.035);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.048, 36, 24), yellow);
+  const beak = new THREE.Mesh(new THREE.SphereGeometry(0.026, 24, 12), orange); beak.scale.set(1.25, 0.45, 1.35); beak.position.set(0, -0.01, 0.045);
+  const eyeGeo = new THREE.SphereGeometry(0.0085, 16, 10), shineGeo = new THREE.SphereGeometry(0.0028, 8, 6), shine = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+  const glassMat = std('#1a1a22', { metalness: 0.6, roughness: 0.3 });
+  [-1, 1].forEach(s => {
+    const e = new THREE.Mesh(eyeGeo, black); e.position.set(s * 0.022, 0.013, 0.039); duckHead.add(e);
+    const sh = new THREE.Mesh(shineGeo, shine); sh.position.set(s * 0.022 + 0.003, 0.017, 0.047); duckHead.add(sh);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.0145, 0.0022, 8, 24), glassMat); ring.position.set(s * 0.022, 0.013, 0.05); duckHead.add(ring);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.003, 0.04), glassMat); arm.position.set(s * 0.037, 0.016, 0.03); arm.rotation.y = -s * 0.25; duckHead.add(arm);
+  });
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.003, 0.003), glassMat); bridge.position.set(0, 0.016, 0.052); duckHead.add(bridge);
+  duckHead.add(head, beak);
+  [body, tail, wl, wr, head, beak].forEach(m => { m.castShadow = true; m.receiveShadow = true; });
+  duckBody.add(body, tail, wl, wr, duckHead);
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false })); hit.position.y = 0.09; duck.add(hit);
+}
+duck.userData = { kind: 'duck', jump: -1, talk: 0, yaw: 0 };
+
+// ---------- the literal bug ----------
+const bug = new THREE.Group(); scene.add(bug);
+const bugLegs = [];
+{
+  const shell = new THREE.Mesh(new THREE.SphereGeometry(0.016, 20, 12), std('#c0281e', { roughness: 0.25, metalness: 0.1 })); shell.scale.set(0.85, 0.55, 1.1); shell.position.y = 0.01;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.008, 12, 8), black); head.position.set(0, 0.008, 0.017);
+  const line = new THREE.Mesh(new THREE.BoxGeometry(0.0012, 0.002, 0.034), black); line.position.set(0, 0.0185, 0);
+  bug.add(shell, head, line);
+  [[0.006, 0.006, -0.004], [-0.005, 0.012, 0.004], [0.004, 0.011, -0.008]].forEach(([x, y, z]) => { const s = new THREE.Mesh(new THREE.SphereGeometry(0.0032, 8, 6), black); s.position.set(x, y + 0.004, z); bug.add(s); });
+  const legGeo = new THREE.BoxGeometry(0.022, 0.0012, 0.0012); legGeo.translate(0.011, 0, 0);
+  for (let i = 0; i < 6; i++) {
+    const side = i < 3 ? 1 : -1, row = i % 3;
+    const l = new THREE.Mesh(legGeo, black); l.position.set(side * 0.008, 0.005, (row - 1) * 0.009);
+    l.userData.base = side > 0 ? -0.25 - (row - 1) * 0.5 : Math.PI + 0.25 + (row - 1) * 0.5; l.rotation.y = l.userData.base; l.rotation.z = -0.35; bug.add(l); bugLegs.push(l);
+  }
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false })); hit.position.y = 0.01; bug.add(hit);
+}
+bug.userData = { kind: 'bug' };
+const B = { x: -1.1, z: 0.5, a: 1.2, turn: 0, state: 0, t: 0, found: false };
+
+// ---------- confetti ----------
+const CONF = 90;
+const confetti = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.014, 0.022), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), CONF);
+const cf = []; const cfCol = ['#ff5a7a', '#ffd84a', '#5ae0ff', '#7aff8a', '#c58aff', '#ff9a3a'];
+for (let i = 0; i < CONF; i++) { confetti.setColorAt(i, keyCol.set(cfCol[i % cfCol.length])); cf.push({ p: new THREE.Vector3(), v: new THREE.Vector3(), r: new THREE.Euler(), w: new THREE.Vector3(), life: 0 }); kmat.makeScale(0, 0, 0); confetti.setMatrixAt(i, kmat); }
+confetti.frustumCulled = false; scene.add(confetti);
+const cfQ = new THREE.Quaternion(), cfS = new THREE.Vector3(1, 1, 1);
+function popConfetti(origin) {
+  for (const c of cf) { c.p.copy(origin); c.v.set((rand() - 0.5) * 1.2, 0.8 + rand() * 1.0, (rand() - 0.5) * 1.2); c.r.set(rand() * 6, rand() * 6, rand() * 6); c.w.set(rand() * 10, rand() * 10, rand() * 10); c.life = 2.2 + rand(); }
+}
+
+// ---------- lights ----------
+scene.add(new THREE.HemisphereLight(0x3a4a80, 0x140e0a, 0.5));
+const moonL = new THREE.DirectionalLight(0x7a90ff, 0.45); moonL.position.set(-1.6, 2.2, -3); scene.add(moonL);
+
+// ---------- audio ----------
+let actx = null, muted = false;
+function ensureAudio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } } if (actx && actx.state === 'suspended') actx.resume(); }
+function tone(f0, f1, dur, type = 'sine', vol = 0.08, delay = 0, q = 0) {
+  if (!actx || muted) return; const t = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.6);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  let node = o; if (q) { const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = f0 * 1.3; f.Q.value = q; o.connect(f); node = f; }
+  node.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+const squeak = () => { const p = 0.9 + Math.random() * 0.25; tone(950 * p, 1600 * p, 0.12, 'square', 0.05, 0, 3); tone(1500 * p, 800 * p, 0.16, 'square', 0.04, 0.09, 3); };
+let noiseBuf = null;
+function click() {
+  if (!actx || muted) return;
+  if (!noiseBuf) { noiseBuf = actx.createBuffer(1, actx.sampleRate * 0.03, actx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3); }
+  const s = actx.createBufferSource(), g = actx.createGain(), f = actx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1800 + Math.random() * 1500;
+  g.gain.value = 0.12; s.buffer = noiseBuf; s.connect(f).connect(g).connect(actx.destination); s.start();
+}
+const chime = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.5, 'sine', 0.07, i * 0.09));
+const buzz = () => tone(160, 120, 0.25, 'sawtooth', 0.03);
+document.querySelectorAll('#bar button').forEach(b => b.addEventListener('click', () => b.blur()));
+$('vSound').onclick = () => { muted = !muted; $('vSound').textContent = muted ? '🔇 Muted' : '🔊 Sound'; ensureAudio(); };
+
+// ---------- the debugging game ----------
+const PUZZLES = [
+  { file: 'average.js', lines: ['function average(nums) {', '  let sum = 0;', '  for (let i = 0; i <= nums.length; i++) {', '    sum += nums[i];', '  }', '  return sum / nums.length;', '}', '', 'average([2, 4, 6]);'],
+    bug: 2, fix: '  for (let i = 0; i < nums.length; i++) {', test: 'average([2, 4, 6])', expected: '4', got: 'NaN',
+    ask: [[8, 'Quack! Okay, out loud: what <b>should</b> average([2, 4, 6]) return?'], [1, 'Right, 4. So <b>sum</b> starts at 0 and the loop adds every number…'], [3, 'nums has 3 items, at indexes 0, 1 and 2. What is <b>nums[3]</b>?'], [2, 'Hmm. Read me the loop condition. When exactly does it stop?']],
+    solved: '<b>i &lt;= nums.length</b> ran one step too far. nums[3] is undefined, and 12 + undefined is NaN. Classic off-by-one!' },
+  { file: 'vote.js', lines: ['function canVote(user) {', '  if (user.age = 18) {', '    return true;', '  }', '  return user.age > 18;', '}', '', 'canVote({ name: "Tim", age: 12 });'],
+    bug: 1, fix: '  if (user.age === 18) {', test: 'canVote({ age: 12 })', expected: 'false', got: 'true',
+    ask: [[7, 'Tim is 12. Should Tim be able to vote? 🗳️'], [1, 'Read me that <b>if</b>, one symbol at a time.'], [1, 'Is that <b>comparing</b> age with 18… or <b>setting</b> it to 18?'], [4, 'And after that line runs, what is user.age now?']],
+    solved: 'A single <b>=</b> assigns! user.age became 18, which is truthy, so it returned true. Use <b>===</b> to compare.' },
+  { file: 'users.js', lines: ['async function getName(id) {', '  const res = fetch(`/api/users/${id}`);', '  const user = await res.json();', '  return user.name;', '}', '', 'await getName(7);'],
+    bug: 1, fix: '  const res = await fetch(`/api/users/${id}`);', test: 'getName(7)', expected: '"Ada"', got: 'TypeError: res.json is not a function',
+    ask: [[6, 'What do you expect getName(7) to give back?'], [1, 'What does <b>fetch()</b> hand you right away? Not later. Right away.'], [2, 'So res is a Promise here. Does a Promise have a <b>.json()</b>?'], [1, 'What little word makes JavaScript wait for a Promise?']],
+    solved: 'fetch returns a Promise. Without <b>await</b>, res was the Promise itself, not the Response.' },
+  { file: 'cart.js', lines: ['function cartTotal(cart) {', '  return cart', '    .map(item => item.price * item.qty)', '    .reduce((sum, x) => sum + x);', '}', '', 'cartTotal([]);'],
+    bug: 3, fix: '    .reduce((sum, x) => sum + x, 0);', test: 'cartTotal([])', expected: '0', got: 'TypeError: Reduce of empty array with no initial value',
+    ask: [[6, 'An empty cart. What total should the customer see?'], [2, 'map on an empty array gives… another empty array. Fine so far.'], [3, 'Now reduce. With zero items, what does it start adding from?'], [3, 'Does this reduce have a starting value anywhere?']],
+    solved: 'reduce with no initial value has nothing to start from on an empty array. Give it a <b>0</b>!' }
+];
+const WRONG = ['Line {n}? Explain it to me… hmm, that one looks innocent.', 'I stared at line {n}. It stared back. Seems fine.', 'Line {n} is doing what it says. Keep talking!', 'Not line {n}, I think. What happens right before the error?'];
+let pz = 0, step = 0, state = 'intro', code = PUZZLES[0].lines.slice(), focusLine = -1, cursorLine = 0;
+let tests = 'fail', wrongLine = -1, wrongT = 0, fixedCount = 0, solvedSet = new Set(), typingQ = [], typingAcc = 0, runT = 0, passFlash = 0, everything = false;
+let screenDirty = true, firstQuack = false;
+
+const scoreEl = $('score');
+const bubble = $('bubble');
+let bubbleTimer = 0;
+function say(html, hold = 0) {
+  bubble.innerHTML = html; bubble.classList.add('show'); duck.userData.talk = 0.7;
+  clearTimeout(bubbleTimer); if (hold) bubbleTimer = setTimeout(() => bubble.classList.remove('show'), hold);
+}
+function loadPuzzle(i) {
+  pz = i % PUZZLES.length; step = 0; code = PUZZLES[pz].lines.slice(); focusLine = -1; cursorLine = 0; tests = 'fail'; wrongLine = -1; state = 'asking';
+  screenDirty = true;
+}
+function quack() {
+  ensureAudio(); squeak();
+  duck.userData.jump = 0;
+  const P = PUZZLES[pz];
+  if (state === 'intro') { state = 'asking'; }
+  if (state === 'asking') {
+    if (step < P.ask.length) { const [ln, txt] = P.ask[step]; focusLine = ln; cursorLine = ln; step++; say(txt); screenDirty = true; if (!firstQuack) { firstQuack = true; vesta('milestone', 'first-quack'); } }
+    else say(['Okay, you explained the whole thing. Now <b>tap the line on the screen</b> you think is broken. 👀', 'You know this. Tap the guilty line on the monitor!', 'Quack. (That means: tap the buggy line on the screen.)'][(step++ - P.ask.length) % 3]);
+  } else if (state === 'fixing' || state === 'running') say('Shh… watching the tests. 🤞');
+  else if (state === 'passed') {
+    if (everything) { everything = false; solvedSet.clear(); loadPuzzle(0); say('Fine, one more lap. You fix, I quack. Tap me when you want a hint.'); }
+    else { loadPuzzle(pz + 1); say(`New failing test in <b>${PUZZLES[pz].file}</b>. Tap me again and walk me through it.`); }
+  }
+}
+function tapLine(line) {
+  const P = PUZZLES[pz];
+  if (state !== 'asking' && state !== 'intro') return;
+  ensureAudio();
+  if (line === P.bug) {
+    const early = step < 2;
+    state = 'fixing'; focusLine = line; cursorLine = line;
+    say((early ? 'Wow, you barely needed me. ' : 'Yes! ') + `Line ${line + 1}. ` + P.solved);
+    const from = code[line], to = P.fix; let p = 0; while (p < from.length && p < to.length && from[p] === to[p]) p++;
+    typingQ = [];
+    for (let k = from.length - 1; k >= p; k--) typingQ.push(from.slice(0, k));
+    for (let k = p + 1; k <= to.length; k++) typingQ.push(to.slice(0, k));
+    typingAcc = -0.6; screenDirty = true;
+  } else {
+    wrongLine = line; wrongT = 1.4; buzz(); screenDirty = true;
+    say(WRONG[(Math.random() * WRONG.length) | 0].replace('{n}', line + 1));
+  }
+}
+
+let CW = 13;
+function tokens(line) {
+  const re = /(\/\/.*$)|(`[^`]*`|"[^"]*"|'[^']*')|(\b\d+\b)|([A-Za-z_$][\w$]*)|(\s+)|(.)/g; const out = []; let m;
+  while ((m = re.exec(line))) {
+    let col = '#d6dbeb';
+    if (m[1]) col = '#68708c'; else if (m[2]) col = '#b5e486'; else if (m[3]) col = '#f7a85e';
+    else if (m[4]) { if (/^(function|let|const|for|if|return|async|await|var|new|true|false)$/.test(m[4])) col = '#c792ea'; else if (line[re.lastIndex] === '(') col = '#82aaff'; else if (line[m.index - 1] === '.') col = '#89ddff'; else col = '#f0f2ff'; }
+    else if (m[6]) col = /[=<>+*\/!-]/.test(m[6]) ? '#89ddff' : '#a8b0c8';
+    out.push([m[0], col]);
+  }
+  return out;
+}
+const CODE_TOP = 58, LINE_H = 34, GUTTER = 66, CODE_X = 84, TY = SH - 200;
+let blink = true, clockT = 0;
+function drawScreen() {
+  const g = sx, P = PUZZLES[pz];
+  g.fillStyle = '#11131b'; g.fillRect(0, 0, SW, SH);
+  g.fillStyle = '#1a1d28'; g.fillRect(0, 0, SW, 40);
+  ['#ff5f57', '#febc2e', '#28c840'].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(22 + i * 22, 20, 7, 0, 7); g.fill(); });
+  g.fillStyle = '#11131b'; g.fillRect(96, 6, 210, 34);
+  g.fillStyle = tests === 'pass' ? '#5ee38a' : '#ffb24a'; g.fillRect(96, 6, 210, 2);
+  g.font = `17px ${SANS}`; g.fillStyle = '#e6e9f5'; g.textAlign = 'left'; g.fillText((tests === 'fail' ? '● ' : '') + P.file, 114, 29);
+  g.fillStyle = '#7d859e'; g.textAlign = 'right'; g.fillText('03:14 AM  ·  ~/night-shift', SW - 18, 27); g.textAlign = 'left';
+  g.font = `22px ${MONO}`; CW = g.measureText('M').width;
+  for (let i = 0; i < code.length; i++) {
+    const y = CODE_TOP + i * LINE_H;
+    let bar = null;
+    if (i === P.bug && (state === 'fixing' || state === 'running')) bar = ['rgba(255,170,60,0.16)', '#ffaa3c'];
+    else if (i === P.bug && state === 'passed') bar = [`rgba(80,230,140,${0.1 + passFlash * 0.25})`, '#5ee38a'];
+    else if (i === wrongLine && wrongT > 0) bar = [`rgba(255,80,90,${0.22 * Math.min(1, wrongT)})`, '#ff5a64'];
+    else if (i === focusLine) bar = ['rgba(255,214,90,0.12)', '#ffd65a'];
+    if (bar) { g.fillStyle = bar[0]; g.fillRect(GUTTER, y - 2, SW - GUTTER, LINE_H); g.fillStyle = bar[1]; g.fillRect(GUTTER, y - 2, 4, LINE_H); }
+    g.fillStyle = i === focusLine ? '#e6e9f5' : '#454b62'; g.textAlign = 'right'; g.font = `18px ${MONO}`; g.fillText(String(i + 1), GUTTER - 14, y + 22); g.textAlign = 'left'; g.font = `22px ${MONO}`;
+    let x = CODE_X; for (const [t, c] of tokens(code[i])) { g.fillStyle = c; g.fillText(t, x, y + 23); x += t.length * CW; }
+  }
+  if (blink || state === 'fixing') { const li = Math.min(cursorLine, code.length - 1); g.fillStyle = '#ffd65a'; g.fillRect(CODE_X + code[li].length * CW + 2, CODE_TOP + li * LINE_H + 2, 3, 26); }
+  // terminal
+  g.fillStyle = '#0c0e14'; g.fillRect(0, TY, SW, SH - TY); g.fillStyle = '#272b3a'; g.fillRect(0, TY, SW, 1);
+  g.font = `600 13px ${SANS}`; g.fillStyle = '#7d859e'; g.fillText('TERMINAL', 22, TY + 24); g.fillStyle = '#4a5068'; g.fillText('PROBLEMS   OUTPUT', 110, TY + 24);
+  g.font = `19px ${MONO}`; let ty = TY + 54;
+  const L = (txt, col) => { g.fillStyle = col; g.fillText(txt, 24, ty); ty += 27; };
+  L('$ npm test', '#7d859e');
+  if (tests === 'running') L('Running 1 test' + '.'.repeat(1 + ((runT * 4) | 0) % 3), '#e6e9f5');
+  else if (tests === 'fail') { L('✕ FAIL  ' + P.test, '#ff6b6b'); L('    expected: ' + P.expected, '#8be28b'); L('    received: ' + P.got, '#ff8f8f'); L('Tests: 1 failed, 0 passed', '#b8bfd4'); }
+  else { L('✓ PASS  ' + P.test, '#5ee38a'); L('    returned: ' + P.expected, '#8be28b'); L('Tests: 1 passed  🎉', '#5ee38a'); }
+  g.fillStyle = tests === 'pass' ? '#1f6e46' : tests === 'fail' ? '#6e2433' : '#2a3a7a'; g.fillRect(0, SH - 26, SW, 26);
+  g.font = `14px ${SANS}`; g.fillStyle = '#f0f2ff'; g.fillText(`🦆 rubber-duck mode   ·   bugs fixed ${fixedCount}/4   ·   Ln ${cursorLine + 1}`, 14, SH - 8);
+  g.textAlign = 'right'; g.fillText(tests === 'pass' ? '✓ all green' : tests === 'fail' ? '✕ 1 failing' : '◌ running', SW - 14, SH - 8); g.textAlign = 'left';
+  screenTex.needsUpdate = true;
+}
+
+// ---------- interaction ----------
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const pickables = [duck, screen, keys, mug, lamp, bug, monitor, desk, kbBase];
+let down = null;
+renderer.domElement.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; ensureAudio(); });
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!down) return; const dx = e.clientX - down.x, dy = e.clientY - down.y;
+  if (dx * dx + dy * dy < 80 && performance.now() - down.t < 600) pick(e.clientX, e.clientY);
+  down = null;
+});
+function firstHit(x, y) {
+  ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(pickables, true);
+  for (const h of hits) { let o = h.object; while (o && !o.userData.kind) o = o.parent; if (o && !o.visible) continue; if (o) return { o, h }; if (h.object === desk || h.object.parent === monitor || h.object === kbBase) return null; }
+  return null;
+}
+let lastHover = 0;
+renderer.domElement.addEventListener('pointermove', e => {
+  if (e.buttons || performance.now() - lastHover < 80) return; lastHover = performance.now();
+  renderer.domElement.style.cursor = firstHit(e.clientX, e.clientY) ? 'pointer' : 'grab';
+});
+function pick(x, y) {
+  const r = firstHit(x, y); if (!r) return;
+  const { o, h } = r, k = o.userData.kind;
+  if (k === 'duck') quack();
+  else if (k === 'screen' && h.uv) {
+    const py = (1 - h.uv.y) * SH;
+    if (py < TY) { const line = Math.floor((py - CODE_TOP + 2) / LINE_H); if (line >= 0 && line < code.length && code[line].trim()) tapLine(line); }
+  } else if (k === 'key' && h.instanceId !== undefined) pressKey(h.instanceId);
+  else if (k === 'mug') sip();
+  else if (k === 'lamp') toggleLamp();
+  else if (k === 'bug') catchBug();
+}
+function pressKey(i) { keyPress[i] = 1; click(); }
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const ch = e.key.length === 1 ? e.key.toUpperCase() : null;
+  if (!ch) return;
+  const i = keyChars.indexOf(ch); if (i >= 0) { ensureAudio(); pressKey(i); }
+});
+function sip() {
+  const u = mug.userData; if (u.sip >= 0) return;
+  ensureAudio();
+  if (u.sips >= 5) { u.sips = 0; coffee.visible = true; toast('☕ Refilled. Coffee level: restored.'); tone(300, 200, 0.4, 'sine', 0.04); return; }
+  u.sip = 0; u.sips++; tone(220, 160, 0.3, 'sine', 0.04, 0.35);
+  if (u.sips === 3) { vesta('milestone', 'caffeinated'); toast('☕ Caffeine level: dangerously productive'); }
+  if (u.sips === 5) { setTimeout(() => { coffee.visible = false; toast('Out of coffee! Debugging speed −50%. Tap the mug to refill.'); }, 1300); }
+}
+let lampDone = false;
+function toggleLamp() {
+  lamp.userData.on = !lamp.userData.on; ensureAudio(); tone(2400, 2000, 0.05, 'square', 0.03);
+  spot.intensity = lamp.userData.on ? 2.6 : 0; lampGlow.intensity = lamp.userData.on ? 0.12 : 0; bulbMat.emissiveIntensity = lamp.userData.on ? 3 : 0;
+  if (!lamp.userData.on && !lampDone) { lampDone = true; vesta('milestone', 'lights-out'); toast('Just you, the monitor glow, and the duck. 🌙'); }
+}
+function catchBug() {
+  if (B.state !== 0) return; B.state = 1; B.t = 0; ensureAudio(); tone(700, 1400, 0.2, 'triangle', 0.06);
+  if (!B.found) { B.found = true; vesta('achievement', 'literal-bug', 'Found a Literal Bug'); toast('🐞 You found a literal bug. Your tests are still red though.'); }
+  else toast('🐞 Caught it again!');
+}
+
+// camera presets
+let fly = null;
+function flyTo(pos, tgt) { fly = { t: 0, fromP: camera.position.clone(), fromT: controls.target.clone(), pos, tgt }; controls.enabled = false; }
+$('vDesk').onclick = () => flyTo(homePos(), HOME.tgt.clone());
+$('vScreen').onclick = () => flyTo(portrait() ? SCREEN_VIEW.pos.clone().setZ(0.95) : SCREEN_VIEW.pos.clone(), SCREEN_VIEW.tgt.clone());
+
+// ---------- resize / visibility ----------
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setSize(innerWidth, innerHeight);
+});
+setTimeout(() => $('hint').classList.add('hide'), 7000);
+setTimeout(() => { if (state === 'intro') say("Hi, I'm <b>Quackers</b> 🦆 Your test is failing. Tap me and talk me through the code."); }, 1600);
+
+// ---------- loop ----------
+let last = performance.now(), T = 0, blinkAcc = 0;
+const headW = new THREE.Vector3(), tv = new THREE.Vector3(), monCol = new THREE.Color(), baseMon = new THREE.Color(0x7aa0ff), redMon = new THREE.Color(0xff6a7a), greenMon = new THREE.Color(0x60ffa0);
+function loop() {
+  const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+
+  // typing the fix
+  if (state === 'fixing') {
+    typingAcc += dt;
+    while (typingAcc > 0.05 && typingQ.length) { typingAcc -= 0.05; code[PUZZLES[pz].bug] = typingQ.shift(); click(); screenDirty = true; }
+    if (!typingQ.length && typingAcc > 0.5) { state = 'running'; tests = 'running'; runT = 0; screenDirty = true; }
+  } else if (state === 'running') {
+    const before = (runT * 4) | 0; runT += dt; if (((runT * 4) | 0) !== before) screenDirty = true;
+    if (runT > 1.4) {
+      state = 'passed'; tests = 'pass'; passFlash = 1; screenDirty = true; chime();
+      if (!solvedSet.has(pz)) { solvedSet.add(pz); fixedCount = Math.min(4, fixedCount + 1); }
+      scoreEl.textContent = `🐛 Bugs fixed ${fixedCount} / 4`;
+      duckHead.getWorldPosition(headW); popConfetti(headW.add(tv.set(0, 0.05, 0))); duck.userData.jump = 0;
+      vesta('milestone', 'fixed-' + PUZZLES[pz].file.replace('.js', ''));
+      if (solvedSet.size === PUZZLES.length) {
+        everything = true;
+        vesta('achievement', 'duck-certified', 'Duck-Certified Debugger');
+        say('🎉 All green, every file. That was all you, I just sat here. <b>Go to sleep!</b> 🌙 (Tap me for another lap.)');
+        toast('🏆 Duck-Certified Debugger: all 4 bugs fixed');
+      } else say('🎉 <b>Tests pass!</b> See? You knew the answer, you just had to say it out loud. Tap me for the next bug.');
+    }
+  }
+  if (wrongT > 0) { wrongT -= dt; screenDirty = true; if (wrongT <= 0) wrongLine = -1; }
+  if (passFlash > 0) { passFlash = Math.max(0, passFlash - dt * 0.8); screenDirty = true; }
+  blinkAcc += dt; if (blinkAcc > 0.53) { blinkAcc = 0; blink = !blink; screenDirty = true; }
+  if (screenDirty) { drawScreen(); screenDirty = false; }
+  monCol.copy(baseMon).lerp(tests === 'pass' ? greenMon : redMon, tests === 'pass' ? 0.35 + passFlash * 0.5 : tests === 'fail' ? 0.15 + Math.sin(T * 2) * 0.05 : 0);
+  screenGlow.color.copy(monCol);
+
+  // keys
+  for (let i = 0; i <= KEYN; i++) if (keyPress[i] > 0) { keyPress[i] = Math.max(0, keyPress[i] - dt * 7); setKey(i); keys.instanceMatrix.needsUpdate = true; }
+  if (state === 'fixing' && typingQ.length && Math.random() < 0.5) { keyPress[(Math.random() * KEYN) | 0] = 1; }
+
+  // duck
+  const du = duck.userData;
+  let jy = 0, sq = 1;
+  if (du.jump >= 0) { du.jump += dt; const k = du.jump / 0.42; if (k >= 1) du.jump = -1; else { jy = Math.sin(k * Math.PI) * 0.045; sq = 1 + Math.sin(k * Math.PI * 2) * 0.08; } }
+  duckBody.position.y = jy; duckBody.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
+  duckBody.rotation.z = Math.sin(T * 1.3) * 0.03;
+  if (du.talk > 0) du.talk -= dt;
+  // head: look at camera when talking, at the screen while tests run
+  let yawT;
+  if (state === 'fixing' || state === 'running') yawT = 1.0;
+  else { tv.copy(camera.position).sub(duck.position); yawT = Math.max(-0.9, Math.min(0.9, Math.atan2(tv.x, tv.z) - duck.rotation.y)); }
+  du.yaw += (yawT - du.yaw) * Math.min(1, dt * 4);
+  duckHead.rotation.y = du.yaw;
+  duckHead.rotation.x = du.talk > 0 ? Math.sin(T * 22) * 0.08 : Math.sin(T * 0.9) * 0.03;
+  duckHead.rotation.z = Math.sin(T * 0.7) * 0.06;
+
+  // bubble follows the duck
+  if (bubble.classList.contains('show')) {
+    duckHead.getWorldPosition(headW); headW.y += 0.09; headW.project(camera);
+    const bw = bubble.offsetWidth, bh = bubble.offsetHeight;
+    let px = (headW.x + 1) / 2 * innerWidth, py = (1 - headW.y) / 2 * innerHeight;
+    const cx = Math.max(10, Math.min(innerWidth - bw - 10, px - bw / 2)), cy = Math.max(10, py - bh - 14);
+    bubble.style.transform = `translate(${cx.toFixed(1)}px,${cy.toFixed(1)}px)`;
+    bubble.style.setProperty('--tail', `${Math.max(16, Math.min(bw - 16, px - cx)).toFixed(0)}px`);
+  }
+
+  // mug sip
+  const mu = mug.userData;
+  if (mu.sip >= 0) { mu.sip += dt; const k = Math.min(1, mu.sip / 1.5), s = Math.sin(k * Math.PI); mug.position.set(0.92 - s * 0.08, s * 0.16, -0.06 + s * 0.14); mug.rotation.x = s * 0.55; if (k >= 1) { mu.sip = -1; mug.position.set(0.92, 0, -0.06); mug.rotation.x = 0; } }
+  // steam
+  for (const s of steam) {
+    const u = s.userData; u.t += dt; if (u.t > 3) u.t -= 3;
+    const k = u.t / 3;
+    s.position.set(mug.position.x + Math.sin(T * 0.8 + u.ph + k * 4) * 0.02 * (1 + k * 2), mug.position.y + 0.1 + k * 0.28, mug.position.z + Math.cos(T * 0.6 + u.ph) * 0.012);
+    s.scale.setScalar(0.04 + k * 0.1);
+    s.material.opacity = coffee.visible ? Math.sin(k * Math.PI) * 0.22 : 0;
+  }
+
+  // bug
+  if (B.state === 0) {
+    B.turn += (Math.random() - 0.5) * dt * 10; B.turn *= 0.97;
+    const sp = 0.045 * (0.5 + 0.5 * Math.sin(T * 0.7)) + 0.01;
+    if (B.x < -1.3 || B.x > 0.98 || B.z < 0.38 || B.z > 0.6) { const want = Math.atan2(-0.1 - B.x, 0.49 - B.z); let d = want - B.a; d = Math.atan2(Math.sin(d), Math.cos(d)); B.a += d * Math.min(1, dt * 4); }
+    else B.a += B.turn * dt;
+    B.x += Math.sin(B.a) * sp * dt; B.z += Math.cos(B.a) * sp * dt;
+    bug.position.set(B.x, 0, B.z); bug.rotation.y = B.a; bug.visible = true; bug.scale.setScalar(1);
+    bugLegs.forEach((l, i) => { l.rotation.y = l.userData.base + Math.sin(T * 26 * (sp / 0.05) + (i % 2) * Math.PI) * 0.35; });
+  } else if (B.state === 1) {
+    B.t += dt; const k = B.t / 0.8; bug.position.y = Math.sin(Math.min(1, k) * Math.PI) * 0.12; bug.rotation.y += dt * 18; bug.scale.setScalar(Math.max(0.001, 1 - k));
+    if (k >= 1) { B.state = 2; B.t = 0; bug.visible = false; }
+  } else { B.t += dt; if (B.t > 20) { B.state = 0; B.x = rand() < 0.5 ? -1.25 : 0.9; B.z = 0.45 + rand() * 0.1; B.a = B.x < 0 ? 1.4 : -1.4; } }
+
+  // confetti
+  let any = false;
+  for (let i = 0; i < CONF; i++) {
+    const c = cf[i]; if (c.life <= 0) continue; any = true;
+    c.life -= dt; c.v.y -= 2.2 * dt; c.v.multiplyScalar(1 - dt * 1.4); c.p.addScaledVector(c.v, dt);
+    if (c.p.y < 0.003) { c.p.y = 0.003; c.v.set(0, 0, 0); c.w.multiplyScalar(0.9); }
+    c.r.x += c.w.x * dt; c.r.y += c.w.y * dt; c.r.z += c.w.z * dt; cfQ.setFromEuler(c.r);
+    cfS.setScalar(c.life > 0 ? Math.min(1, c.life * 2) : 0); kmat.compose(c.p, cfQ, cfS); confetti.setMatrixAt(i, kmat);
+  }
+  if (any) confetti.instanceMatrix.needsUpdate = true;
+
+  // camera fly
+  if (fly) {
+    fly.t += dt; const k = Math.min(1, fly.t / 1.2), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    camera.position.lerpVectors(fly.fromP, fly.pos, e); controls.target.lerpVectors(fly.fromT, fly.tgt, e);
+    if (k >= 1) { fly = null; controls.enabled = true; }
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+drawScreen();
+renderer.setAnimationLoop(loop);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) renderer.setAnimationLoop(null);
+  else { last = performance.now(); renderer.setAnimationLoop(loop); }
+});
+</script>
+</body>
+</html>

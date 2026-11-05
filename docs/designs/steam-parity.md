@@ -17,7 +17,7 @@ without accounts (players are anonymous; creators hold per-game keys) and on Clo
 | Community hub, discussions | comments per game; arena galleries | done |
 | News / updates | per-game changelog; global `/updates` page + RSS | done |
 | Developer tools (SDK, analytics, crash reports) | CLI + MCP, telemetry, feedback report, alerts | done |
-| 3D content | three.js r187 served from the play origin (`/lib/three/`), `/3d` storefront with covers, 3D arena `/arena/3d`, 3D entries via `--arena`; reviews and achievements work on 3D store pages (Gemini's scenes ship 3 achievements) | building: Gemini scenes live, Claude scenes in progress, round 2 fix for the solar system pending |
-| Model / AI comparisons (Vesta-only) | blind arenas for games, SVG, 3D; daily challenge | done (3D planned) |
+| 3D content | three.js r187 served from the play origin (`/lib/three/`); `/3d` storefront and a home-page 3D row with real covers; 3D store pages with reviews, achievements (Gemini's scenes ship 3), tags and search; 3D arena `/arena/3d` with Claude vs Gemini on three prompts; anyone can enter with `--arena` | done (round 2 fix for Gemini's solar system running) |
+| Model / AI comparisons (Vesta-only) | blind arenas for games, SVG and 3D; daily SVG challenge; round 2 (models fix their entries from player feedback) | done |
 | Media gallery on store pages | `screenshots` in vesta.json (up to 6), strip on the game page | done |
 | Tags / genres | `tags` in vesta.json, chips on game pages that search the store | done |

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
+  "slug": "arena-6bd2833a",
+  "title": "Tiny Solar System",
+  "madeWith": [
+    "Claude Opus 5.5"
+  ]
+}

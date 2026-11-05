@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/vesta-arcade/vesta.schema.json",
+  "slug": "arena-e35dbd5f",
+  "title": "Debug Desk",
+  "madeWith": [
+    "Claude Opus 5.5"
+  ]
+}

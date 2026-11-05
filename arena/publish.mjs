@@ -38,7 +38,9 @@ const only = process.argv.includes("--only") ? process.argv[process.argv.indexOf
 for (const [id, p] of Object.entries(PROMPTS)) {
   if (only && id !== only) continue;
   await api("PUT", `/api/arena/prompts/${id}`, { title: p.title, prompt: p.text, kind });
+  const onlyModel = process.argv.includes("--model") ? process.argv[process.argv.indexOf("--model") + 1] : null;
   for (const key of Object.keys(MODELS)) {
+    if (onlyModel && key !== onlyModel) continue;
     const dir = join(base, id, key);
     if (!existsSync(join(dir, "index.html"))) continue;
     const m = MODELS[key];
