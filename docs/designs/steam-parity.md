@@ -10,8 +10,8 @@ without accounts (players are anonymous; creators hold per-game keys) and on Clo
 | Reviews with summary label ("Very Positive") | thumbs up/down + text, label on cards and page, in the agent report | done |
 | Achievements with global unlock % | `window.vesta.achievement(id, name, description)`, trophy toast, % of players on the game page | done |
 | Leaderboards | high scores per game, challenge links | done |
-| Discovery: search, tags, sections | search, tag filter, Top rated / New & Trending / Hidden gems | planned |
-| Developer pages | `/dev/<name>` | planned |
+| Discovery: search, tags, sections | search (titles, makers, tools, tags), Trending / New / Most played / Top rated, AI-tool filter | done |
+| Developer pages | `/dev/<name>`: games, plays, review summary, tools | done |
 | Library, wishlist, recently played | browser-local `/library` | planned |
 | Workshop / community content | arena community entries, community challenges, open publishing | done |
 | Community hub, discussions | comments per game; arena galleries | done |

@@ -15,7 +15,7 @@ let arenaSvgOgBytes: Uint8Array<ArrayBuffer> | null = null;
 import { isAdmin, tokenConfigured } from "./auth.ts";
 import { feedbackReport, getChallenge, getGame, listAchievements, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
-import { EmbedPage, GamePage, HomePage, NotFoundPage } from "./pages.tsx";
+import { DeveloperPage, EmbedPage, GamePage, HomePage, NotFoundPage } from "./pages.tsx";
 import { ArenaBoardPage, ArenaEmbedPage, ArenaPage, EntryPage, PromptGalleryPage } from "./arenaPages.tsx";
 import { arenaNames, arenaPrompts, daily, entryPage, featuredChallenge, isArenaEntry, leaderboard, promptGallery, randomMatchup, votesLastHour, type ArenaKind } from "./arena.ts";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
@@ -87,17 +87,18 @@ site.get("/robots.txt", (c) => c.text(`User-agent: *\nDisallow: /admin\nDisallow
 
 site.get("/", async (c) => {
   const sortQ = c.req.query("sort");
-  const sort: Sort = sortQ === "new" || sortQ === "top" ? sortQ : "trending";
+  const sort: Sort = sortQ === "new" || sortQ === "top" || sortQ === "rated" ? sortQ : "trending";
+  const q = c.req.query("q")?.trim().slice(0, 60) || undefined;
   const tool = c.req.query("made_with")?.slice(0, 32) || undefined;
   const [games, tools, loop, arenaRow, featured] = await Promise.all([
-    listGames(c.env, { sort, tool }),
+    listGames(c.env, { sort, tool, q }),
     madeWithCounts(c.env),
     loopData(c.env),
     arenaNames(c.env),
     featuredChallenge(c.env),
   ]);
   c.header("cache-control", "public, max-age=30");
-  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} open={c.env.OPEN_PUBLISHING === "1"} arena={arenaRow || undefined} featured={featured} playOrigin={playOrigin(c)} />);
+  return c.html(<HomePage arcade={arcade(c)} siteUrl={origin(c)} games={games} sort={sort} tool={tool} tools={tools} loop={loop} q={q} open={c.env.OPEN_PUBLISHING === "1"} arena={arenaRow || undefined} featured={featured} playOrigin={playOrigin(c)} />);
 });
 
 async function loadGame(c: Context<AppEnv>) {
@@ -220,6 +221,14 @@ site.get("/arena/leaderboard", async (c) => {
   const [board, names] = await Promise.all([leaderboard(c.env), arenaNames(c.env)]);
   c.header("cache-control", "public, max-age=30");
   return c.html(<ArenaBoardPage arcade={arcade(c)} siteUrl={origin(c)} names={names} playOrigin={playOrigin(c)} {...board} />);
+});
+
+site.get("/dev/:name", async (c) => {
+  const name = decodeURIComponent(c.req.param("name")).slice(0, 60);
+  const games = await listGames(c.env, { author: name, sort: "top" });
+  if (!games.length) return notFound(c);
+  c.header("cache-control", "public, max-age=60");
+  return c.html(<DeveloperPage arcade={arcade(c)} siteUrl={origin(c)} name={games[0]!.author || name} games={games} />);
 });
 
 site.get("/embed/arena", async (c) => {
@@ -374,7 +383,7 @@ site.get("/__version", (c) => c.json({ vesta: VERSION }));
 // When the arcade takes over a domain that already had a site (ORIGIN_FALLBACK=1),
 // anything the arcade doesn't serve is passed through to that site, so old
 // links like /download keep working.
-const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/"];
+const OWN_PREFIXES = ["/g/", "/api/", "/admin", "/embed/", "/cover/", "/badge/", "/static/", "/dev/", "/arena"];
 site.notFound(async (c) => {
   const path = new URL(c.req.url).pathname;
   if (c.env.ORIGIN_FALLBACK === "1" && (c.req.method === "GET" || c.req.method === "HEAD") && !OWN_PREFIXES.some((p) => path.startsWith(p))) {

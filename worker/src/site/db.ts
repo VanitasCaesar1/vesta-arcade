@@ -74,18 +74,37 @@ export function toGame(r: GameRow & { recent_plays?: number }): Game {
   };
 }
 
-export type Sort = "trending" | "new" | "top";
+export type Sort = "trending" | "new" | "top" | "rated";
 
-export async function listGames(env: Env, opts: { sort?: Sort; includeHidden?: boolean; tool?: string; limit?: number } = {}): Promise<Game[]> {
+export async function listGames(
+  env: Env,
+  opts: { sort?: Sort; includeHidden?: boolean; tool?: string; limit?: number; q?: string; author?: string } = {},
+): Promise<Game[]> {
   const sort = opts.sort ?? "trending";
+  // Top rated: share of positive reviews, pulled toward 50% when there are few (so one 👍 doesn't top the store).
   const order =
-    sort === "new" ? "g.created_at DESC" : sort === "top" ? "g.plays DESC, g.likes DESC" : "recent_plays DESC, g.likes DESC, g.updated_at DESC";
+    sort === "new"
+      ? "g.created_at DESC"
+      : sort === "top"
+        ? "g.plays DESC, g.likes DESC"
+        : sort === "rated"
+          ? "(g.reviews_up + 1.0) / (g.reviews_total + 2.0) DESC, g.reviews_total DESC, g.plays DESC"
+          : "recent_plays DESC, g.likes DESC, g.updated_at DESC";
   const where = ["g.current_version IS NOT NULL"];
   const binds: unknown[] = [daysAgo(2)];
   if (!opts.includeHidden) where.push("g.hidden = 0");
   if (opts.tool) {
     where.push("EXISTS (SELECT 1 FROM json_each(g.made_with) WHERE lower(value) = lower(?))");
     binds.push(opts.tool);
+  }
+  if (opts.q) {
+    const like = `%${opts.q.replace(/[\\%_]/g, (m) => "\\" + m)}%`;
+    where.push("(g.title LIKE ? ESCAPE '\\' OR g.description LIKE ? ESCAPE '\\' OR g.author LIKE ? ESCAPE '\\' OR g.tags LIKE ? ESCAPE '\\' OR g.made_with LIKE ? ESCAPE '\\')");
+    binds.push(like, like, like, like, like);
+  }
+  if (opts.author) {
+    where.push("lower(g.author) = lower(?)");
+    binds.push(opts.author);
   }
   binds.push(opts.limit ?? 120);
   const { results } = await env.DB.prepare(

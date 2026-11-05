@@ -7,6 +7,7 @@ const SORTS: { id: Sort; label: string }[] = [
   { id: "trending", label: "Trending" },
   { id: "new", label: "New" },
   { id: "top", label: "Most played" },
+  { id: "rated", label: "Top rated" },
 ];
 
 const cover = (g: Game) => `/cover/${g.slug}?v=${g.updatedAt}`;
@@ -178,7 +179,7 @@ function Loop({ d, siteUrl }: { d: LoopData; siteUrl: string }) {
   );
 }
 
-export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null; open?: boolean; arena?: string; featured?: { id: string; prompt: string; n: number; community: number; author: string; top: { slug: string; model: string; file_key: string }[] } | null; playOrigin?: string }) {
+export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; sort: Sort; tool?: string; tools: { tool: string; n: number }[]; loop: LoopData | null; open?: boolean; q?: string; arena?: string; featured?: { id: string; prompt: string; n: number; community: number; author: string; top: { slug: string; model: string; file_key: string }[] } | null; playOrigin?: string }) {
   const qs = (sort: Sort, tool?: string) => {
     const q = new URLSearchParams();
     if (sort !== "trending") q.set("sort", sort);
@@ -264,7 +265,11 @@ export function HomePage(p: { arcade: string; siteUrl: string; games: Game[]; so
       <div class="wrap">
         <section class="floor" id="games">
           <div class="head">
-            <h2 class="display">{p.tool ? `Made with ${p.tool}` : "On the floor"}</h2>
+            <h2 class="display">{p.q ? `Results for "${p.q}"` : p.tool ? `Made with ${p.tool}` : "On the floor"}</h2>
+            <form class="search" method="get" action="/#games" role="search">
+              <input type="search" name="q" value={p.q ?? ""} placeholder="Search games, makers, tools…" aria-label="Search games" maxlength={60} />
+              {p.sort !== "trending" ? <input type="hidden" name="sort" value={p.sort} /> : null}
+            </form>
             <nav class="tabs" aria-label="Sort and filter">
               {SORTS.map((s) => (
                 <a class={p.sort === s.id ? "on" : ""} href={qs(s.id, p.tool)}>
@@ -418,7 +423,10 @@ export function GamePage(p: {
             <div class="byline">
               {g.author ? (
                 <span>
-                  By <b>{g.author}</b>
+                  By{" "}
+                  <a href={`/dev/${encodeURIComponent(g.author)}`}>
+                    <b>{g.author}</b>
+                  </a>
                 </span>
               ) : null}
               <span>
@@ -634,6 +642,38 @@ export function NotFoundPage(p: { arcade: string; siteUrl: string }) {
             </p>
           </div>
         </section>
+      </div>
+    </Layout>
+  );
+}
+
+export function DeveloperPage(p: { arcade: string; siteUrl: string; name: string; games: Game[] }) {
+  const plays = p.games.reduce((n, g) => n + g.plays, 0);
+  const up = p.games.reduce((n, g) => n + g.reviewsUp, 0);
+  const total = p.games.reduce((n, g) => n + g.reviewsTotal, 0);
+  const tools = [...new Set(p.games.flatMap((g) => g.madeWith))];
+  return (
+    <Layout meta={{ title: `${p.name} | ${p.arcade}`, description: `${p.games.length} games by ${p.name}${tools.length ? `, made with ${tools.join(", ")}` : ""}.`, url: `${p.siteUrl}/dev/${encodeURIComponent(p.name)}`, arcade: p.arcade }}>
+      <div class="wrap">
+        <section class="dev-head">
+          <span class="k">Developer</span>
+          <h1 class="display">{p.name}</h1>
+          <p class="sub">
+            {p.games.length} {p.games.length === 1 ? "game" : "games"} · {compactNumber(plays)} plays
+            {total ? (
+              <>
+                {" · "}
+                <ReviewBadge up={up} total={total} long />
+              </>
+            ) : null}
+            {tools.length ? ` · made with ${tools.join(", ")}` : ""}
+          </p>
+        </section>
+        <div class="grid">
+          {p.games.map((g, i) => (
+            <GameCard g={g} i={i} />
+          ))}
+        </div>
       </div>
     </Layout>
   );
