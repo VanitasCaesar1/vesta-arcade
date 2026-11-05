@@ -6,7 +6,7 @@ import { contentType, COVER_TYPES } from "../lib/mime.ts";
 import { cleanList, cleanText, ipHash, now, safeEqual, sha256 } from "../lib/util.ts";
 import type { MiddlewareHandler } from "hono";
 import { bearer, endSession, isAdmin, requireAdmin, startSession, tokenConfigured } from "./auth.ts";
-import { ARENA_KINDS, checkSvg, recordVote, revealOnly, svgSlug, verifyMatchup, type ArenaKind } from "./arena.ts";
+import { ARENA_KINDS, checkSvg, crowd, recordVote, revealOnly, svgSlug, verifyMatchup, type ArenaKind } from "./arena.ts";
 import { feedbackReport, getGame, getGameRow, listGames, reportMarkdown, topScores, type Sort } from "./db.ts";
 
 export const VERSION = "0.1.0";
@@ -148,9 +148,9 @@ api.post("/arena/vote", async (c) => {
   if (counted) {
     const reveal = await recordVote(c.env, m, winner, ip);
     if (!reveal) return c.json({ error: "not found" }, 404);
-    return c.json({ ...reveal, counted: true });
+    return c.json({ ...reveal, counted: true, crowd: await crowd(c.env, m.a, m.b) });
   }
-  return c.json({ ...(await revealOnly(c.env, m.a, m.b)), winner, counted: false });
+  return c.json({ ...(await revealOnly(c.env, m.a, m.b)), winner, counted: false, crowd: await crowd(c.env, m.a, m.b) });
 });
 
 const SUBMISSIONS_PER_DAY = 10;

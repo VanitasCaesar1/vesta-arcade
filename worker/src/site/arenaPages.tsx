@@ -123,7 +123,16 @@ export function ArenaPage(p: {
                   {isSvg ? "B is better" : "B is more fun"}
                 </button>
               </div>
+              <p class="keys">Keys: 1 or A · 2 or B · T for a tie · N for the next matchup</p>
               <div class="arena-reveal" hidden>
+                <div class="crowd">
+                  <div class="bar">
+                    <span data-bar="a" />
+                    <span data-bar="tie" />
+                    <span data-bar="b" />
+                  </div>
+                  <p data-crowd-text />
+                </div>
                 <div class="pair">
                   <div>
                     <span class="k">{isSvg ? "A" : "Game A"}</span>
@@ -146,10 +155,17 @@ export function ArenaPage(p: {
                     )}
                   </div>
                 </div>
+                <div class="taste">
+                  <p data-taste />
+                  <div class="badge" data-badge hidden />
+                </div>
                 <div class="row">
-                  <a class="btn pop" href={isSvg ? "/arena/svg" : "/arena"}>
+                  <a class="btn pop" href={isSvg ? "/arena/svg" : "/arena"} data-next>
                     Next matchup
                   </a>
+                  <button class="btn" data-share={`${p.siteUrl}/arena${isSvg ? "/svg" : ""}`} data-taste-share type="button">
+                    <Icon name="share" /> Share my AI taste
+                  </button>
                   <button class="btn" data-share={url} data-arena-share type="button">
                     <Icon name="share" /> Challenge a friend
                   </button>

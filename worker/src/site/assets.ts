@@ -237,6 +237,19 @@ small.community { font-weight: 400; opacity: .7; }
 .arena-vote .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .arena-vote .btn[disabled] { opacity: .45; cursor: not-allowed; }
 .arena-reveal { display: grid; gap: 16px; }
+.arena-vote .keys { font: 500 11px var(--mono); opacity: .55; margin: 0; }
+.crowd { display: grid; gap: 8px; }
+.crowd .bar { display: flex; height: 34px; border: 2px solid var(--line); overflow: hidden; background: var(--hair); }
+.crowd .bar span { width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); display: grid; place-items: center; font: 700 12px var(--mono); white-space: nowrap; overflow: hidden; }
+.crowd .bar [data-bar=a] { background: var(--pop); color: var(--pop-ink); }
+.crowd .bar [data-bar=tie] { background: #8a8a86; color: #111; }
+.crowd .bar [data-bar=b] { background: #5ac8fa; color: #0b2230; }
+.crowd p { margin: 0; font-weight: 700; font-size: 17px; }
+.taste { display: grid; gap: 8px; justify-items: center; }
+.taste p { margin: 0; }
+.badge { font-weight: 800; padding: 6px 12px; background: var(--pop); color: var(--pop-ink); border: 2px solid var(--pop-ink); animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
+.badge.next { background: transparent; color: inherit; border: 2px dashed var(--line); font-weight: 600; animation: none; }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } }
 .arena-reveal .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .arena-reveal .pair > div { display: grid; gap: 6px; justify-items: center; padding: 12px; border: 2px solid var(--pop); }
 .arena-reveal b { font-family: var(--display); font-stretch: 112%; font-weight: 900; font-size: 22px; }
@@ -423,6 +436,56 @@ export const APP_JS = String.raw`(function () {
     var hint = $("[data-vote-hint]", vote);
     if (hint && all.length) hint.textContent = ready ? "Which one was more fun?" : played ? "Now play the other one." : "Play both, then vote.";
   }
+  // After a vote: how everyone else voted on this pair.
+  function showCrowd(j, mine) {
+    var cr = j.crowd; if (!cr || !vote) return;
+    var pa = cr.picks[j.a.slug] || 0, pb = cr.picks[j.b.slug] || 0, tot = cr.total || 0;
+    var pct = function (n) { return tot ? Math.round((n * 100) / tot) : 0; };
+    var bars = { a: pct(pa), tie: pct(cr.ties || 0), b: pct(pb) };
+    Object.keys(bars).forEach(function (k) {
+      var el = $("[data-bar=" + k + "]", vote); if (!el) return;
+      el.textContent = bars[k] >= 14 ? (k === "tie" ? "Tie " : k.toUpperCase() + " ") + bars[k] + "%" : "";
+      setTimeout(function () { el.style.width = bars[k] + "%"; }, 80);
+    });
+    var t = $("[data-crowd-text]", vote); if (!t) return;
+    if (tot < 3) { t.textContent = (tot <= 1 ? "You're the first to judge this pair." : "Only " + tot + " people have judged this pair so far.") + " Send it to a friend and see if they agree."; return; }
+    var majority = pa === pb ? "" : pa > pb ? "a" : "b";
+    var same = mine === "a" ? pa : mine === "b" ? pb : cr.ties || 0;
+    t.textContent = mine === "tie" ? pct(same) + "% of " + tot + " players also called it a tie." : !majority ? "Dead even: the crowd is split 50/50 on this one." : mine === majority ? "You're with the crowd: " + pct(same) + "% of " + tot + " players picked the same." : "Hot take: only " + pct(same) + "% of " + tot + " players agree with you.";
+  }
+
+  // The judge's own record, kept in this browser: how many votes, and which models they keep picking.
+  var BADGES = [[3, "Warming up"], [10, "Critic"], [25, "Curator"], [50, "Arena regular"], [100, "Taste maker"]];
+  function showTaste(j) {
+    var st; try { st = JSON.parse(localStorage.getItem("vesta:judge") || "{}"); } catch (e) { st = {}; }
+    st.n = st.n || 0; st.picks = st.picks || {};
+    if (j.counted) {
+      st.n++;
+      if (j.winner !== "tie") { var m = j[j.winner].model.split(" ")[0]; st.picks[m] = (st.picks[m] || 0) + 1; }
+      try { localStorage.setItem("vesta:judge", JSON.stringify(st)); } catch (e) {}
+    }
+    var tally = Object.keys(st.picks).sort(function (x, y) { return st.picks[y] - st.picks[x]; }).map(function (k) { return k + " " + st.picks[k]; }).join(" · ");
+    var el = $("[data-taste]", vote);
+    if (el) el.textContent = "You've judged " + st.n + (st.n === 1 ? " matchup" : " matchups") + (tally ? ". Your picks: " + tally + "." : ".");
+    var next = BADGES.filter(function (x) { return x[0] > st.n; })[0];
+    var hit = BADGES.filter(function (x) { return x[0] === st.n; })[0];
+    var badge = $("[data-badge]", vote);
+    if (badge && hit && j.counted) { badge.hidden = false; badge.textContent = "🏅 " + hit[1] + ": " + hit[0] + " blind votes"; toast("🏅 New badge: " + hit[1]); }
+    else if (badge && next) { badge.hidden = false; badge.className = "badge next"; badge.textContent = (next[0] - st.n) + " more to " + next[1]; }
+    var ts = $("[data-taste-share]", vote);
+    if (ts) ts.setAttribute("data-share-text", "My AI taste after " + st.n + " blind " + (st.n === 1 ? "vote" : "votes") + (tally ? ": " + tally : "") + ". Judge them yourself:");
+  }
+
+  // Keyboard: 1/A, 2/B, T to vote; N or Enter for the next matchup.
+  if (vote) document.addEventListener("keydown", function (e) {
+    var tg = e.target && e.target.tagName; if (tg === "INPUT" || tg === "TEXTAREA" || tg === "SELECT" || e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = (e.key || "").toLowerCase();
+    var revealed = !$(".arena-reveal", vote).hidden;
+    if (revealed && (k === "n" || k === "enter")) { var nx = $("[data-next]", vote); if (nx) { e.preventDefault(); location.href = nx.href; } return; }
+    var map = { "1": "a", a: "a", "2": "b", b: "b", t: "tie" };
+    if (!revealed && map[k]) { var btn = $("[data-vote=" + map[k] + "]", vote); if (btn && !btn.disabled) { e.preventDefault(); btn.click(); } }
+  });
+
   if (vote) {
     arenaReady();
     $$("[data-vote]", vote).forEach(function (b) {
@@ -441,6 +504,9 @@ export const APP_JS = String.raw`(function () {
             var hint = $("[data-vote-hint]", vote);
             if (hint) hint.textContent = (j.winner === "tie" ? "You called it a tie." : "You picked " + j[j.winner].model + ".") + (j.counted ? "" : " (You already voted on this pair today, so this one wasn't counted.)");
             $(".arena-reveal", vote).hidden = false;
+            showCrowd(j, b.getAttribute("data-vote"));
+            showTaste(j);
+            var rv = $(".arena-reveal", vote); if (rv && rv.scrollIntoView) rv.scrollIntoView({ behavior: "smooth", block: "center" });
             var sb = $("[data-arena-share]", vote);
             if (sb) {
               var lab = function (k) { return j[k].model.split(" ")[0]; };

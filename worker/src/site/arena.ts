@@ -219,3 +219,19 @@ export function svgSlug(): string {
   const b = crypto.getRandomValues(new Uint8Array(5));
   return "svg-" + Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 }
+
+/** How everyone voted on this pair, in either order: picks per entry slug, ties and total. */
+export async function crowd(env: Env, a: string, b: string): Promise<{ picks: Record<string, number>; ties: number; total: number }> {
+  const { results } = await env.DB.prepare(
+    "SELECT a, b, winner, COUNT(*) AS n FROM arena_votes WHERE (a = ? AND b = ?) OR (a = ? AND b = ?) GROUP BY a, b, winner",
+  )
+    .bind(a, b, b, a)
+    .all<{ a: string; b: string; winner: "a" | "b" | "tie"; n: number }>();
+  const picks: Record<string, number> = { [a]: 0, [b]: 0 };
+  let ties = 0;
+  for (const r of results) {
+    if (r.winner === "tie") ties += r.n;
+    else picks[r.winner === "a" ? r.a : r.b] = (picks[r.winner === "a" ? r.a : r.b] ?? 0) + r.n;
+  }
+  return { picks, ties, total: (picks[a] ?? 0) + (picks[b] ?? 0) + ties };
+}
