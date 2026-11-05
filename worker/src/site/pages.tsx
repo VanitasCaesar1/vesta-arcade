@@ -797,9 +797,15 @@ export function ThreeDPage(p: { arcade: string; siteUrl: string; games: Game[]; 
         <div class="grid">
           {p.games.map((g, i) => (
             <a class="card rise" style={`--i:${i}`} href={`/g/${g.slug}`}>
-              <div class="art art-3d">
-                <span>3D</span>
-              </div>
+              {g.hasCover ? (
+                <div class="art">
+                  <img src={cover(g)} alt="" loading="lazy" width={640} height={360} />
+                </div>
+              ) : (
+                <div class="art art-3d">
+                  <span>3D</span>
+                </div>
+              )}
               <h3>{p.arenaIds.has(g.slug) ? `${g.title} (arena scene)` : g.title}</h3>
               <div class="meta">
                 <span>
