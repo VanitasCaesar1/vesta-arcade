@@ -159,11 +159,20 @@ const SUBMISSIONS_PER_DAY = 10;
 api.post("/arena/submit", async (c) => {
   const form = await c.req.formData().catch(() => null);
   const get = (k: string) => String(form?.get(k) ?? "");
-  const prompt = get("prompt");
+  let prompt = get("prompt");
   const back = (msg: string) => c.redirect(`/arena/svg?p=${encodeURIComponent(prompt)}&submitted=${encodeURIComponent(msg)}#submit`, 303);
   if (get("website")) return back("Thanks!");
-  const row = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'svg'").bind(prompt).first();
-  if (!row) return back("Pick a prompt first.");
+  const ip0 = await ipHash(c.req.raw, c.env.ADMIN_TOKEN ?? "vesta");
+  let newPrompt = "";
+  if (prompt === "__new") {
+    newPrompt = cleanText(get("new_prompt"), 140);
+    if (newPrompt.length < 12) return back("Write the new prompt (at least a few words), e.g. \"Generate an SVG of a capybara running a startup\".");
+    const started = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_prompts WHERE ip_hash = ? AND created_at > ?").bind(ip0, now() - 86_400).first<{ n: number }>();
+    if ((started?.n ?? 0) >= 3) return back("You've started 3 challenges today. Add drawings to existing ones, or come back tomorrow.");
+  } else {
+    const row = await c.env.DB.prepare("SELECT id FROM arena_prompts WHERE id = ? AND kind = 'svg' AND hidden = 0").bind(prompt).first();
+    if (!row) return back("Pick a prompt first.");
+  }
   const model = cleanText(get("model"), 60);
   if (!model) return back("Say which model made it, e.g. GPT-6 Luna or Llama 5.");
   let svg: string;
@@ -176,27 +185,42 @@ api.post("/arena/submit", async (c) => {
   const t = now();
   const recent = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_entries WHERE ip_hash = ? AND created_at > ?").bind(ip, t - 86_400).first<{ n: number }>();
   if ((recent?.n ?? 0) >= SUBMISSIONS_PER_DAY) return back(`That's ${SUBMISSIONS_PER_DAY} entries today. Come back tomorrow.`);
+  const author = cleanText(get("author"), 40);
+  if (newPrompt) {
+    const base = newPrompt.toLowerCase().replace(/^generate an svg of (an? )?/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "") || "challenge";
+    prompt = `${base}-${svgSlug().slice(4, 8)}`;
+    await c.env.DB.prepare("INSERT INTO arena_prompts (id, title, prompt, kind, community, author, ip_hash, created_at) VALUES (?, ?, ?, 'svg', 1, ?, ?, ?)")
+      .bind(prompt, newPrompt.slice(0, 80), newPrompt, author, ip, t)
+      .run();
+  }
   const slug = svgSlug();
   const key = `svg/${slug}.svg`;
   await c.env.FILES.put(key, svg, { httpMetadata: { contentType: "image/svg+xml" } });
   await c.env.DB.prepare(
     "INSERT INTO arena_entries (slug, prompt, model, lab, kind, file_key, community, author, ip_hash, created_at) VALUES (?, ?, ?, '', 'svg', ?, 1, ?, ?, ?)",
   )
-    .bind(slug, prompt, model, key, cleanText(get("author"), 40), ip, t)
+    .bind(slug, prompt, model, key, author, ip, t)
     .run();
-  return back("Your drawing is in the arena. It'll show up in matchups for this prompt.");
+  const msg = newPrompt
+    ? "Your challenge is live. Share it: once someone adds a second drawing, it shows up in blind matchups."
+    : "Your drawing is in the arena. Here's how it ranks against the rest.";
+  return c.redirect(`/arena/svg/p/${prompt}?submitted=${encodeURIComponent(msg)}`, 303);
 });
 
 // Anyone can report an arena entry. Three distinct reports hide a community entry until the owner looks.
 api.post("/arena/entries/:slug/report", async (c) => {
   const slug = c.req.param("slug");
   if (!/^[a-z0-9-]{3,60}$/.test(slug)) return c.json({ error: "bad entry" }, 400);
-  const row = await c.env.DB.prepare("SELECT community FROM arena_entries WHERE slug = ?").bind(slug).first<{ community: number }>();
+  const row = await c.env.DB.prepare("SELECT community, prompt FROM arena_entries WHERE slug = ?").bind(slug).first<{ community: number; prompt: string }>();
   if (!row) return c.json({ error: "not found" }, 404);
   const ip = await ipHash(c.req.raw, c.env.ADMIN_TOKEN ?? "vesta");
   await c.env.DB.prepare("INSERT OR IGNORE INTO reports (slug, ip_hash, reason, created_at) VALUES (?, ?, 'arena entry', ?)").bind(slug, ip, now()).run();
   const n = await c.env.DB.prepare("SELECT COUNT(*) AS n FROM reports WHERE slug = ?").bind(slug).first<{ n: number }>();
-  if (row.community && (n?.n ?? 0) >= REPORTS_TO_HIDE) await c.env.DB.prepare("UPDATE arena_entries SET hidden = 1 WHERE slug = ?").bind(slug).run();
+  if (row.community && (n?.n ?? 0) >= REPORTS_TO_HIDE) {
+    await c.env.DB.prepare("UPDATE arena_entries SET hidden = 1 WHERE slug = ?").bind(slug).run();
+    // A community challenge whose opening drawing gets hidden is hidden too, so a bad prompt can't stay up.
+    await c.env.DB.prepare("UPDATE arena_prompts SET hidden = 1 WHERE id = ? AND community = 1 AND NOT EXISTS (SELECT 1 FROM arena_entries WHERE prompt = ? AND hidden = 0)").bind(row.prompt, row.prompt).run();
+  }
   return c.json({ ok: true });
 });
 

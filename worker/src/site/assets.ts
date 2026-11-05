@@ -211,6 +211,20 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .arena-strip .go { font-weight: 700; text-decoration: underline; }
 @media (max-width: 700px) { .arena-strip { grid-template-columns: auto 1fr; } .arena-strip span:nth-of-type(2) { grid-column: 1 / -1; } }
 .arena-head { margin: 24px 0 18px; }
+.gallery-q { font-size: clamp(26px, 4vw, 46px) !important; line-height: 1.05; }
+.gallery-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 6px; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin: 18px 0 40px; }
+.gallery-item { margin: 0; display: grid; gap: 8px; }
+.gallery-item figcaption { display: grid; gap: 2px; font-size: 13px; }
+.gallery-item figcaption b { font-size: 15px; }
+.gallery-item figcaption span { opacity: .75; }
+.gallery-item .linkbtn { justify-self: start; font-size: 11px; opacity: .5; }
+.challenges { margin: 40px 0 10px; }
+.challenge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.challenge-card { display: grid; gap: 8px; padding: 14px; border: 2px solid var(--line); text-decoration: none; color: inherit; }
+.challenge-card:hover { box-shadow: 4px 4px 0 var(--pop); transform: translate(-1px, -1px); }
+.challenge-card .q { font-weight: 700; }
+.challenge-card .meta { font: 500 12px var(--mono); opacity: .7; }
 .arena-tabs { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
 .arena-tabs a { padding: 7px 14px; border: 2px solid var(--line); text-decoration: none; color: inherit; font-weight: 700; font-size: 14px; }
 .arena-tabs a.on { background: var(--pop); color: var(--pop-ink); border-color: var(--pop-ink); }
@@ -475,6 +489,14 @@ export const APP_JS = String.raw`(function () {
     var ts = $("[data-taste-share]", vote);
     if (ts) ts.setAttribute("data-share-text", "My AI taste after " + st.n + " blind " + (st.n === 1 ? "vote" : "votes") + (tally ? ": " + tally : "") + ". Judge them yourself:");
   }
+
+  $$("[data-report-entry]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!confirm("Report this drawing as offensive or spam?")) return;
+      fetch("/api/arena/entries/" + b.getAttribute("data-report-entry") + "/report", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })
+        .then(function () { b.textContent = "Reported"; b.disabled = true; toast("Thanks. It'll be reviewed."); });
+    });
+  });
 
   // Keyboard: 1/A, 2/B, T to vote; N or Enter for the next matchup.
   if (vote) document.addEventListener("keydown", function (e) {

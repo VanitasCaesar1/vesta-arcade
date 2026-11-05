@@ -16,8 +16,8 @@ import { isAdmin, tokenConfigured } from "./auth.ts";
 import { feedbackReport, getChallenge, getGame, listComments, listGames, listVersions, loopData, madeWithCounts, topScores, type Sort } from "./db.ts";
 import { DashboardPage, GameDashboardPage, LoginPage, type GameSummary } from "./admin.tsx";
 import { EmbedPage, GamePage, HomePage, NotFoundPage } from "./pages.tsx";
-import { ArenaBoardPage, ArenaPage } from "./arenaPages.tsx";
-import { arenaNames, arenaPrompts, isArenaEntry, leaderboard, randomMatchup, type ArenaKind } from "./arena.ts";
+import { ArenaBoardPage, ArenaPage, PromptGalleryPage } from "./arenaPages.tsx";
+import { arenaNames, arenaPrompts, isArenaEntry, leaderboard, promptGallery, randomMatchup, type ArenaKind } from "./arena.ts";
 import { badgeSvg, coverSvg, escapeXml } from "./svg.ts";
 import { REPO_URL } from "./layout.tsx";
 
@@ -147,12 +147,14 @@ site.get("/arena/og.jpg", (c) =>
 
 async function arenaRoute(c: Context<AppEnv>, kind: ArenaKind) {
   const promptId = c.req.query("p")?.slice(0, 60);
-  const [m, votes, names, prompts] = await Promise.all([
+  const [m, votes, names, prompts, countRows] = await Promise.all([
     randomMatchup(c.env, kind, promptId),
     c.env.DB.prepare("SELECT COUNT(*) AS n FROM arena_votes").first<{ n: number }>(),
     arenaNames(c.env),
     kind === "svg" ? arenaPrompts(c.env, "svg") : Promise.resolve([]),
+    c.env.DB.prepare("SELECT prompt, COUNT(*) AS n FROM arena_entries WHERE hidden = 0 GROUP BY prompt").all<{ prompt: string; n: number }>(),
   ]);
+  const counts = Object.fromEntries(countRows.results.map((r) => [r.prompt, r.n]));
   c.header("cache-control", "no-store");
   return c.html(
     <ArenaPage
@@ -164,6 +166,7 @@ async function arenaRoute(c: Context<AppEnv>, kind: ArenaKind) {
       names={names}
       prompts={prompts}
       promptId={promptId}
+      counts={counts}
       submitted={c.req.query("submitted")?.slice(0, 200)}
       playOrigin={playOrigin(c)}
       playSrc={(g) => playSrc(c, g.slug, g.version!)}
@@ -176,6 +179,15 @@ site.get("/arena/svg/og.jpg", (c) =>
 );
 site.get("/arena", (c) => arenaRoute(c, "game"));
 site.get("/arena/svg", (c) => arenaRoute(c, "svg"));
+
+site.get("/arena/svg/p/:id", async (c) => {
+  const id = c.req.param("id");
+  if (!/^[a-z0-9-]{1,60}$/.test(id)) return notFound(c);
+  const g = await promptGallery(c.env, id);
+  if (!g) return notFound(c);
+  c.header("cache-control", "public, max-age=30");
+  return c.html(<PromptGalleryPage arcade={arcade(c)} siteUrl={origin(c)} playOrigin={playOrigin(c)} prompt={g.prompt} entries={g.entries} submitted={c.req.query("submitted")?.slice(0, 200)} />);
+});
 
 site.get("/arena/leaderboard", async (c) => {
   const [board, names] = await Promise.all([leaderboard(c.env), arenaNames(c.env)]);

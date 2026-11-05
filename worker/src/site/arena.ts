@@ -14,6 +14,8 @@ export interface ArenaPrompt {
   title: string;
   prompt: string;
   kind: ArenaKind;
+  community?: number;
+  author?: string;
 }
 export interface ArenaEntry {
   slug: string;
@@ -62,8 +64,8 @@ export async function isArenaEntry(env: Env, slug: string): Promise<boolean> {
 
 export async function arenaPrompts(env: Env, kind?: ArenaKind): Promise<ArenaPrompt[]> {
   const q = kind
-    ? env.DB.prepare("SELECT id, title, prompt, kind FROM arena_prompts WHERE kind = ? ORDER BY created_at").bind(kind)
-    : env.DB.prepare("SELECT id, title, prompt, kind FROM arena_prompts ORDER BY kind, created_at");
+    ? env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE kind = ? AND hidden = 0 ORDER BY community, created_at").bind(kind)
+    : env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE hidden = 0 ORDER BY kind, community, created_at");
   return (await q.all<ArenaPrompt>()).results;
 }
 
@@ -92,7 +94,7 @@ export async function randomMatchup(env: Env, kind: ArenaKind, promptId?: string
   const differentModel = others.filter((e) => e.model !== first.model);
   const second = pick(differentModel.length ? differentModel : others);
   const [a, b] = Math.random() < 0.5 ? [first, second] : [second, first];
-  const prompt = await env.DB.prepare("SELECT id, title, prompt, kind FROM arena_prompts WHERE id = ?").bind(pid).first<ArenaPrompt>();
+  const prompt = await env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0").bind(pid).first<ArenaPrompt>();
   if (!prompt) return null;
   const side = async (e: typeof a): Promise<Side | null> => {
     if (kind === "svg") return { slug: e.slug, svg: `/${e.file_key}` };
@@ -234,4 +236,12 @@ export async function crowd(env: Env, a: string, b: string): Promise<{ picks: Re
     else picks[r.winner === "a" ? r.a : r.b] = (picks[r.winner === "a" ? r.a : r.b] ?? 0) + r.n;
   }
   return { picks, ties, total: (picks[a] ?? 0) + (picks[b] ?? 0) + ties };
+}
+
+/** Every visible entry for one prompt, best rated first: the prompt's gallery page. */
+export async function promptGallery(env: Env, id: string) {
+  const prompt = await env.DB.prepare("SELECT id, title, prompt, kind, community, author FROM arena_prompts WHERE id = ? AND hidden = 0").bind(id).first<ArenaPrompt>();
+  if (!prompt) return null;
+  const { results } = await env.DB.prepare("SELECT * FROM arena_entries WHERE prompt = ? AND hidden = 0 ORDER BY rating DESC, created_at ASC LIMIT 200").bind(id).all<ArenaEntry>();
+  return { prompt, entries: results };
 }

@@ -62,6 +62,7 @@ export function ArenaPage(p: {
   prompts: ArenaPrompt[];
   submitted?: string;
   promptId?: string;
+  counts?: Record<string, number>;
 }) {
   const m = p.m;
   const isSvg = p.kind === "svg";
@@ -180,6 +181,23 @@ export function ArenaPage(p: {
           <p class="sub">The first matchups are being made. Check back soon{isSvg ? ", or add the first drawing below" : ""}.</p>
         )}
 
+        {isSvg && p.prompts.length ? (
+          <section class="challenges">
+            <h2 class="display">All challenges</h2>
+            <div class="challenge-grid">
+              {p.prompts.map((pr) => (
+                <a class="challenge-card" href={`/arena/svg/p/${pr.id}`}>
+                  <span class="q">"{pr.prompt}"</span>
+                  <span class="meta">
+                    {p.counts?.[pr.id] ?? 0} {(p.counts?.[pr.id] ?? 0) === 1 ? "drawing" : "drawings"}
+                    {pr.community ? ` · started by ${pr.author || "the community"}` : ""}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {isSvg ? (
           <section class="arena-submit" id="submit">
             <h2 class="display">Add your model's drawing</h2>
@@ -197,7 +215,12 @@ export function ArenaPage(p: {
                       {pr.prompt}
                     </option>
                   ))}
+                  <option value="__new">+ Start a new challenge with my own prompt…</option>
                 </select>
+              </label>
+              <label class="field">
+                New prompt (only if you picked "Start a new challenge")
+                <input name="new_prompt" maxlength={140} placeholder="Generate an SVG of a capybara running a startup" />
               </label>
               <div class="row">
                 <label class="field">
@@ -340,6 +363,75 @@ export function ArenaBoardPage(p: {
             </section>
           );
         })}
+      </div>
+    </Layout>
+  );
+}
+
+export function PromptGalleryPage(p: {
+  arcade: string;
+  siteUrl: string;
+  playOrigin: string;
+  prompt: ArenaPrompt;
+  entries: ArenaEntry[];
+  submitted?: string;
+}) {
+  const url = `${p.siteUrl}/arena/svg/p/${p.prompt.id}`;
+  const models = new Set(p.entries.map((e) => e.model.split(" ")[0])).size;
+  return (
+    <Layout
+      meta={{
+        title: `"${p.prompt.prompt}": ${p.entries.length} AI drawings | ${p.arcade}`,
+        description: `${p.entries.length} drawings of the same prompt by ${models} AI ${models === 1 ? "model" : "models"}, rated by blind votes. Add yours.`,
+        url,
+        image: `${p.siteUrl}/arena/svg/og.jpg`,
+        arcade: p.arcade,
+      }}
+    >
+      <div class="wrap arena">
+        <header class="arena-head">
+          <span class="k">{p.prompt.community ? `Community challenge${p.prompt.author ? ` by ${p.prompt.author}` : ""}` : "SVG challenge"}</span>
+          <h1 class="display gallery-q">"{p.prompt.prompt}"</h1>
+          <p class="sub">
+            {p.entries.length} {p.entries.length === 1 ? "drawing" : "drawings"}, best rated first. Ratings come from blind votes.
+          </p>
+          <div class="row gallery-actions">
+            <a class="btn pop" href={`/arena/svg?p=${p.prompt.id}`}>
+              Judge them blind
+            </a>
+            <a class="btn" href={`/arena/svg?p=${p.prompt.id}#submit`}>
+              Add your model's drawing
+            </a>
+            <button class="btn" data-share={url} data-share-text={`Can your AI draw this? "${p.prompt.prompt}" ${p.entries.length} tries so far:`} type="button">
+              <Icon name="share" /> Share this challenge
+            </button>
+          </div>
+          {p.submitted ? <div class="notice">{p.submitted}</div> : null}
+          <Tabs kind="svg" />
+        </header>
+        <div class="gallery">
+          {p.entries.map((e, i) => {
+            const n = e.wins + e.losses + e.ties;
+            return (
+              <figure class="gallery-item">
+                <div class="arena-svg">
+                  <img src={`${p.playOrigin}/${e.file_key}`} alt={`${e.model}'s drawing`} loading="lazy" width={800} height={600} />
+                </div>
+                <figcaption>
+                  <b>
+                    #{i + 1} {e.model}
+                  </b>
+                  <span>
+                    {e.community ? `community${e.author ? `, by ${e.author}` : ""}` : "made by the arena, one attempt"} · {n ? `${Math.round(((e.wins + e.ties / 2) / n) * 100)}% of ${n} votes` : "no votes yet"}
+                  </span>
+                  <button class="linkbtn" data-report-entry={e.slug} type="button">
+                    Report
+                  </button>
+                </figcaption>
+              </figure>
+            );
+          })}
+        </div>
       </div>
     </Layout>
   );
