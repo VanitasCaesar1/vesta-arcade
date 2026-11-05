@@ -1,0 +1,402 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#231d47"/>
+      <stop offset="0.45" stop-color="#5b3f78"/>
+      <stop offset="0.75" stop-color="#c46a74"/>
+      <stop offset="1" stop-color="#f3a165"/>
+    </linearGradient>
+    <radialGradient id="room" cx="0.6" cy="0.6" r="0.8">
+      <stop offset="0" stop-color="#ffd690"/>
+      <stop offset="1" stop-color="#c97a3f"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd27a" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffd27a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="trunk" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3a2820"/>
+      <stop offset="0.55" stop-color="#5a3d2e"/>
+      <stop offset="1" stop-color="#8a5a3c"/>
+    </linearGradient>
+    <mask id="moonMask">
+      <circle cx="690" cy="70" r="24" fill="#fff"/>
+      <circle cx="680" cy="62" r="22" fill="#000"/>
+    </mask>
+    <clipPath id="roomClip"><rect x="262" y="194" width="296" height="136"/></clipPath>
+  </defs>
+
+  <!-- sky -->
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <g fill="#fff7dc">
+    <circle cx="40" cy="40" r="1.6"><animate attributeName="opacity" values="1;0.3;1" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="92" cy="96" r="1.2"><animate attributeName="opacity" values="0.4;1;0.4" dur="2.4s" repeatCount="indefinite"/></circle>
+    <circle cx="20" cy="150" r="1.4"><animate attributeName="opacity" values="1;0.4;1" dur="3.6s" repeatCount="indefinite"/></circle>
+    <circle cx="760" cy="30" r="1.6"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.8s" repeatCount="indefinite"/></circle>
+    <circle cx="740" cy="120" r="1.2"><animate attributeName="opacity" values="1;0.3;1" dur="2.2s" repeatCount="indefinite"/></circle>
+    <circle cx="785" cy="180" r="1.3"><animate attributeName="opacity" values="0.5;1;0.5" dur="3.2s" repeatCount="indefinite"/></circle>
+    <circle cx="640" cy="20" r="1.2"/>
+    <circle cx="60" cy="210" r="1"/>
+  </g>
+  <circle cx="690" cy="70" r="40" fill="#fff3c9" opacity="0.12"/>
+  <rect width="800" height="200" fill="#fff3c9" mask="url(#moonMask)"/>
+
+  <!-- distant hills -->
+  <path d="M0 470 C80 440 160 450 240 462 C330 476 420 440 520 448 C620 456 700 430 800 446 L800 600 L0 600 Z" fill="#4a3360" opacity="0.8"/>
+  <path d="M0 505 C120 486 220 500 330 506 C460 514 560 488 680 494 C740 497 780 500 800 504 L800 600 L0 600 Z" fill="#2e2440"/>
+  <rect y="540" width="800" height="60" fill="#241c33"/>
+
+  <!-- branches behind -->
+  <g stroke="#3d2a22" stroke-linecap="round" fill="none">
+    <path d="M410 200 C380 140 320 110 250 100" stroke-width="16"/>
+    <path d="M412 190 C440 130 500 100 560 90" stroke-width="16"/>
+    <path d="M410 160 L405 60" stroke-width="14"/>
+    <path d="M420 300 C500 260 600 230 680 240" stroke-width="12"/>
+    <path d="M400 300 C330 270 240 250 150 250" stroke-width="12"/>
+  </g>
+
+  <!-- canopy (bottom-right rim lit by the sunset) -->
+  <g fill="#9a5f43" opacity="0.9">
+    <circle cx="186" cy="178" r="70"/><circle cx="266" cy="98" r="80"/><circle cx="406" cy="58" r="90"/>
+    <circle cx="546" cy="88" r="85"/><circle cx="646" cy="168" r="70"/><circle cx="136" cy="258" r="50"/>
+    <circle cx="696" cy="258" r="50"/><circle cx="336" cy="36" r="60"/><circle cx="476" cy="26" r="60"/>
+  </g>
+  <g fill="#2a3d39">
+    <circle cx="180" cy="172" r="70"/><circle cx="260" cy="92" r="80"/><circle cx="400" cy="52" r="90"/>
+    <circle cx="540" cy="82" r="85"/><circle cx="640" cy="162" r="70"/><circle cx="130" cy="252" r="50"/>
+    <circle cx="690" cy="252" r="50"/><circle cx="330" cy="30" r="60"/><circle cx="470" cy="20" r="60"/>
+  </g>
+  <g fill="#34504a" opacity="0.8">
+    <circle cx="165" cy="155" r="38"/><circle cx="245" cy="75" r="44"/><circle cx="385" cy="35" r="48"/>
+    <circle cx="525" cy="65" r="44"/><circle cx="625" cy="148" r="36"/><circle cx="118" cy="240" r="26"/>
+    <circle cx="676" cy="240" r="26"/>
+  </g>
+
+  <!-- trunk -->
+  <path d="M362 600 C378 560 384 500 386 420 L388 140 L434 140 L436 420 C438 500 444 560 462 600 Z" fill="url(#trunk)"/>
+  <path d="M330 600 C350 590 366 580 372 560 L380 600 Z M494 600 C474 590 456 580 450 560 L444 600 Z" fill="#4a3328"/>
+  <g stroke="#2e1f18" stroke-width="2" fill="none" opacity="0.7">
+    <path d="M398 360 C394 420 400 480 394 560"/>
+    <path d="M420 380 C424 440 418 500 426 580"/>
+    <ellipse cx="410" cy="470" rx="7" ry="11"/>
+  </g>
+
+  <!-- supports -->
+  <g stroke="#4f3426" stroke-width="10" stroke-linecap="round">
+    <line x1="270" y1="342" x2="390" y2="430"/>
+    <line x1="550" y1="342" x2="432" y2="430"/>
+  </g>
+
+  <!-- house walls (cutaway) -->
+  <rect x="250" y="186" width="320" height="148" fill="#5a3a28"/>
+  <g clip-path="url(#roomClip)">
+    <rect x="262" y="194" width="296" height="136" fill="url(#room)"/>
+    <!-- round window on the back wall -->
+    <circle cx="512" cy="226" r="24" fill="#7a4a7a"/>
+    <circle cx="512" cy="226" r="24" fill="none" stroke="#6b4429" stroke-width="5"/>
+    <path d="M512 202 L512 250 M488 226 L536 226" stroke="#6b4429" stroke-width="3"/>
+    <circle cx="502" cy="218" r="1.5" fill="#fff7dc"/>
+    <!-- shelves -->
+    <rect x="266" y="194" width="194" height="136" fill="#7a4b2e"/>
+    <rect x="266" y="228" width="194" height="4" fill="#5a3522"/>
+    <rect x="270" y="204" width="8" height="24" fill="#d97c3a"/>
+    <rect x="270" y="208" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="270" y="221" width="8" height="2" fill="#000" opacity="0.25"/>
+    <rect x="279" y="203" width="7" height="25" fill="#4e7d4a"/>
+    <rect x="279" y="207" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="279" y="221" width="7" height="2" fill="#000" opacity="0.25"/>
+    <rect x="287" y="199" width="7" height="29" fill="#2f5d73"/>
+    <rect x="287" y="203" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="287" y="221" width="7" height="2" fill="#000" opacity="0.25"/>
+    <rect x="295" y="204" width="11" height="24" fill="#a8423f"/>
+    <rect x="295" y="208" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="307" y="198" width="8" height="30" fill="#4e7d4a"/>
+    <rect x="307" y="202" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="320" y="200" width="8" height="28" fill="#8c3a55" transform="rotate(-14 328 228)"/>
+    <rect x="336" y="204" width="9" height="24" fill="#d9a441"/>
+    <rect x="336" y="208" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="346" y="200" width="11" height="28" fill="#3f6fb0"/>
+    <rect x="346" y="204" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="358" y="199" width="9" height="29" fill="#8c3a55"/>
+    <rect x="358" y="203" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="368" y="201" width="11" height="27" fill="#e3c06a"/>
+    <rect x="368" y="205" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="380" y="205" width="9" height="23" fill="#4e7d4a"/>
+    <rect x="380" y="209" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="390" y="200" width="8" height="28" fill="#f0e3c2"/>
+    <rect x="390" y="204" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="399" y="205" width="9" height="23" fill="#c46a4a"/>
+    <rect x="399" y="209" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="409" y="199" width="7" height="29" fill="#8c3a55"/>
+    <rect x="409" y="203" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="409" y="221" width="7" height="2" fill="#000" opacity="0.25"/>
+    <rect x="417" y="205" width="8" height="23" fill="#2f5d73"/>
+    <rect x="417" y="209" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="417" y="221" width="8" height="2" fill="#000" opacity="0.25"/>
+    <rect x="426" y="203" width="13" height="25" fill="#c46a4a"/>
+    <rect x="426" y="207" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="440" y="205" width="11" height="23" fill="#3f6fb0"/>
+    <rect x="440" y="209" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="266" y="264" width="194" height="4" fill="#5a3522"/>
+    <rect x="270" y="235" width="10" height="29" fill="#a8423f"/>
+    <rect x="270" y="239" width="10" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="281" y="241" width="11" height="23" fill="#7a4a8c"/>
+    <rect x="281" y="245" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="293" y="234" width="9" height="30" fill="#e3c06a"/>
+    <rect x="293" y="238" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="293" y="257" width="9" height="2" fill="#000" opacity="0.25"/>
+    <rect x="303" y="234" width="10" height="30" fill="#5d8c6a"/>
+    <rect x="303" y="238" width="10" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="314" y="240" width="8" height="24" fill="#2f5d73"/>
+    <rect x="314" y="244" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="323" y="241" width="8" height="23" fill="#2f5d73"/>
+    <rect x="323" y="245" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="332" y="240" width="13" height="24" fill="#8c3a55"/>
+    <rect x="332" y="244" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="332" y="257" width="13" height="2" fill="#000" opacity="0.25"/>
+    <rect x="346" y="240" width="9" height="24" fill="#5d8c6a"/>
+    <rect x="346" y="244" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="346" y="257" width="9" height="2" fill="#000" opacity="0.25"/>
+    <rect x="356" y="237" width="8" height="27" fill="#a8423f"/>
+    <rect x="356" y="241" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="356" y="257" width="8" height="2" fill="#000" opacity="0.25"/>
+    <rect x="365" y="238" width="9" height="26" fill="#a8423f"/>
+    <rect x="365" y="242" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="365" y="257" width="9" height="2" fill="#000" opacity="0.25"/>
+    <rect x="375" y="239" width="11" height="25" fill="#d9a441"/>
+    <rect x="375" y="243" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="387" y="234" width="11" height="30" fill="#e3c06a"/>
+    <rect x="387" y="238" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="399" y="240" width="13" height="24" fill="#2f5d73"/>
+    <rect x="399" y="244" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="399" y="257" width="13" height="2" fill="#000" opacity="0.25"/>
+    <rect x="413" y="240" width="12" height="24" fill="#a8423f"/>
+    <rect x="413" y="244" width="12" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="413" y="257" width="12" height="2" fill="#000" opacity="0.25"/>
+    <rect x="426" y="236" width="10" height="28" fill="#3f6fb0"/>
+    <rect x="426" y="240" width="10" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="426" y="257" width="10" height="2" fill="#000" opacity="0.25"/>
+    <rect x="437" y="236" width="7" height="28" fill="#8c3a55"/>
+    <rect x="437" y="240" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="437" y="257" width="7" height="2" fill="#000" opacity="0.25"/>
+    <rect x="445" y="235" width="7" height="29" fill="#5d8c6a"/>
+    <rect x="445" y="239" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="266" y="300" width="194" height="4" fill="#5a3522"/>
+    <rect x="270" y="275" width="9" height="25" fill="#4e7d4a"/>
+    <rect x="270" y="279" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="270" y="293" width="9" height="2" fill="#000" opacity="0.25"/>
+    <rect x="280" y="277" width="13" height="23" fill="#e3c06a"/>
+    <rect x="280" y="281" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="280" y="293" width="13" height="2" fill="#000" opacity="0.25"/>
+    <rect x="294" y="271" width="8" height="29" fill="#f0e3c2"/>
+    <rect x="294" y="275" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="294" y="293" width="8" height="2" fill="#000" opacity="0.25"/>
+    <rect x="303" y="272" width="13" height="28" fill="#8c3a55"/>
+    <rect x="303" y="276" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="303" y="293" width="13" height="2" fill="#000" opacity="0.25"/>
+    <rect x="317" y="275" width="11" height="25" fill="#d9a441"/>
+    <rect x="317" y="279" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="329" y="274" width="13" height="26" fill="#d97c3a"/>
+    <rect x="329" y="278" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="343" y="275" width="9" height="25" fill="#d9a441"/>
+    <rect x="343" y="279" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="343" y="293" width="9" height="2" fill="#000" opacity="0.25"/>
+    <rect x="353" y="275" width="11" height="25" fill="#d97c3a"/>
+    <rect x="353" y="279" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="353" y="293" width="11" height="2" fill="#000" opacity="0.25"/>
+    <rect x="365" y="273" width="13" height="27" fill="#5d8c6a"/>
+    <rect x="365" y="277" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="379" y="273" width="8" height="27" fill="#8c3a55"/>
+    <rect x="379" y="277" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="379" y="293" width="8" height="2" fill="#000" opacity="0.25"/>
+    <rect x="388" y="274" width="7" height="26" fill="#e3c06a"/>
+    <rect x="388" y="278" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="388" y="293" width="7" height="2" fill="#000" opacity="0.25"/>
+    <rect x="396" y="277" width="9" height="23" fill="#f0e3c2"/>
+    <rect x="396" y="281" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="406" y="271" width="9" height="29" fill="#5d8c6a"/>
+    <rect x="406" y="275" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="406" y="293" width="9" height="2" fill="#000" opacity="0.25"/>
+    <rect x="416" y="273" width="9" height="27" fill="#e3c06a"/>
+    <rect x="416" y="277" width="9" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="426" y="270" width="13" height="30" fill="#e3c06a"/>
+    <rect x="426" y="274" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="440" y="271" width="12" height="29" fill="#d97c3a"/>
+    <rect x="440" y="275" width="12" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="440" y="293" width="12" height="2" fill="#000" opacity="0.25"/>
+    <rect x="266" y="330" width="194" height="4" fill="#5a3522"/>
+    <rect x="270" y="309" width="12" height="21" fill="#e3c06a"/>
+    <rect x="270" y="313" width="12" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="283" y="311" width="12" height="19" fill="#3f6fb0"/>
+    <rect x="283" y="315" width="12" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="296" y="313" width="10" height="17" fill="#2f5d73"/>
+    <rect x="296" y="317" width="10" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="307" y="308" width="8" height="22" fill="#d9a441"/>
+    <rect x="307" y="312" width="8" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="307" y="323" width="8" height="2" fill="#000" opacity="0.25"/>
+    <rect x="316" y="308" width="10" height="22" fill="#4e7d4a"/>
+    <rect x="316" y="312" width="10" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="327" y="311" width="12" height="19" fill="#d9a441"/>
+    <rect x="327" y="315" width="12" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="340" y="307" width="7" height="23" fill="#8c3a55"/>
+    <rect x="340" y="311" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="348" y="309" width="13" height="21" fill="#5d8c6a"/>
+    <rect x="348" y="313" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="348" y="323" width="13" height="2" fill="#000" opacity="0.25"/>
+    <rect x="362" y="309" width="11" height="21" fill="#4e7d4a"/>
+    <rect x="362" y="313" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="362" y="323" width="11" height="2" fill="#000" opacity="0.25"/>
+    <rect x="374" y="308" width="13" height="22" fill="#a8423f"/>
+    <rect x="374" y="312" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="388" y="312" width="10" height="18" fill="#8c3a55"/>
+    <rect x="388" y="316" width="10" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="388" y="323" width="10" height="2" fill="#000" opacity="0.25"/>
+    <rect x="399" y="306" width="11" height="24" fill="#e3c06a"/>
+    <rect x="399" y="310" width="11" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="411" y="308" width="13" height="22" fill="#d9a441"/>
+    <rect x="411" y="312" width="13" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="411" y="323" width="13" height="2" fill="#000" opacity="0.25"/>
+    <rect x="425" y="306" width="7" height="24" fill="#c46a4a"/>
+    <rect x="425" y="310" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="433" y="307" width="10" height="23" fill="#8c3a55"/>
+    <rect x="433" y="311" width="10" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="433" y="323" width="10" height="2" fill="#000" opacity="0.25"/>
+    <rect x="444" y="307" width="7" height="23" fill="#8c3a55"/>
+    <rect x="444" y="311" width="7" height="2" fill="#fff" opacity="0.35"/>
+    <rect x="444" y="323" width="7" height="2" fill="#000" opacity="0.25"/>
+    <!-- lamp light -->
+    <circle cx="462" cy="250" r="90" fill="url(#glow)" opacity="0.6">
+      <animate attributeName="opacity" values="0.6;0.5;0.62;0.6" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <!-- rug -->
+    <ellipse cx="505" cy="330" rx="50" ry="6" fill="#b8434a"/>
+    <!-- floor lamp -->
+    <line x1="468" y1="328" x2="468" y2="258" stroke="#3b2a20" stroke-width="3"/>
+    <ellipse cx="468" cy="328" rx="9" ry="2.5" fill="#3b2a20"/>
+    <path d="M454 260 L482 260 L476 242 L460 242 Z" fill="#f6c86b"/>
+    <!-- armchair -->
+    <rect x="482" y="266" width="66" height="60" rx="14" fill="#2f6b5e"/>
+    <rect x="488" y="300" width="54" height="22" rx="6" fill="#3a8272"/>
+    <!-- fox reader -->
+    <path d="M540 312 C566 306 568 280 552 272 C560 288 552 300 536 302 Z" fill="#e0772e"/>
+    <path d="M556 276 C562 280 562 288 558 292 C556 286 554 280 552 276 Z" fill="#fff4e6"/>
+    <ellipse cx="514" cy="300" rx="18" ry="20" fill="#e0772e"/>
+    <ellipse cx="514" cy="306" rx="10" ry="13" fill="#fff4e6"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 514 280;-4 514 280;0 514 280;0 514 280" keyTimes="0;0.2;0.4;1" dur="6s" repeatCount="indefinite"/>
+      <polygon points="498,270 500,248 512,264" fill="#e0772e"/>
+      <polygon points="530,270 528,248 516,264" fill="#e0772e"/>
+      <polygon points="501,266 502,254 508,263" fill="#3b2a20"/>
+      <polygon points="527,266 526,254 520,263" fill="#3b2a20"/>
+      <circle cx="514" cy="276" r="15" fill="#e0772e"/>
+      <path d="M500 278 C506 290 522 290 528 278 C522 286 506 286 500 278 Z" fill="#fff4e6"/>
+      <path d="M502 280 Q514 296 526 280 Q514 290 502 280 Z" fill="#fff4e6"/>
+      <circle cx="514" cy="287" r="2.5" fill="#2a1d14"/>
+      <path d="M505 274 q3 2 6 0 M517 274 q3 2 6 0" stroke="#2a1d14" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    </g>
+    <!-- open book -->
+    <path d="M498 300 L514 304 L514 318 L498 314 Z" fill="#fdf6e3"/>
+    <path d="M530 300 L514 304 L514 318 L530 314 Z" fill="#f3e9cf"/>
+    <path d="M498 300 L514 304 L530 300" stroke="#8a3b3b" stroke-width="1.5" fill="none"/>
+    <circle cx="498" cy="310" r="4" fill="#e0772e"/><circle cx="530" cy="310" r="4" fill="#e0772e"/>
+  </g>
+  <!-- front frame posts -->
+  <rect x="250" y="186" width="12" height="148" fill="#6b4630"/>
+  <rect x="558" y="186" width="12" height="148" fill="#6b4630"/>
+
+  <!-- roof -->
+  <path d="M228 192 L410 92 L592 192 Z" fill="#7a3e36"/>
+  <g stroke="#5c2c27" stroke-width="2" fill="none">
+    <path d="M300 152 L520 152 M266 172 L554 172 M336 132 L484 132 M372 112 L448 112"/>
+  </g>
+  <path d="M228 192 L410 92 L592 192" stroke="#4f2622" stroke-width="7" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="410" cy="150" r="14" fill="#ffd690"/>
+  <circle cx="410" cy="150" r="14" fill="none" stroke="#4f2622" stroke-width="4"/>
+  <path d="M410 136 L410 164 M396 150 L424 150" stroke="#4f2622" stroke-width="2"/>
+  <!-- stovepipe + smoke -->
+  <rect x="512" y="104" width="12" height="40" fill="#3b3b44"/>
+  <rect x="508" y="100" width="20" height="6" fill="#2b2b33"/>
+  <g fill="#cbb9d6" opacity="0">
+    <animate attributeName="opacity" values="0;0.5;0" dur="5s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate" values="0 0;18 -50" dur="5s" repeatCount="indefinite"/>
+    <circle cx="520" cy="92" r="7"/><circle cx="528" cy="82" r="9"/><circle cx="522" cy="70" r="6"/>
+  </g>
+
+  <!-- platform -->
+  <rect x="206" y="330" width="408" height="14" fill="#7b5134"/>
+  <g stroke="#5a3a28" stroke-width="1.5">
+    <line x1="246" y1="330" x2="246" y2="344"/><line x1="296" y1="330" x2="296" y2="344"/>
+    <line x1="350" y1="330" x2="350" y2="344"/><line x1="410" y1="330" x2="410" y2="344"/>
+    <line x1="470" y1="330" x2="470" y2="344"/><line x1="530" y1="330" x2="530" y2="344"/>
+    <line x1="580" y1="330" x2="580" y2="344"/>
+  </g>
+  <rect x="206" y="330" width="408" height="3" fill="#a87a52"/>
+  <!-- porch books -->
+  <rect x="214" y="318" width="26" height="12" fill="#5d8c6a"/>
+  <rect x="216" y="306" width="22" height="12" fill="#c46a4a"/>
+  <rect x="218" y="296" width="18" height="10" fill="#e3c06a"/>
+
+  <!-- rope ladder -->
+  <g stroke="#c9a46b" stroke-width="3">
+    <path d="M292 344 C290 420 296 480 292 548"/>
+    <path d="M322 344 C320 420 326 480 322 548"/>
+  </g>
+  <g stroke="#8a6440" stroke-width="5" stroke-linecap="round">
+    <line x1="292" y1="366" x2="322" y2="366"/><line x1="292" y1="390" x2="322" y2="390"/>
+    <line x1="292" y1="414" x2="323" y2="414"/><line x1="293" y1="438" x2="323" y2="438"/>
+    <line x1="294" y1="462" x2="324" y2="462"/><line x1="294" y1="486" x2="324" y2="486"/>
+    <line x1="293" y1="510" x2="323" y2="510"/><line x1="292" y1="534" x2="322" y2="534"/>
+  </g>
+
+  <!-- book-delivery pulley -->
+  <path d="M640 238 L676 232" stroke="#3d2a22" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="648" cy="246" r="8" fill="#6b5a4a" stroke="#3d2a22" stroke-width="2"/>
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 -16;0 0" dur="7s" repeatCount="indefinite"/>
+    <line x1="640" y1="246" x2="640" y2="416" stroke="#c9a46b" stroke-width="2.5"/>
+    <path d="M622 416 L658 416" stroke="#c9a46b" stroke-width="2"/>
+    <rect x="626" y="416" width="8" height="22" fill="#3f6fb0" transform="rotate(-10 630 427)"/>
+    <rect x="636" y="414" width="8" height="24" fill="#d9a441"/>
+    <rect x="645" y="418" width="7" height="20" fill="#a8423f" transform="rotate(8 648 428)"/>
+    <path d="M618 426 L662 426 L656 456 L624 456 Z" fill="#8a5a3c"/>
+    <path d="M620 434 L660 434 M622 446 L658 446" stroke="#5a3a28" stroke-width="2"/>
+  </g>
+  <line x1="656" y1="246" x2="656" y2="520" stroke="#c9a46b" stroke-width="2.5"/>
+
+  <!-- hanging lanterns -->
+  <path d="M232 192 Q180 236 110 222" stroke="#2a1f1c" stroke-width="1.5" fill="none"/>
+  <path d="M588 192 Q640 236 712 226" stroke="#2a1f1c" stroke-width="1.5" fill="none"/>
+  <g>
+    <circle cx="196" cy="226" r="22" fill="url(#glow)"><animate attributeName="opacity" values="1;0.7;1" dur="2.3s" repeatCount="indefinite"/></circle>
+    <circle cx="146" cy="232" r="22" fill="url(#glow)"><animate attributeName="opacity" values="0.7;1;0.7" dur="2.9s" repeatCount="indefinite"/></circle>
+    <circle cx="626" cy="226" r="22" fill="url(#glow)"><animate attributeName="opacity" values="1;0.7;1" dur="2.6s" repeatCount="indefinite"/></circle>
+    <circle cx="676" cy="234" r="22" fill="url(#glow)"><animate attributeName="opacity" values="0.7;1;0.7" dur="2.1s" repeatCount="indefinite"/></circle>
+    <g fill="#ffcf6e">
+      <rect x="191" y="218" width="10" height="13" rx="3"/>
+      <rect x="141" y="224" width="10" height="13" rx="3"/>
+      <rect x="621" y="218" width="10" height="13" rx="3"/>
+      <rect x="671" y="226" width="10" height="13" rx="3"/>
+    </g>
+    <g fill="#2a1f1c">
+      <rect x="192" y="215" width="8" height="3"/><rect x="142" y="221" width="8" height="3"/>
+      <rect x="622" y="215" width="8" height="3"/><rect x="672" y="223" width="8" height="3"/>
+    </g>
+  </g>
+
+  <!-- cat on the platform edge, watching the moon -->
+  <g fill="#1e1830" transform="translate(-24 0)">
+    <path d="M598 330 C594 312 596 298 604 290 L606 278 L611 286 L617 286 L622 278 L623 291 C630 300 630 316 624 330 Z"/>
+    <path d="M622 330 C632 340 634 356 628 372" stroke="#1e1830" stroke-width="5" fill="none" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" values="0 622 332;12 622 332;0 622 332" dur="3s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- fireflies -->
+  <g fill="#f8f39a">
+    <circle r="2.5"><animateMotion path="M100 420 C140 380 180 440 220 400 C260 360 200 340 100 420 Z" dur="9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite"/></circle>
+    <circle r="2.5"><animateMotion path="M520 470 C560 430 620 460 600 500 C580 540 500 520 520 470 Z" dur="11s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;1" dur="2.2s" repeatCount="indefinite"/></circle>
+    <circle r="2"><animateMotion path="M700 380 C740 340 760 400 720 420 C680 440 660 410 700 380 Z" dur="8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/></circle>
+    <circle r="2"><animateMotion path="M220 500 C260 470 330 480 350 510 C330 540 250 530 220 500 Z" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;1" dur="2.6s" repeatCount="indefinite"/></circle>
+    <circle r="2.5"><animateMotion path="M60 330 C90 300 130 320 110 350 C90 380 50 360 60 330 Z" dur="7s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/></circle>
+  </g>
+</svg>

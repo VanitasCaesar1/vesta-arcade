@@ -1,0 +1,226 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#121a26"/>
+      <stop offset="0.6" stop-color="#2b3a4c"/>
+      <stop offset="1" stop-color="#46576a"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c4b5a"/>
+      <stop offset="1" stop-color="#0f222c"/>
+    </linearGradient>
+    <linearGradient id="wave1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a5465"/>
+      <stop offset="1" stop-color="#132b36"/>
+    </linearGradient>
+    <linearGradient id="wave2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f4757"/>
+      <stop offset="1" stop-color="#091820"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#fff2b0" stop-opacity="0.85"/>
+      <stop offset="0.5" stop-color="#fff2b0" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#fff2b0" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="lampglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff6c8" stop-opacity="1"/>
+      <stop offset="0.3" stop-color="#ffe08a" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#ffe08a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.45" r="0.75">
+      <stop offset="0.55" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+    </radialGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset="0.6" stop-color="#000" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.45"/>
+    </linearGradient>
+    <pattern id="rain1" width="24" height="80" patternUnits="userSpaceOnUse">
+      <line x1="20" y1="4" x2="14" y2="24" stroke="#c9d6e2" stroke-width="1.4" stroke-opacity="0.45"/>
+      <line x1="8" y1="44" x2="2" y2="64" stroke="#c9d6e2" stroke-width="1.4" stroke-opacity="0.35"/>
+    </pattern>
+    <pattern id="rain2" width="45" height="150" patternUnits="userSpaceOnUse">
+      <line x1="38" y1="10" x2="29" y2="40" stroke="#e3ecf5" stroke-width="2.2" stroke-opacity="0.5"/>
+      <line x1="16" y1="85" x2="7" y2="115" stroke="#e3ecf5" stroke-width="2.2" stroke-opacity="0.4"/>
+    </pattern>
+  </defs>
+
+  <!-- sky -->
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <!-- lightning flash on sky -->
+  <rect width="800" height="400" fill="#c9d8ff" opacity="0">
+    <animate attributeName="opacity" values="0;0;0.35;0.05;0.3;0;0" keyTimes="0;0.6;0.61;0.63;0.65;0.69;1" dur="7s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- clouds -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;-25 0;0 0" dur="24s" repeatCount="indefinite"/>
+    <g fill="#1b2330">
+      <ellipse cx="80" cy="60" rx="150" ry="70"/>
+      <ellipse cx="300" cy="40" rx="170" ry="70"/>
+      <ellipse cx="560" cy="50" rx="190" ry="75"/>
+      <ellipse cx="780" cy="70" rx="140" ry="80"/>
+    </g>
+    <g fill="#283344">
+      <ellipse cx="150" cy="120" rx="130" ry="40"/>
+      <ellipse cx="380" cy="105" rx="150" ry="38"/>
+      <ellipse cx="650" cy="125" rx="160" ry="42"/>
+    </g>
+    <g fill="#36445a" opacity="0.8">
+      <ellipse cx="90" cy="160" rx="110" ry="22"/>
+      <ellipse cx="330" cy="150" rx="120" ry="20"/>
+      <ellipse cx="700" cy="175" rx="130" ry="24"/>
+    </g>
+    <g fill="#495a72" opacity="0.5">
+      <ellipse cx="230" cy="215" rx="140" ry="14"/>
+      <ellipse cx="610" cy="230" rx="150" ry="14"/>
+    </g>
+  </g>
+
+  <!-- lightning bolt -->
+  <path d="M168 120 L150 190 L176 190 L138 280 L160 280 L112 380 L182 262 L158 262 L196 180 L170 180 L188 120 Z" fill="#f4f7ff" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;0;1;0;0" keyTimes="0;0.6;0.61;0.63;0.65;0.67;1" dur="7s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- distant rain curtains -->
+  <g fill="#7f93aa" opacity="0.12">
+    <polygon points="20,170 160,170 120,380 -40,380"/>
+    <polygon points="600,180 760,180 720,380 560,380"/>
+  </g>
+
+  <!-- far sea -->
+  <rect y="370" width="800" height="230" fill="url(#sea)"/>
+  <path d="M0 372 Q30 366 60 372 T120 372 T180 372 T240 372 T300 372 T360 372 T420 372 T480 372 T540 372 T600 372 T660 372 T720 372 T780 372 T840 372 L840 380 L0 380 Z" fill="#3b5d6d" opacity="0.7"/>
+
+  <!-- rocky island -->
+  <path d="M370 420 L392 384 L428 360 L468 340 L598 336 L640 350 L676 378 L712 420 Z" fill="#1d232a"/>
+  <path d="M428 360 L468 340 L520 338 L480 356 L450 380 Z" fill="#2d363f"/>
+  <path d="M600 336 L640 350 L660 368 L620 360 Z" fill="#2d363f"/>
+
+  <!-- keeper's cottage -->
+  <rect x="566" y="312" width="52" height="28" fill="#c9c2b3"/>
+  <polygon points="560,314 592,292 624,314" fill="#5a3b33"/>
+  <rect x="598" y="290" width="8" height="14" fill="#4a4040"/>
+  <rect x="576" y="320" width="11" height="10" fill="#ffd27a">
+    <animate attributeName="opacity" values="1;0.75;1" dur="3s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="598" y="320" width="11" height="10" fill="#ffd27a" opacity="0.9"/>
+
+  <!-- lighthouse tower -->
+  <path d="M485 340 L555 340 L543 140 L497 140 Z" fill="#ece8df"/>
+  <path d="M492.6 300 L547.4 300 L545.6 270 L494.4 270 Z" fill="#b8322a"/>
+  <path d="M496.8 230 L543.2 230 L541.4 200 L498.6 200 Z" fill="#b8322a"/>
+  <path d="M500.4 170 L539.6 170 L543 140 L497 140 Z" fill="#b8322a"/>
+  <path d="M485 340 L555 340 L543 140 L497 140 Z" fill="url(#tower)"/>
+  <path d="M510 340 L510 318 Q520 308 530 318 L530 340 Z" fill="#3a2b25"/>
+  <rect x="516" y="244" width="8" height="12" rx="2" fill="#2a2f36"/>
+  <rect x="516" y="178" width="8" height="12" rx="2" fill="#ffd27a" opacity="0.85"/>
+  <rect x="480" y="336" width="80" height="6" fill="#4b4f55"/>
+
+  <!-- rotating beams -->
+  <g transform="translate(520 115)">
+    <g>
+      <animateTransform attributeName="transform" type="scale" values="1 1;0.02 1;-1 1;0.02 1;1 1" keyTimes="0;0.25;0.5;0.75;1" dur="6s" repeatCount="indefinite"/>
+      <polygon points="0,-8 -620,-75 -620,75 0,8" fill="url(#beam)"/>
+    </g>
+  </g>
+  <g transform="translate(520 115)">
+    <g>
+      <animateTransform attributeName="transform" type="scale" values="-1 1;-0.02 1;1 1;-0.02 1;-1 1" keyTimes="0;0.25;0.5;0.75;1" dur="6s" repeatCount="indefinite"/>
+      <polygon points="0,-8 -620,-75 -620,75 0,8" fill="url(#beam)" opacity="0.45"/>
+    </g>
+  </g>
+
+  <!-- gallery + lantern -->
+  <rect x="486" y="132" width="68" height="9" fill="#24282e"/>
+  <g stroke="#24282e" stroke-width="2">
+    <line x1="488" y1="132" x2="488" y2="122"/><line x1="500" y1="132" x2="500" y2="122"/>
+    <line x1="540" y1="132" x2="540" y2="122"/><line x1="552" y1="132" x2="552" y2="122"/>
+    <line x1="486" y1="122" x2="554" y2="122"/>
+  </g>
+  <rect x="499" y="98" width="42" height="34" fill="#ffe8a0"/>
+  <g stroke="#2a2e33" stroke-width="2.5">
+    <line x1="513" y1="98" x2="513" y2="132"/><line x1="527" y1="98" x2="527" y2="132"/>
+  </g>
+  <rect x="499" y="98" width="42" height="34" fill="none" stroke="#24282e" stroke-width="3"/>
+  <path d="M494 99 Q496 78 520 72 Q544 78 546 99 Z" fill="#8f2620"/>
+  <line x1="520" y1="72" x2="520" y2="58" stroke="#24282e" stroke-width="3"/>
+  <circle cx="520" cy="57" r="3.5" fill="#24282e"/>
+  <circle cx="520" cy="115" r="70" fill="url(#lampglow)">
+    <animate attributeName="r" values="45;95;45;95;45" keyTimes="0;0.25;0.5;0.75;1" dur="6s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- spray crashing on the rocks -->
+  <g fill="#e8f1f5">
+    <g opacity="0">
+      <animate attributeName="opacity" values="0;0.85;0" dur="3.2s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" values="0 20;0 -10" dur="3.2s" repeatCount="indefinite"/>
+      <circle cx="392" cy="378" r="14"/><circle cx="378" cy="360" r="10"/><circle cx="404" cy="356" r="9"/>
+      <circle cx="388" cy="340" r="6"/><circle cx="370" cy="346" r="5"/><circle cx="410" cy="338" r="4"/>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" values="0;0.85;0" dur="3.8s" begin="1.4s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" values="0 20;0 -12" dur="3.8s" begin="1.4s" repeatCount="indefinite"/>
+      <circle cx="690" cy="384" r="15"/><circle cx="706" cy="366" r="10"/><circle cx="676" cy="362" r="9"/>
+      <circle cx="696" cy="346" r="6"/><circle cx="716" cy="350" r="5"/><circle cx="680" cy="342" r="4"/>
+    </g>
+  </g>
+  <path d="M360 422 Q380 404 400 416 Q430 400 460 418 Q520 404 580 418 Q640 402 690 416 Q712 404 724 422 Z" fill="#dfe9ee" opacity="0.7"/>
+
+  <!-- mid swell -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;-10 6;0 0" dur="4s" repeatCount="indefinite"/>
+    <path d="M-20 455 C60 425 130 412 220 430 C300 446 360 420 440 432 C520 444 580 470 660 448 C720 432 780 430 830 440 L830 610 L-20 610 Z" fill="url(#wave1)"/>
+    <path d="M150 418 C190 412 220 422 250 432 M420 431 C460 428 500 438 520 444 M640 452 C680 440 720 434 760 434" stroke="#dbe8ee" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.6"/>
+  </g>
+
+  <!-- fishing boat -->
+  <g transform="translate(220 424)">
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="-9;7;-9" dur="4s" repeatCount="indefinite"/>
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0 0;0 9;0 0" dur="4s" repeatCount="indefinite"/>
+        <line x1="22" y1="-6" x2="22" y2="-74" stroke="#2c2622" stroke-width="3"/>
+        <line x1="22" y1="-70" x2="-50" y2="-8" stroke="#2c2622" stroke-width="1.2"/>
+        <line x1="22" y1="-70" x2="56" y2="-10" stroke="#2c2622" stroke-width="1.2"/>
+        <circle cx="22" cy="-76" r="3.5" fill="#ff5a4a">
+          <animate attributeName="opacity" values="1;0.2;1" dur="1.2s" repeatCount="indefinite"/>
+        </circle>
+        <rect x="-26" y="-36" width="34" height="30" fill="#e7e1d3"/>
+        <rect x="-30" y="-40" width="42" height="6" fill="#3a4a58"/>
+        <rect x="-19" y="-28" width="12" height="10" fill="#ffd27a"/>
+        <rect x="-3" y="-28" width="7" height="10" fill="#ffd27a" opacity="0.8"/>
+        <path d="M-64 -14 L62 -6 L46 18 L-46 18 Z" fill="#7b2d26"/>
+        <path d="M-64 -14 L62 -6 L60 -1 L-61 -8 Z" fill="#e7e1d3"/>
+      </g>
+    </g>
+  </g>
+  <path d="M150 440 Q180 428 200 446 Q230 432 260 444 Q285 432 300 444" stroke="#e8f1f5" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.7">
+    <animate attributeName="opacity" values="0.7;0.2;0.7" dur="4s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- foreground wave -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;14 -10;0 0" dur="5s" repeatCount="indefinite"/>
+    <path d="M-30 610 L-30 500 C40 470 110 476 170 500 C230 524 290 496 360 492 C430 488 490 530 570 516 C640 504 690 470 760 478 C800 482 820 492 840 500 L840 610 Z" fill="url(#wave2)"/>
+    <path d="M-10 498 C40 478 100 480 160 500 M340 494 C400 490 450 510 500 520 M660 486 C700 474 740 476 790 486" stroke="#e3eef3" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+    <path d="M60 540 C120 530 170 550 230 545 M420 560 C480 548 540 566 600 556 M640 535 C680 528 720 538 760 532" stroke="#a9c3cf" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.35"/>
+    <g fill="#e3eef3" opacity="0.7">
+      <circle cx="170" cy="496" r="4"/><circle cx="182" cy="490" r="3"/><circle cx="500" cy="516" r="4"/>
+      <circle cx="512" cy="510" r="3"/><circle cx="790" cy="482" r="4"/><circle cx="46" cy="482" r="3"/>
+    </g>
+  </g>
+
+  <!-- rain -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;-24 80" dur="0.45s" repeatCount="indefinite"/>
+    <rect x="-100" y="-160" width="1000" height="860" fill="url(#rain1)"/>
+  </g>
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;-45 150" dur="0.5s" repeatCount="indefinite"/>
+    <rect x="-100" y="-300" width="1000" height="1000" fill="url(#rain2)"/>
+  </g>
+
+  <rect width="800" height="600" fill="url(#vignette)"/>
+</svg>

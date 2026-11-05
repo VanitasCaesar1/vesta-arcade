@@ -1,0 +1,338 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efe7d6"/>
+      <stop offset="1" stop-color="#d9ccb3"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#86bde6"/>
+      <stop offset="1" stop-color="#f6dcb2"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7c5537"/>
+      <stop offset="1" stop-color="#553621"/>
+    </linearGradient>
+    <linearGradient id="tabletop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b9845a"/>
+      <stop offset="1" stop-color="#9c6a42"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b2a40"/>
+      <stop offset="1" stop-color="#2c4a6e"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5fe0c0"/>
+      <stop offset="1" stop-color="#2a9d8f"/>
+    </linearGradient>
+    <radialGradient id="fur" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#b8834f"/>
+      <stop offset="1" stop-color="#875a31"/>
+    </radialGradient>
+    <pattern id="winpat" width="9" height="11" patternUnits="userSpaceOnUse">
+      <rect x="2" y="2" width="4" height="5" fill="#fff8d8" opacity="0.55"/>
+    </pattern>
+    <clipPath id="winclip"><rect x="40" y="55" width="210" height="190"/></clipPath>
+    <clipPath id="bodyclip"><ellipse cx="685" cy="392" rx="70" ry="96"/></clipPath>
+  </defs>
+
+  <!-- room -->
+  <rect width="800" height="430" fill="url(#wall)"/>
+  <rect y="430" width="800" height="170" fill="url(#floor)"/>
+  <g stroke="#4a2f1c" stroke-width="2" opacity="0.35">
+    <line x1="0" y1="470" x2="800" y2="470"/>
+    <line x1="0" y1="515" x2="800" y2="515"/>
+    <line x1="0" y1="565" x2="800" y2="565"/>
+  </g>
+  <rect y="418" width="800" height="14" fill="#bba98a"/>
+
+  <!-- window with skyline -->
+  <rect x="30" y="45" width="230" height="210" rx="4" fill="#f7f2e8" stroke="#c9bca3" stroke-width="2"/>
+  <rect x="40" y="55" width="210" height="190" fill="url(#sky)"/>
+  <g clip-path="url(#winclip)">
+    <g fill="#fff" opacity="0.85">
+      <ellipse cx="95" cy="88" rx="26" ry="9"/>
+      <ellipse cx="112" cy="82" rx="16" ry="10"/>
+      <ellipse cx="205" cy="105" rx="20" ry="7"/>
+    </g>
+    <g>
+      <rect x="40" y="170" width="30" height="75" fill="#8aa7c4"/>
+      <rect x="72" y="130" width="34" height="115" fill="#6a88a8"/>
+      <rect x="108" y="158" width="28" height="90" fill="#7d9bbb"/>
+      <rect x="138" y="98" width="40" height="150" fill="#5f7d9d"/>
+      <rect x="180" y="145" width="30" height="100" fill="#8aa7c4"/>
+      <rect x="212" y="120" width="38" height="125" fill="#6f8db0"/>
+      <polygon points="138,98 158,78 178,98" fill="#5f7d9d"/>
+      <line x1="158" y1="78" x2="158" y2="62" stroke="#5f7d9d" stroke-width="2"/>
+    </g>
+    <g fill="url(#winpat)">
+      <rect x="40" y="176" width="30" height="69"/>
+      <rect x="72" y="136" width="34" height="109"/>
+      <rect x="108" y="164" width="28" height="84"/>
+      <rect x="138" y="104" width="40" height="144"/>
+      <rect x="180" y="151" width="30" height="94"/>
+      <rect x="212" y="126" width="38" height="119"/>
+    </g>
+  </g>
+  <g stroke="#f7f2e8" stroke-width="6">
+    <line x1="145" y1="55" x2="145" y2="245"/>
+    <line x1="40" y1="150" x2="250" y2="150"/>
+  </g>
+  <rect x="24" y="250" width="242" height="10" rx="3" fill="#e6dccb"/>
+
+  <!-- presentation screen -->
+  <rect x="296" y="36" width="278" height="198" rx="8" fill="#20232b"/>
+  <rect x="306" y="46" width="258" height="178" rx="3" fill="url(#screen)"/>
+  <g stroke="#ffffff" stroke-opacity="0.08" stroke-width="1">
+    <line x1="320" y1="205" x2="550" y2="205"/>
+    <line x1="320" y1="175" x2="550" y2="175"/>
+    <line x1="320" y1="145" x2="550" y2="145"/>
+    <line x1="320" y1="115" x2="550" y2="115"/>
+    <line x1="320" y1="85" x2="550" y2="85"/>
+  </g>
+  <!-- mini pie -->
+  <circle cx="340" cy="78" r="17" fill="#f2b84b"/>
+  <path d="M340 78 L340 61 A17 17 0 0 1 356 84 Z" fill="#ef6f6c"/>
+  <path d="M340 78 L356 84 A17 17 0 0 1 333 94 Z" fill="#5fe0c0"/>
+  <rect x="364" y="68" width="46" height="5" rx="2" fill="#9fb6d3" opacity="0.7"/>
+  <rect x="364" y="80" width="30" height="5" rx="2" fill="#9fb6d3" opacity="0.5"/>
+  <!-- bars -->
+  <g fill="url(#bar)">
+    <rect x="330" y="186" width="22" height="19" rx="2"/>
+    <rect x="365" y="176" width="22" height="29" rx="2"/>
+    <rect x="400" y="164" width="22" height="41" rx="2"/>
+    <rect x="435" y="140" width="22" height="65" rx="2"/>
+    <rect x="470" y="110" width="22" height="95" rx="2"/>
+    <rect x="505" y="76" width="22" height="129" rx="2">
+      <animate attributeName="height" values="129;137;129" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="76;68;76" dur="3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <path d="M330 178 L370 172 L410 160 L448 132 L486 98 L532 56" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="260" stroke-dashoffset="260">
+    <animate attributeName="stroke-dashoffset" values="260;0;0" keyTimes="0;0.55;1" dur="4s" repeatCount="indefinite"/>
+  </path>
+  <polygon points="540,48 520,54 534,68" fill="#ffd166" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.5;0.56;1" dur="4s" repeatCount="indefinite"/>
+  </polygon>
+
+  <!-- framed rocket poster -->
+  <rect x="655" y="26" width="112" height="92" rx="3" fill="#2f2f38"/>
+  <rect x="662" y="33" width="98" height="78" fill="#fbe6c8"/>
+  <circle cx="742" cy="50" r="7" fill="#f4a259"/>
+  <g transform="translate(708 74) rotate(35)">
+    <path d="M0 -30 C 12 -18 12 6 8 16 L -8 16 C -12 6 -12 -18 0 -30 Z" fill="#e9eef3" stroke="#3d405b" stroke-width="2"/>
+    <circle cx="0" cy="-8" r="5" fill="#81b29a" stroke="#3d405b" stroke-width="2"/>
+    <path d="M-8 6 L-16 20 L-8 16 Z M8 6 L16 20 L8 16 Z" fill="#e07a5f"/>
+    <path d="M-5 17 Q0 34 5 17 Z" fill="#f2cc8f">
+      <animate attributeName="d" values="M-5 17 Q0 34 5 17 Z;M-5 17 Q0 28 5 17 Z;M-5 17 Q0 34 5 17 Z" dur="0.4s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- plant -->
+  <g>
+    <path d="M770 395 C 740 330 735 300 748 270" stroke="#3e7d4f" stroke-width="4" fill="none"/>
+    <path d="M778 395 C 790 330 800 300 795 260" stroke="#3e7d4f" stroke-width="4" fill="none"/>
+    <ellipse cx="748" cy="285" rx="10" ry="24" fill="#4f9a62" transform="rotate(-25 748 285)"/>
+    <ellipse cx="795" cy="275" rx="10" ry="26" fill="#468c58" transform="rotate(15 795 275)"/>
+    <ellipse cx="760" cy="330" rx="9" ry="20" fill="#5aa86c" transform="rotate(-50 760 330)"/>
+    <ellipse cx="790" cy="335" rx="9" ry="20" fill="#4f9a62" transform="rotate(40 790 335)"/>
+    <path d="M752 392 L800 392 L795 440 L757 440 Z" fill="#c76b4a"/>
+  </g>
+
+  <!-- floor shadows -->
+  <ellipse cx="335" cy="540" rx="300" ry="14" fill="#000" opacity="0.18"/>
+  <ellipse cx="690" cy="502" rx="75" ry="10" fill="#000" opacity="0.22"/>
+
+  <!-- board member: turtle -->
+  <rect x="115" y="252" width="90" height="155" rx="18" fill="#34354a"/>
+  <ellipse cx="160" cy="348" rx="50" ry="60" fill="#5e7a34" stroke="#45601f" stroke-width="4"/>
+  <path d="M125 330 L145 315 L175 315 L195 330 M130 365 L190 365" stroke="#45601f" stroke-width="3" fill="none" opacity="0.6"/>
+  <ellipse cx="160" cy="362" rx="31" ry="44" fill="#e3cf8a"/>
+  <path d="M136 350 L184 350 M134 372 L186 372" stroke="#c4ae66" stroke-width="2"/>
+  <rect x="148" y="304" width="24" height="28" fill="#8fb860"/>
+  <ellipse cx="160" cy="292" rx="27" ry="24" fill="#8fb860"/>
+  <g stroke="#2e2e2e" stroke-width="2.5">
+    <circle cx="149" cy="289" r="8.5" fill="#ffffff" fill-opacity="0.7"/>
+    <circle cx="171" cy="289" r="8.5" fill="#ffffff" fill-opacity="0.7"/>
+    <line x1="157.5" y1="289" x2="162.5" y2="289"/>
+  </g>
+  <circle cx="150" cy="290" r="3" fill="#222"/>
+  <circle cx="172" cy="290" r="3" fill="#222"/>
+  <path d="M151 304 Q160 310 169 304" stroke="#3c5a22" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- board member: rabbit -->
+  <rect x="250" y="252" width="90" height="155" rx="18" fill="#34354a"/>
+  <g>
+    <animateTransform attributeName="transform" type="rotate" values="0 295 300;4 295 300;0 295 300;0 295 300" keyTimes="0;0.15;0.3;1" dur="5s" repeatCount="indefinite"/>
+    <ellipse cx="280" cy="226" rx="11" ry="38" fill="#ddd8d2" transform="rotate(-8 280 226)"/>
+    <ellipse cx="280" cy="228" rx="5" ry="27" fill="#f1b9c2" transform="rotate(-8 280 228)"/>
+    <ellipse cx="311" cy="226" rx="11" ry="38" fill="#ddd8d2" transform="rotate(10 311 226)"/>
+    <ellipse cx="311" cy="228" rx="5" ry="27" fill="#f1b9c2" transform="rotate(10 311 228)"/>
+  </g>
+  <ellipse cx="295" cy="362" rx="40" ry="48" fill="#5b7fa6"/>
+  <path d="M275 322 Q295 334 315 322 L312 314 Q295 324 278 314 Z" fill="#46688d"/>
+  <circle cx="295" cy="292" r="29" fill="#e9e4de"/>
+  <circle cx="284" cy="288" r="4" fill="#2a2a2a"/>
+  <circle cx="306" cy="288" r="4" fill="#2a2a2a"/>
+  <circle cx="285.5" cy="286.5" r="1.3" fill="#fff"/>
+  <circle cx="307.5" cy="286.5" r="1.3" fill="#fff"/>
+  <path d="M291 298 L299 298 L295 303 Z" fill="#e88a9a"/>
+  <path d="M295 303 L295 308 M295 308 Q290 312 287 309 M295 308 Q300 312 303 309" stroke="#8a7f78" stroke-width="1.6" fill="none"/>
+  <g stroke="#b4aca5" stroke-width="1">
+    <line x1="282" y1="302" x2="264" y2="298"/>
+    <line x1="282" y1="305" x2="265" y2="307"/>
+    <line x1="308" y1="302" x2="326" y2="298"/>
+    <line x1="308" y1="305" x2="325" y2="307"/>
+  </g>
+  <ellipse cx="280" cy="294" rx="6" ry="3.5" fill="#f3a7b3" opacity="0.5"/>
+  <ellipse cx="310" cy="294" rx="6" ry="3.5" fill="#f3a7b3" opacity="0.5"/>
+
+  <!-- board member: owl -->
+  <rect x="395" y="252" width="90" height="155" rx="18" fill="#34354a"/>
+  <ellipse cx="440" cy="350" rx="44" ry="57" fill="#8b6b4a"/>
+  <ellipse cx="440" cy="366" rx="28" ry="38" fill="#dcc7a2"/>
+  <path d="M428 352 l4 5 l4 -5 M444 352 l4 5 l4 -5 M436 368 l4 5 l4 -5 M428 384 l4 5 l4 -5 M444 384 l4 5 l4 -5" stroke="#a88a62" stroke-width="2" fill="none"/>
+  <polygon points="404,290 410,258 424,284" fill="#7a5b3c"/>
+  <polygon points="476,290 470,258 456,284" fill="#7a5b3c"/>
+  <ellipse cx="440" cy="302" rx="40" ry="32" fill="#8b6b4a"/>
+  <circle cx="425" cy="304" r="17" fill="#f1e5cc"/>
+  <circle cx="455" cy="304" r="17" fill="#f1e5cc"/>
+  <circle cx="425" cy="304" r="10" fill="#f6c33a"/>
+  <circle cx="455" cy="304" r="10" fill="#f6c33a"/>
+  <g fill="#1f1a14">
+    <circle cx="427" cy="304" r="5">
+      <animate attributeName="cx" values="427;429;429;427" keyTimes="0;0.2;0.8;1" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="457" cy="304" r="5">
+      <animate attributeName="cx" values="457;459;459;457" keyTimes="0;0.2;0.8;1" dur="4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <g fill="#8b6b4a">
+    <rect x="406" y="286" width="38" height="0">
+      <animate attributeName="height" values="0;0;19;0;0" keyTimes="0;0.9;0.94;0.98;1" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="437" y="286" width="38" height="0">
+      <animate attributeName="height" values="0;0;19;0;0" keyTimes="0;0.9;0.94;0.98;1" dur="4s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <path d="M435 314 L445 314 L440 324 Z" fill="#e8962e"/>
+
+  <!-- table -->
+  <polygon points="70,395 600,395 632,440 38,440" fill="url(#tabletop)"/>
+  <polygon points="70,395 600,395 603,399 67,399" fill="#cf9d72" opacity="0.6"/>
+  <rect x="38" y="440" width="594" height="20" fill="#7b4f2e"/>
+  <rect x="58" y="460" width="554" height="72" fill="#68432a"/>
+  <rect x="58" y="460" width="554" height="6" fill="#000" opacity="0.15"/>
+
+  <!-- items on table -->
+  <!-- turtle laptop + arms -->
+  <ellipse cx="118" cy="398" rx="13" ry="8" fill="#8fb860"/>
+  <ellipse cx="203" cy="398" rx="13" ry="8" fill="#8fb860"/>
+  <rect x="124" y="348" width="74" height="48" rx="4" fill="#b9c0c9"/>
+  <rect x="120" y="394" width="82" height="6" rx="2" fill="#9aa1aa"/>
+  <circle cx="161" cy="371" r="5" fill="#e3e8ee"/>
+  <!-- turtle mug -->
+  <rect x="215" y="398" width="18" height="22" rx="3" fill="#f4f1ea"/>
+  <path d="M233 403 q8 0 8 7 q0 7 -8 7" stroke="#f4f1ea" stroke-width="3" fill="none"/>
+  <ellipse cx="224" cy="398" rx="9" ry="2.5" fill="#5a3a22"/>
+  <!-- rabbit paws + mug -->
+  <ellipse cx="282" cy="402" rx="10" ry="7" fill="#e9e4de"/>
+  <ellipse cx="318" cy="402" rx="10" ry="7" fill="#e9e4de"/>
+  <rect x="289" y="384" width="22" height="24" rx="3" fill="#ef6f6c"/>
+  <ellipse cx="300" cy="384" rx="11" ry="3" fill="#4a2c18"/>
+  <g stroke="#ffffff" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round">
+    <path d="M296 378 q-5 -8 0 -15 q5 -7 0 -14">
+      <animate attributeName="opacity" values="0;0.8;0" dur="2.5s" repeatCount="indefinite"/>
+    </path>
+    <path d="M304 376 q-5 -8 0 -15 q5 -7 0 -14">
+      <animate attributeName="opacity" values="0.8;0;0.8" dur="2.5s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  <!-- papers -->
+  <rect x="236" y="415" width="38" height="20" fill="#fbfbf7" transform="rotate(-6 255 425)"/>
+  <rect x="242" y="413" width="38" height="20" fill="#ffffff" transform="rotate(4 261 423)"/>
+  <rect x="248" y="418" width="22" height="2.5" fill="#c9d3de" transform="rotate(4 261 423)"/>
+  <rect x="248" y="424" width="16" height="2.5" fill="#c9d3de" transform="rotate(4 261 423)"/>
+  <!-- watermelon snack plate -->
+  <ellipse cx="368" cy="420" rx="38" ry="10" fill="#f3f3ee" stroke="#d8d6cc" stroke-width="2"/>
+  <g>
+    <path d="M340 418 L354 396 L366 418 Z" fill="#ef5b5b"/>
+    <path d="M340 418 L366 418" stroke="#4caf50" stroke-width="4"/>
+    <path d="M362 418 L378 394 L392 418 Z" fill="#f06a6a"/>
+    <path d="M362 418 L392 418" stroke="#3f9d46" stroke-width="4"/>
+    <g fill="#2b2b2b">
+      <circle cx="353" cy="408" r="1.3"/><circle cx="357" cy="412" r="1.3"/><circle cx="349" cy="413" r="1.3"/>
+      <circle cx="377" cy="406" r="1.3"/><circle cx="381" cy="412" r="1.3"/><circle cx="373" cy="412" r="1.3"/>
+    </g>
+  </g>
+  <!-- owl laptop + wings -->
+  <ellipse cx="402" cy="398" rx="12" ry="8" fill="#7a5b3c"/>
+  <ellipse cx="478" cy="398" rx="12" ry="8" fill="#7a5b3c"/>
+  <rect x="404" y="348" width="74" height="48" rx="4" fill="#9fa7b2"/>
+  <rect x="400" y="394" width="82" height="6" rx="2" fill="#868e99"/>
+  <circle cx="441" cy="371" r="5" fill="#c9d0d8"/>
+  <!-- glass of water -->
+  <path d="M520 392 L540 392 L537 422 L523 422 Z" fill="#cfe8f5" opacity="0.8" stroke="#a9c9db" stroke-width="1.5"/>
+  <rect x="522" y="400" width="16" height="20" fill="#9fd0ea" opacity="0.5"/>
+
+  <!-- capybara CEO -->
+  <g>
+    <!-- legs -->
+    <rect x="642" y="460" width="27" height="40" rx="11" fill="#7d5230"/>
+    <rect x="698" y="460" width="27" height="40" rx="11" fill="#7d5230"/>
+    <ellipse cx="652" cy="500" rx="19" ry="7" fill="#5e3c22"/>
+    <ellipse cx="714" cy="500" rx="19" ry="7" fill="#5e3c22"/>
+    <!-- back arm with mug -->
+    <line x1="744" y1="340" x2="752" y2="408" stroke="#24345a" stroke-width="22" stroke-linecap="round"/>
+    <!-- neck -->
+    <ellipse cx="672" cy="292" rx="42" ry="30" fill="#93633a"/>
+    <!-- body + suit -->
+    <ellipse cx="685" cy="392" rx="70" ry="96" fill="url(#fur)"/>
+    <g clip-path="url(#bodyclip)">
+      <rect x="600" y="300" width="170" height="168" fill="#2c3e66"/>
+      <rect x="600" y="300" width="40" height="168" fill="#24345a"/>
+      <polygon points="626,298 672,298 652,372" fill="#f7f7f2"/>
+      <polygon points="644,303 657,303 661,350 651,363 641,350" fill="#d64545"/>
+      <polygon points="644,303 657,303 654,312 647,312" fill="#a83232"/>
+      <path d="M626 298 L652 372 M672 298 L652 372" stroke="#3e5689" stroke-width="7"/>
+      <circle cx="656" cy="400" r="3.5" fill="#1a2644"/>
+      <circle cx="656" cy="424" r="3.5" fill="#1a2644"/>
+      <rect x="700" y="330" width="22" height="5" fill="#f2c14e" transform="rotate(-8 711 332)"/>
+    </g>
+    <!-- mug in back paw -->
+    <rect x="740" y="402" width="24" height="28" rx="4" fill="#f2b84b"/>
+    <path d="M764 408 q9 0 9 8 q0 8 -9 8" stroke="#f2b84b" stroke-width="3.5" fill="none"/>
+    <circle cx="748" cy="414" r="11" fill="#93633a"/>
+    <g stroke="#fff" stroke-width="2" fill="none" opacity="0.7" stroke-linecap="round">
+      <path d="M752 396 q-5 -7 0 -13 q5 -6 0 -12">
+        <animate attributeName="opacity" values="0.8;0;0.8" dur="2s" repeatCount="indefinite"/>
+      </path>
+    </g>
+    <!-- head -->
+    <g transform="translate(648 232)">
+      <animateTransform attributeName="transform" type="translate" values="648 232;648 229;648 232" dur="2s" repeatCount="indefinite"/>
+      <ellipse cx="22" cy="-52" rx="12" ry="10" fill="#7a4b28"/>
+      <ellipse cx="22" cy="-50" rx="6" ry="5" fill="#4f2f17"/>
+      <path d="M50 -5 C 50 -42 25 -58 -5 -58 L -60 -50 C -85 -46 -100 -35 -102 -15 L -102 20 C -100 38 -88 46 -70 47 L 10 50 C 38 50 50 30 50 -5 Z" fill="url(#fur)"/>
+      <path d="M-102 -15 C -100 -35 -88 -44 -72 -47 C -78 -30 -78 25 -70 47 C -88 46 -100 38 -102 20 Z" fill="#6e4526" opacity="0.45"/>
+      <ellipse cx="-95" cy="-18" rx="3" ry="5.5" fill="#3a2414" transform="rotate(15 -95 -18)"/>
+      <path d="M-100 26 Q-90 33 -78 28" stroke="#3a2414" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M-40 -38 Q-30 -44 -20 -39" stroke="#5a3820" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="-30" cy="-29" r="6" fill="#24160c"/>
+      <circle cx="-28" cy="-31" r="2" fill="#fff"/>
+      <ellipse cx="-30" cy="12" rx="15" ry="8" fill="#e98f7a" opacity="0.3"/>
+      <!-- the yuzu -->
+      <circle cx="-8" cy="-72" r="15" fill="#f39a2b"/>
+      <circle cx="-13" cy="-77" r="4" fill="#ffc46b"/>
+      <path d="M-8 -87 q8 -10 18 -6 q-6 9 -18 6 Z" fill="#5aa04e"/>
+    </g>
+    <!-- pointing arm -->
+    <line x1="636" y1="352" x2="552" y2="322" stroke="#2c3e66" stroke-width="24" stroke-linecap="round"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 544 318;-4 544 318;0 544 318" dur="2s" repeatCount="indefinite"/>
+      <line x1="544" y1="318" x2="522" y2="72" stroke="#2b2b2b" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="522" cy="72" r="4" fill="#d64545"/>
+      <circle cx="544" cy="318" r="12" fill="#93633a"/>
+      <path d="M534 312 q-4 6 2 10" stroke="#6e4526" stroke-width="2" fill="none"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,280 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c3e57"/>
+      <stop offset="1" stop-color="#5b6f88"/>
+    </linearGradient>
+    <linearGradient id="street" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b4656"/>
+      <stop offset="1" stop-color="#232a35"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9fb0bf"/>
+      <stop offset="0.4" stop-color="#e3ebf1"/>
+      <stop offset="1" stop-color="#7f909f"/>
+    </linearGradient>
+    <linearGradient id="metalDark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6c7c8b"/>
+      <stop offset="0.5" stop-color="#aebdc9"/>
+      <stop offset="1" stop-color="#5f6e7c"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe3a3" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#ffe3a3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="puddle" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7d93ad"/>
+      <stop offset="1" stop-color="#4d5f76"/>
+    </radialGradient>
+    <radialGradient id="screenGlow" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#1d3b4f"/>
+      <stop offset="1" stop-color="#0d1c27"/>
+    </radialGradient>
+    <pattern id="rain" width="20" height="70" patternUnits="userSpaceOnUse">
+      <line x1="16" y1="4" x2="12" y2="22" stroke="#d6e3f0" stroke-width="1.5" stroke-opacity="0.5"/>
+      <line x1="6" y1="40" x2="2" y2="58" stroke="#d6e3f0" stroke-width="1.5" stroke-opacity="0.4"/>
+    </pattern>
+    <pattern id="rainBig" width="40" height="140" patternUnits="userSpaceOnUse">
+      <line x1="34" y1="10" x2="26" y2="44" stroke="#eef4fa" stroke-width="2.2" stroke-opacity="0.55"/>
+      <line x1="14" y1="80" x2="6" y2="114" stroke="#eef4fa" stroke-width="2.2" stroke-opacity="0.45"/>
+    </pattern>
+    <clipPath id="canopyClip"><path d="M-135 -100 Q0 -195 135 -100 Z"/></clipPath>
+  </defs>
+
+  <!-- sky + city -->
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <g fill="#3a4b62">
+    <rect x="0" y="150" width="90" height="260"/>
+    <rect x="95" y="90" width="70" height="320"/>
+    <rect x="170" y="190" width="80" height="220"/>
+    <rect x="560" y="120" width="85" height="290"/>
+    <rect x="650" y="170" width="70" height="240"/>
+    <rect x="725" y="100" width="80" height="310"/>
+    <rect x="255" y="230" width="60" height="180"/>
+    <rect x="480" y="210" width="75" height="200"/>
+  </g>
+  <g fill="#2f3e52">
+    <rect x="320" y="250" width="70" height="160"/>
+    <rect x="395" y="200" width="80" height="210"/>
+  </g>
+  <g fill="#ffd88a">
+    <rect x="12" y="170" width="10" height="12" opacity="0.8"/><rect x="40" y="200" width="10" height="12" opacity="0.6"/>
+    <rect x="62" y="240" width="10" height="12" opacity="0.9"/><rect x="18" y="290" width="10" height="12" opacity="0.5"/>
+    <rect x="108" y="110" width="10" height="12" opacity="0.7"/><rect x="140" y="150" width="10" height="12" opacity="0.9"/>
+    <rect x="108" y="220" width="10" height="12" opacity="0.6"/><rect x="140" y="270" width="10" height="12" opacity="0.8"/>
+    <rect x="186" y="210" width="10" height="12" opacity="0.7"/><rect x="220" y="250" width="10" height="12" opacity="0.5"/>
+    <rect x="574" y="140" width="10" height="12" opacity="0.9"/><rect x="610" y="180" width="10" height="12" opacity="0.6"/>
+    <rect x="574" y="240" width="10" height="12" opacity="0.7"/><rect x="664" y="190" width="10" height="12" opacity="0.8"/>
+    <rect x="694" y="250" width="10" height="12" opacity="0.5"/><rect x="740" y="120" width="10" height="12" opacity="0.7"/>
+    <rect x="772" y="170" width="10" height="12" opacity="0.9"/><rect x="740" y="230" width="10" height="12" opacity="0.6"/>
+    <rect x="410" y="220" width="10" height="12" opacity="0.6"/><rect x="446" y="260" width="10" height="12" opacity="0.8"/>
+    <rect x="496" y="230" width="10" height="12" opacity="0.7"/><rect x="530" y="280" width="10" height="12" opacity="0.5"/>
+    <rect x="336" y="270" width="10" height="12" opacity="0.7"/><rect x="268" y="250" width="10" height="12" opacity="0.6"/>
+  </g>
+  <rect y="300" width="800" height="110" fill="#5b6f88" opacity="0.35"/>
+
+  <!-- sidewalk + street -->
+  <rect y="405" width="800" height="195" fill="url(#street)"/>
+  <rect y="405" width="800" height="10" fill="#56647a"/>
+  <g stroke="#2a323e" stroke-width="2">
+    <line x1="120" y1="415" x2="60" y2="600"/><line x1="300" y1="415" x2="270" y2="600"/>
+    <line x1="480" y1="415" x2="490" y2="600"/><line x1="660" y1="415" x2="710" y2="600"/>
+  </g>
+  <!-- wet reflections of windows -->
+  <g fill="#ffd88a" opacity="0.18">
+    <rect x="140" y="430" width="10" height="40"/><rect x="574" y="440" width="10" height="45"/>
+    <rect x="740" y="430" width="10" height="50"/><rect x="40" y="445" width="10" height="35"/>
+  </g>
+
+  <!-- street lamp -->
+  <g>
+    <circle cx="690" cy="140" r="120" fill="url(#lamp)"/>
+    <rect x="684" y="140" width="10" height="275" fill="#1d242e"/>
+    <path d="M664 130 L716 130 L706 112 L674 112 Z" fill="#1d242e"/>
+    <rect x="672" y="130" width="36" height="16" fill="#ffe7ad"/>
+    <path d="M668 146 L712 146" stroke="#1d242e" stroke-width="4"/>
+    <polygon points="672,146 708,146 780,410 600,410" fill="#ffe3a3" opacity="0.08"/>
+    <ellipse cx="690" cy="470" rx="70" ry="10" fill="#ffe3a3" opacity="0.15"/>
+  </g>
+
+  <!-- puddles -->
+  <ellipse cx="200" cy="520" rx="120" ry="22" fill="url(#puddle)" opacity="0.8"/>
+  <ellipse cx="610" cy="540" rx="100" ry="18" fill="url(#puddle)" opacity="0.7"/>
+  <!-- reflections in puddles -->
+  <g opacity="0.35">
+    <rect x="234" y="510" width="34" height="16" rx="6" fill="#aebdc9"/>
+    <rect x="248" y="524" width="8" height="10" fill="#7fe3ff"/>
+  </g>
+  <g fill="none" stroke="#c6d6e6" stroke-width="1.5">
+    <ellipse cx="160" cy="520" rx="4" ry="1"><animate attributeName="rx" values="2;30" dur="1.6s" repeatCount="indefinite"/><animate attributeName="ry" values="0.5;6" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1.6s" repeatCount="indefinite"/></ellipse>
+    <ellipse cx="250" cy="528" rx="4" ry="1"><animate attributeName="rx" values="2;26" dur="1.4s" begin="0.6s" repeatCount="indefinite"/><animate attributeName="ry" values="0.5;5" dur="1.4s" begin="0.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1.4s" begin="0.6s" repeatCount="indefinite"/></ellipse>
+    <ellipse cx="580" cy="538" rx="4" ry="1"><animate attributeName="rx" values="2;28" dur="1.5s" begin="0.3s" repeatCount="indefinite"/><animate attributeName="ry" values="0.5;5" dur="1.5s" begin="0.3s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1.5s" begin="0.3s" repeatCount="indefinite"/></ellipse>
+    <ellipse cx="650" cy="545" rx="4" ry="1"><animate attributeName="rx" values="2;22" dur="1.3s" begin="0.9s" repeatCount="indefinite"/><animate attributeName="ry" values="0.5;4" dur="1.3s" begin="0.9s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1.3s" begin="0.9s" repeatCount="indefinite"/></ellipse>
+  </g>
+
+  <!-- ground shadows -->
+  <ellipse cx="290" cy="500" rx="85" ry="10" fill="#000" opacity="0.3"/>
+  <ellipse cx="505" cy="497" rx="80" ry="8" fill="#000" opacity="0.3"/>
+
+  <!-- ROBOT -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 -4;0 0;0 -4;0 0" dur="1.2s" repeatCount="indefinite"/>
+    <!-- far leg -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="12 300 400;-12 300 400;12 300 400" dur="1.2s" repeatCount="indefinite"/>
+      <rect x="292" y="395" width="20" height="80" rx="8" fill="url(#metalDark)"/>
+      <path d="M284 472 L326 472 Q330 494 316 494 L286 494 Q278 494 284 472 Z" fill="#4a5866"/>
+    </g>
+    <!-- far arm holding leash -->
+    <path d="M326 316 C356 340 372 356 388 362" stroke="#7f909f" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <circle cx="392" cy="364" r="10" fill="#5f6e7c"/>
+    <!-- torso -->
+    <rect x="236" y="290" width="112" height="118" rx="22" fill="url(#metal)"/>
+    <rect x="252" y="312" width="62" height="44" rx="8" fill="#2c3a47"/>
+    <circle cx="268" cy="334" r="7" fill="#ff6b6b">
+      <animate attributeName="opacity" values="1;0.35;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <rect x="282" y="326" width="22" height="4" rx="2" fill="#7fe3ff"/>
+    <rect x="282" y="336" width="14" height="4" rx="2" fill="#7fe3ff" opacity="0.6"/>
+    <path d="M246 370 L338 370" stroke="#7f909f" stroke-width="3"/>
+    <circle cx="256" cy="388" r="4" fill="#7f909f"/><circle cx="328" cy="388" r="4" fill="#7f909f"/>
+    <!-- near leg -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="-12 284 400;12 284 400;-12 284 400" dur="1.2s" repeatCount="indefinite"/>
+      <rect x="274" y="395" width="22" height="82" rx="8" fill="url(#metal)"/>
+      <circle cx="285" cy="436" r="7" fill="#7f909f"/>
+      <path d="M266 474 L312 474 Q318 498 302 498 L270 498 Q260 498 266 474 Z" fill="#596877"/>
+    </g>
+    <!-- neck + head -->
+    <rect x="280" y="272" width="24" height="22" fill="#7f909f"/>
+    <rect x="232" y="196" width="122" height="84" rx="24" fill="url(#metal)"/>
+    <rect x="246" y="208" width="94" height="58" rx="16" fill="url(#screenGlow)"/>
+    <g fill="#7fe3ff">
+      <ellipse cx="276" cy="232" rx="7" ry="9">
+        <animate attributeName="ry" values="9;9;1;9;9" keyTimes="0;0.92;0.95;0.98;1" dur="4s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="312" cy="232" rx="7" ry="9">
+        <animate attributeName="ry" values="9;9;1;9;9" keyTimes="0;0.92;0.95;0.98;1" dur="4s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+    <path d="M282 250 Q294 259 306 250" stroke="#7fe3ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="262" cy="250" rx="6" ry="3" fill="#ff8fb1" opacity="0.6"/>
+    <ellipse cx="326" cy="250" rx="6" ry="3" fill="#ff8fb1" opacity="0.6"/>
+    <rect x="224" y="222" width="10" height="28" rx="4" fill="#7f909f"/>
+    <rect x="352" y="222" width="10" height="28" rx="4" fill="#7f909f"/>
+    <line x1="293" y1="196" x2="293" y2="172" stroke="#7f909f" stroke-width="4"/>
+    <circle cx="293" cy="168" r="7" fill="#ffcf5c">
+      <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <!-- raindrops beading on the head -->
+    <g fill="#d6ecff" opacity="0.8">
+      <circle cx="250" cy="202" r="2.5"/><circle cx="330" cy="200" r="2"/><circle cx="345" cy="214" r="2.5"/>
+      <circle cx="244" cy="300" r="2"/><circle cx="340" cy="306" r="2.5"/>
+    </g>
+    <!-- near arm reaching out to hold umbrella over the dog -->
+    <path d="M340 310 C390 302 440 294 466 284" stroke="url(#metal)" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <circle cx="341" cy="312" r="11" fill="#8fa0af"/>
+  </g>
+
+  <!-- umbrella (held over the dog, not the robot) -->
+  <g transform="translate(470 282)">
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="16;21;16" dur="2.4s" repeatCount="indefinite"/>
+      <path d="M0 -192 L0 6 Q0 18 -10 18" stroke="#2b2b2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M-135 -100 Q0 -195 135 -100 Z" fill="#f2c94c"/>
+      <g clip-path="url(#canopyClip)">
+        <path d="M0 -190 L-80 -96 L-45 -96 Z M0 -190 L45 -96 L80 -96 Z" fill="#e0a92e"/>
+      </g>
+      <path d="M-135 -100 Q-118 -90 -101 -100 Q-84 -90 -67 -100 Q-51 -90 -34 -100 Q-17 -90 0 -100 Q17 -90 34 -100 Q51 -90 67 -100 Q84 -90 101 -100 Q118 -90 135 -100" fill="#f2c94c" stroke="#d29a20" stroke-width="2"/>
+      <circle cx="0" cy="-192" r="5" fill="#2b2b2b"/>
+    </g>
+  </g>
+  <!-- drips off the canopy edges -->
+  <g fill="#cfe3f5">
+    <circle cx="374" cy="150" r="3"><animate attributeName="cy" values="150;400" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1s" repeatCount="indefinite"/></circle>
+    <circle cx="630" cy="234" r="3"><animate attributeName="cy" values="234;420" dur="0.9s" begin="0.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="0.9s" begin="0.4s" repeatCount="indefinite"/></circle>
+  </g>
+  <!-- robot hand on umbrella handle -->
+  <circle cx="470" cy="282" r="11" fill="#8fa0af"/>
+
+  <!-- DOG in a raincoat -->
+  <g transform="translate(-30 0)">
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0;0 -3;0 0" dur="0.8s" repeatCount="indefinite"/>
+    <!-- tail -->
+    <path d="M482 410 C462 396 456 378 466 366" stroke="#c98b4f" stroke-width="10" fill="none" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" values="-15 482 410;20 482 410;-15 482 410" dur="0.35s" repeatCount="indefinite"/>
+    </path>
+    <!-- back legs -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="15 500 440;-15 500 440;15 500 440" dur="0.8s" repeatCount="indefinite"/>
+      <rect x="492" y="428" width="14" height="60" rx="7" fill="#a86f3c"/>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="15 580 440;-15 580 440;15 580 440" dur="0.8s" repeatCount="indefinite"/>
+      <rect x="572" y="428" width="14" height="60" rx="7" fill="#a86f3c"/>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="-15 512 440;15 512 440;-15 512 440" dur="0.8s" repeatCount="indefinite"/>
+      <rect x="504" y="428" width="15" height="62" rx="7" fill="#c98b4f"/>
+      <ellipse cx="514" cy="490" rx="10" ry="5" fill="#c98b4f"/>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="-15 592 440;15 592 440;-15 592 440" dur="0.8s" repeatCount="indefinite"/>
+      <rect x="584" y="428" width="15" height="62" rx="7" fill="#c98b4f"/>
+      <ellipse cx="594" cy="490" rx="10" ry="5" fill="#c98b4f"/>
+    </g>
+    <!-- body -->
+    <ellipse cx="545" cy="418" rx="68" ry="34" fill="#c98b4f"/>
+    <!-- raincoat -->
+    <path d="M480 412 C484 380 520 372 552 374 C584 374 608 384 614 406 L612 432 C580 444 520 446 484 436 Z" fill="#e8483f"/>
+    <path d="M480 430 C520 442 580 440 612 428" stroke="#b8322a" stroke-width="3" fill="none"/>
+    <path d="M500 382 L604 398" stroke="#ff7a70" stroke-width="3" opacity="0.6"/>
+    <circle cx="560" cy="414" r="3" fill="#fff"/><circle cx="580" cy="412" r="3" fill="#fff"/>
+    <!-- head -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 612 380;-6 612 380;0 612 380" dur="3s" repeatCount="indefinite"/>
+      <ellipse cx="612" cy="392" rx="16" ry="20" fill="#c98b4f"/>
+      <ellipse cx="632" cy="368" rx="32" ry="28" fill="#c98b4f"/>
+      <ellipse cx="660" cy="378" rx="20" ry="14" fill="#e0b07a"/>
+      <ellipse cx="676" cy="372" rx="7" ry="5.5" fill="#2a1d14"/>
+      <path d="M658 388 Q668 394 676 386" stroke="#2a1d14" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M664 391 Q668 404 674 392 Z" fill="#ff7e94">
+        <animate attributeName="d" values="M664 391 Q668 404 674 392 Z;M664 391 Q669 408 674 392 Z;M664 391 Q668 404 674 392 Z" dur="0.4s" repeatCount="indefinite"/>
+      </path>
+      <circle cx="642" cy="360" r="5" fill="#2a1d14"/>
+      <circle cx="643.5" cy="358.5" r="1.6" fill="#fff"/>
+      <path d="M618 346 C602 344 596 362 600 384 C612 380 620 366 624 352 Z" fill="#7a4a24">
+        <animateTransform attributeName="transform" type="rotate" values="0 620 348;8 620 348;0 620 348" dur="0.8s" repeatCount="indefinite"/>
+      </path>
+      <!-- little rain hat -->
+      <path d="M604 350 C606 326 650 322 662 346 Z" fill="#e8483f"/>
+      <path d="M598 352 Q634 340 672 350" stroke="#b8322a" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </g>
+    <!-- collar -->
+    <path d="M604 380 Q614 396 628 394" stroke="#2f6fd6" stroke-width="5" fill="none"/>
+    <circle cx="618" cy="396" r="3.5" fill="#ffd166"/>
+  </g>
+  </g>
+  <!-- leash -->
+  <path d="M394 366 C440 326 536 334 588 394" stroke="#e05656" stroke-width="3" fill="none"/>
+
+  <!-- rain -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;-20 70" dur="0.4s" repeatCount="indefinite"/>
+    <rect x="-100" y="-140" width="1000" height="840" fill="url(#rain)"/>
+  </g>
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0;-40 140" dur="0.55s" repeatCount="indefinite"/>
+    <rect x="-100" y="-280" width="1000" height="980" fill="url(#rainBig)"/>
+  </g>
+  <!-- splashes on the robot's head -->
+  <g stroke="#e3f0ff" stroke-width="2" stroke-linecap="round" fill="none">
+    <path d="M258 192 l-6 -8 M262 190 l0 -9 M266 192 l6 -8" opacity="0">
+      <animate attributeName="opacity" values="0;1;0" dur="0.7s" repeatCount="indefinite"/>
+    </path>
+    <path d="M318 192 l-6 -8 M322 190 l0 -9 M326 192 l6 -8" opacity="0">
+      <animate attributeName="opacity" values="0;1;0" dur="0.9s" begin="0.35s" repeatCount="indefinite"/>
+    </path>
+  </g>
+</svg>
