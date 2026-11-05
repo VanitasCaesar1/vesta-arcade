@@ -588,7 +588,12 @@ export function GamePage(p: {
             ) : null}
 
             <div>
-              <h3>Changelog</h3>
+              <h3>
+                Changelog{" "}
+                <a class="follow" href={`/g/${g.slug}/feed.xml`} title="Follow this game's updates (RSS)">
+                  Follow
+                </a>
+              </h3>
               <ul class="log">
                 {p.versions.map((v) => (
                   <li>

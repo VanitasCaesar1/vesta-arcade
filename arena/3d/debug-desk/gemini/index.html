@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>The Debug Desk</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #090b10;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #f1f5f9;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+    /* Sleek Night-Mode HUD */
+    .hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px;
+    }
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .badge {
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 215, 0, 0.25);
+      border-radius: 14px;
+      padding: 10px 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    .badge h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fef08a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge p {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .btn-row {
+      pointer-events: auto;
+      display: flex;
+      gap: 8px;
+    }
+    .hud-btn {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .hud-btn:hover {
+      background: rgba(234, 179, 8, 0.25);
+      border-color: rgba(250, 204, 21, 0.5);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .hud-btn.active {
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+      border-color: #fef08a;
+      color: #0f172a;
+      font-weight: 600;
+      box-shadow: 0 0 16px rgba(234, 179, 8, 0.45);
+    }
+    /* Duck Speech Dialogue */
+    .duck-dialogue {
+      position: absolute;
+      top: 85px;
+      right: 24px;
+      width: 310px;
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 2px solid #eab308;
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(234, 179, 8, 0.25);
+      display: none;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .duck-dialogue.show {
+      display: block;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.85) translateY(-10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .duck-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .duck-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fef08a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .duck-body {
+      font-size: 12px;
+      color: #f8fafc;
+      line-height: 1.45;
+    }
+    .duck-action-btn {
+      margin-top: 10px;
+      width: 100%;
+      background: #eab308;
+      border: none;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 7px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .duck-action-btn:hover {
+      background: #facc15;
+      transform: translateY(-1px);
+    }
+    /* Toast Banner */
+    .toast {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(250, 204, 21, 0.5);
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 12px;
+      color: #fef08a;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    /* Bottom bar */
+    .hud-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+    .cam-dock {
+      pointer-events: auto;
+      display: flex;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 30px;
+      padding: 4px 6px;
+    }
+    /* Hint Banner */
+    .hint-banner {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(250, 204, 21, 0.3);
+      border-radius: 24px;
+      padding: 8px 18px;
+      font-size: 13px;
+      color: #fef08a;
+      animation: pulseHint 2.5s infinite ease-in-out;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .hint-banner.fade-out {
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+    }
+    @keyframes pulseHint {
+      0%, 100% { border-color: rgba(250, 204, 21, 0.3); box-shadow: 0 0 16px rgba(234, 179, 8, 0.2); }
+      50% { border-color: rgba(250, 204, 21, 0.7); box-shadow: 0 0 24px rgba(234, 179, 8, 0.45); }
+    }
+    @media (max-width: 600px) {
+      .duck-dialogue { right: 14px; left: 14px; width: auto; }
+      .hint-banner { font-size: 11px; padding: 6px 14px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div class="hud">
+    <div class="hud-top">
+      <div class="badge">
+        <h1>🦆 Debug Desk</h1>
+        <p>Late Night Engineering • 3:14 AM</p>
+      </div>
+      <div class="btn-row">
+        <button id="btn-duck" class="hud-btn active">🦆 Ask Duck</button>
+        <button id="btn-lamp" class="hud-btn">💡 Lamp</button>
+        <button id="btn-audio" class="hud-btn">🔈 Audio</button>
+      </div>
+    </div>
+
+    <!-- Duck Speech Bubble -->
+    <div id="duck-box" class="duck-dialogue">
+      <div class="duck-header">
+        <div class="duck-title">🦆 Senior Rubber Duck, Staff Engineer</div>
+        <button id="duck-close" class="hud-btn" style="padding: 2px 8px; font-size: 10px;">✕</button>
+      </div>
+      <div id="duck-text" class="duck-body">
+        "Quack! Don't panic. What is the stack trace telling you? Explain each line to me step by step."
+      </div>
+      <button id="duck-squash-btn" class="duck-action-btn">✨ Search Desk for the Bug</button>
+    </div>
+
+    <div id="toast" class="toast">Secret activated!</div>
+
+    <div class="hud-bottom">
+      <div id="hint" class="hint-banner">
+        ✨ Click the Rubber Duck to debug • Drag to orbit • Click lamp, mug & keyboard
+      </div>
+      <div class="cam-dock">
+        <button id="cam-overview" class="hud-btn active">Overview</button>
+        <button id="cam-duck" class="hud-btn">Focus Duck</button>
+        <button id="cam-monitor" class="hud-btn">Code Screen</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "/lib/three/three.module.js";
+    import { OrbitControls } from "/lib/three/OrbitControls.js";
+
+    // --- Web Audio API Procedural Sound Synthesizer ---
+    class DeskAudio {
+      constructor() {
+        this.ctx = null;
+        this.humGain = null;
+        this.enabled = false;
+      }
+      init() {
+        if (this.ctx) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        this.ctx = new AudioCtx();
+
+        // Cozy low room computer fan hum
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        this.humGain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.value = 60; // 60Hz mains / cooling hum
+        filter.type = 'lowpass';
+        filter.frequency.value = 110;
+        this.humGain.gain.value = 0;
+
+        osc.connect(filter);
+        filter.connect(this.humGain);
+        this.humGain.connect(this.ctx.destination);
+        osc.start();
+      }
+      toggle() {
+        this.init();
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        this.enabled = !this.enabled;
+        if (this.humGain) {
+          this.humGain.gain.setTargetAtTime(this.enabled ? 0.05 : 0, this.ctx.currentTime, 0.3);
+        }
+        return this.enabled;
+      }
+      playQuack() {
+        if (!this.enabled || !this.ctx) return;
+        // Rubber duck realistic high squeak + resonant drop
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1100, t);
+        osc.frequency.exponentialRampToValueAtTime(1600, t + 0.08);
+        osc.frequency.exponentialRampToValueAtTime(750, t + 0.22);
+
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1400, t);
+        filter.Q.value = 3.5;
+
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(t);
+        osc.stop(t + 0.25);
+      }
+      playClick() {
+        if (!this.enabled || !this.ctx) return;
+        // Mechanical switch click
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(2400, t);
+        osc.frequency.exponentialRampToValueAtTime(400, t + 0.03);
+        gain.gain.setValueAtTime(0.08, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.03);
+      }
+      playFanfare() {
+        if (!this.enabled || !this.ctx) return;
+        // Triumphant bug-fixed arpeggio
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+        notes.forEach((freq, idx) => {
+          const t = this.ctx.currentTime + idx * 0.1;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.4);
+        });
+      }
+    }
+
+    const sound = new DeskAudio();
+
+    // --- Procedural Canvas Textures ---
+    function createWoodTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#2d1b11'; // Dark walnut
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Grain fibers
+      for (let y = 0; y < 512; y += 2) {
+        const grainTone = Math.sin(y * 0.08) * 20 + Math.sin(y * 0.3) * 10;
+        ctx.fillStyle = `rgb(${45 + grainTone}, ${27 + grainTone * 0.6}, ${17 + grainTone * 0.4})`;
+        ctx.fillRect(0, y, 512, 2);
+      }
+      // Pores & knots
+      for (let i = 0; i < 400; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        ctx.fillStyle = 'rgba(20, 10, 6, 0.4)';
+        ctx.fillRect(x, y, Math.random() * 25 + 5, 2);
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2, 2);
+      return tex;
+    }
+
+    let codeCanvas = null;
+    let codeCtx = null;
+    let codeTexture = null;
+    let bugSquashed = false;
+
+    function renderCodeScreen() {
+      if (!codeCanvas) {
+        codeCanvas = document.createElement('canvas');
+        codeCanvas.width = 1024;
+        codeCanvas.height = 512;
+        codeCtx = codeCanvas.getContext('2d');
+        codeTexture = new THREE.CanvasTexture(codeCanvas);
+      }
+
+      const ctx = codeCtx;
+      // Editor dark background
+      ctx.fillStyle = '#1e1e24';
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Top Tab Bar
+      ctx.fillStyle = '#18181b';
+      ctx.fillRect(0, 0, 1024, 38);
+      ctx.fillStyle = '#27272a';
+      ctx.fillRect(0, 0, 180, 38);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '14px monospace';
+      ctx.fillText('⚡ solver.ts', 24, 24);
+
+      ctx.fillStyle = '#71717a';
+      ctx.fillText('config.json', 210, 24);
+      ctx.fillText('test.spec.ts', 330, 24);
+
+      // Line Numbers Gutter
+      ctx.fillStyle = '#27272a';
+      ctx.fillRect(0, 38, 55, 474);
+      ctx.fillStyle = '#52525b';
+      ctx.font = '13px monospace';
+      for (let i = 1; i <= 18; i++) {
+        ctx.fillText(i.toString().padStart(2, ' '), 18, 45 + i * 20);
+      }
+
+      // Code Lines
+      const lines = [
+        { text: 'import { RealityEngine } from "./core";', col: '#c084fc' },
+        { text: '', col: '#fff' },
+        { text: 'export async function solveParadox(input: Data): Promise<Result> {', col: '#60a5fa' },
+        { text: '  const duck = await RealityEngine.consultAdvisor();', col: '#facc15' },
+        { text: '  if (!duck.hasPatience()) {', col: '#f43f5e' },
+        { text: '    throw new Error("Quack overflow: take a break!");', col: '#fb923c' },
+        { text: '  }', col: '#f8fafc' },
+        { text: '  // Line 42: The crucial calculation', col: '#64748b' },
+        { text: bugSquashed ? '  const bug = null; // Bug permanently resolved!' : '  const bug = input.unverifiedState.crash(); // <-- BUG HERE', col: bugSquashed ? '#4ade80' : '#f87171' },
+        { text: bugSquashed ? '  return RealityEngine.synthesizeHarmony(duck);' : '  return bug.calculate();', col: bugSquashed ? '#4ade80' : '#cbd5e1' },
+        { text: '}', col: '#60a5fa' }
+      ];
+
+      lines.forEach((l, idx) => {
+        ctx.fillStyle = l.col;
+        ctx.fillText(l.text, 75, 65 + idx * 20);
+      });
+
+      // Bottom Terminal Panel
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(55, 330, 969, 182);
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(55, 330, 969, 28);
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '12px monospace';
+      ctx.fillText('TERMINAL — zsh (pid: 4209)', 75, 348);
+
+      if (!bugSquashed) {
+        ctx.fillStyle = '#ef4444';
+        ctx.font = '13px monospace';
+        ctx.fillText('❌ ERROR: TypeError: Cannot read properties of undefined (reading "crash")', 75, 385);
+        ctx.fillStyle = '#f87171';
+        ctx.fillText('    at solveParadox (solver.ts:42:37)', 95, 410);
+        ctx.fillText('    at processTicksAndRejections (node:internal/process/task_queues:95:5)', 95, 432);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('💡 Senior Duck Tip: Click the duck or find the cyber-bug on your desk!', 75, 470);
+      } else {
+        ctx.fillStyle = '#22c55e';
+        ctx.font = '14px monospace';
+        ctx.fillText('✅ BUILD SUCCESSFUL — 42/42 tests passing in 84ms', 75, 395);
+        ctx.fillStyle = '#4ade80';
+        ctx.fillText('🚀 Zero warnings. Zero memory leaks. Clean architecture verified.', 75, 425);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('🦆 Duck Verdict: "Ship it to production!"', 75, 465);
+      }
+
+      codeTexture.needsUpdate = true;
+      return codeTexture;
+    }
+
+    function createMugTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, 256, 128);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText('TODO: sleep()', 45, 68);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      return tex;
+    }
+
+    function createStickyNoteTexture(text, bgColor = '#fef08a') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, 256, 256);
+
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 18px cursive, sans-serif';
+      const words = text.split(' ');
+      let line = '';
+      let y = 50;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > 220 && n > 0) {
+          ctx.fillText(line, 20, y);
+          line = words[n] + ' ';
+          y += 28;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, 20, y);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function createGlowTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.3, 'rgba(255, 220, 120, 0.7)');
+      grad.addColorStop(0.7, 'rgba(255, 160, 40, 0.2)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // --- Scene Setup ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 4.2, 7.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI * 0.49;
+    controls.minDistance = 2.0;
+    controls.maxDistance = 14.0;
+    controls.target.set(0, 1.2, 0);
+
+    // --- Room & Background Walls ---
+    const roomMat = new THREE.MeshStandardMaterial({ color: 0x111625, roughness: 0.95 });
+    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(24, 16), roomMat);
+    backWall.position.set(0, 6, -5);
+    backWall.receiveShadow = true;
+    scene.add(backWall);
+
+    // Window with moonlit venetian blinds in background
+    const windowFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(4.5, 6, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b })
+    );
+    windowFrame.position.set(-6, 6.5, -4.9);
+    scene.add(windowFrame);
+
+    const moonLight = new THREE.DirectionalLight(0x38bdf8, 0.5);
+    moonLight.position.set(-8, 9, -2);
+    moonLight.target.position.set(0, 1, 0);
+    scene.add(moonLight);
+    scene.add(moonLight.target);
+
+    // --- Ambient Fill Lighting ---
+    const ambientLight = new THREE.AmbientLight(0x0f172a, 0.6);
+    scene.add(ambientLight);
+
+    // --- The Desk ---
+    const deskGroup = new THREE.Group();
+    scene.add(deskGroup);
+
+    const woodTex = createWoodTexture();
+    const deskTopMat = new THREE.MeshStandardMaterial({
+      map: woodTex,
+      roughness: 0.55,
+      metalness: 0.1
+    });
+
+    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.25, 4.8), deskTopMat);
+    deskTop.position.set(0, 0, 0);
+    deskTop.receiveShadow = true;
+    deskTop.castShadow = true;
+    deskGroup.add(deskTop);
+
+    // Desk Legs
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.7, metalness: 0.4 });
+    const legGeo = new THREE.CylinderGeometry(0.12, 0.12, 3.2, 12);
+    const legPositions = [
+      [-4.2, -1.6, -2.1],
+      [4.2, -1.6, -2.1],
+      [-4.2, -1.6, 2.1],
+      [4.2, -1.6, 2.1]
+    ];
+    legPositions.forEach(p => {
+      const leg = new THREE.Mesh(legGeo, legMat);
+      leg.position.set(...p);
+      leg.castShadow = true;
+      deskGroup.add(leg);
+    });
+
+    // Desk Mat / Mousepad
+    const padMat = new THREE.MeshStandardMaterial({ color: 0x1e2230, roughness: 0.85 });
+    const deskPad = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.02, 2.6), padMat);
+    deskPad.position.set(0, 0.13, 0.4);
+    deskPad.receiveShadow = true;
+    deskGroup.add(deskPad);
+
+    // --- Ultrawide Curved Coding Monitor ---
+    const monitorGroup = new THREE.Group();
+    monitorGroup.position.set(0, 0.13, -1.1);
+    deskGroup.add(monitorGroup);
+
+    // Monitor Stand
+    const standMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.3 });
+    const standBase = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.75, 0.08, 24), standMat);
+    standBase.position.y = 0.04;
+    monitorGroup.add(standBase);
+
+    const standPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.6, 16), standMat);
+    standPole.position.set(0, 0.8, -0.2);
+    monitorGroup.add(standPole);
+
+    // Monitor Frame
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.7 });
+    const frameMesh = new THREE.Mesh(new THREE.BoxGeometry(5.2, 2.7, 0.12), frameMat);
+    frameMesh.position.set(0, 1.8, 0);
+    frameMesh.castShadow = true;
+    monitorGroup.add(frameMesh);
+
+    // Monitor Display Screen
+    const screenTex = renderCodeScreen();
+    const screenMat = new THREE.MeshBasicMaterial({ map: screenTex });
+    const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(5.05, 2.55), screenMat);
+    screenMesh.position.set(0, 1.8, 0.07);
+    screenMesh.name = 'monitor_screen';
+    monitorGroup.add(screenMesh);
+
+    // Code Glow Light on desk
+    const monitorLight = new THREE.PointLight(0x38bdf8, 1.4, 6.0, 1.2);
+    monitorLight.position.set(0, 1.8, 0.4);
+    scene.add(monitorLight);
+
+    // --- Mechanical Keyboard ---
+    const kbGroup = new THREE.Group();
+    kbGroup.name = 'keyboard';
+    kbGroup.position.set(-0.2, 0.15, 0.8);
+    deskGroup.add(kbGroup);
+
+    const kbBase = new THREE.Mesh(
+      new THREE.BoxGeometry(2.4, 0.1, 0.9),
+      new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.7 })
+    );
+    kbBase.castShadow = true;
+    kbGroup.add(kbBase);
+
+    // Keys row clusters
+    const keyMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.6 });
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 14; c++) {
+        const key = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.12), keyMat);
+        key.position.set(-1.0 + c * 0.155, 0.07, -0.3 + r * 0.15);
+        kbGroup.add(key);
+      }
+    }
+
+    // Keyboard Underglow Light
+    const kbLight = new THREE.PointLight(0x06b6d4, 0.7, 1.5);
+    kbLight.position.set(-0.2, 0.25, 0.8);
+    scene.add(kbLight);
+
+    // --- Ergonomic Mouse ---
+    const mouseGroup = new THREE.Group();
+    mouseGroup.position.set(1.6, 0.15, 0.85);
+    deskGroup.add(mouseGroup);
+
+    const mouseBody = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.12, 0.65),
+      new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 })
+    );
+    mouseBody.castShadow = true;
+    mouseGroup.add(mouseBody);
+
+    const scrollWheel = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 0.06, 12),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+    );
+    scrollWheel.rotation.z = Math.PI / 2;
+    scrollWheel.position.set(0, 0.07, -0.12);
+    mouseGroup.add(scrollWheel);
+
+    // --- Architect Gooseneck Desk Lamp ---
+    const lampGroup = new THREE.Group();
+    lampGroup.position.set(-3.2, 0.13, -0.6);
+    deskGroup.add(lampGroup);
+
+    const lampBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.45, 0.5, 0.1, 24),
+      standMat
+    );
+    lampBase.name = 'desk_lamp';
+    lampGroup.add(lampBase);
+
+    // Angled Arm
+    const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.8, 12), standMat);
+    arm1.position.set(0.3, 0.9, 0.1);
+    arm1.rotation.z = -0.35;
+    lampGroup.add(arm1);
+
+    const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 12), standMat);
+    arm2.position.set(0.9, 1.9, 0.3);
+    arm2.rotation.z = 0.55;
+    lampGroup.add(arm2);
+
+    // Lamp Shade Cone
+    const shadeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 });
+    const shade = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.6, 24, 1, true), shadeMat);
+    shade.position.set(1.4, 2.2, 0.4);
+    shade.rotation.z = -1.1;
+    shade.name = 'desk_lamp';
+    lampGroup.add(shade);
+
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfff3d6 }));
+    bulb.position.set(1.4, 2.2, 0.4);
+    lampGroup.add(bulb);
+
+    const lampLight = new THREE.SpotLight(0xffb366, 3.8, 10.0, Math.PI * 0.32, 0.6, 1.2);
+    lampLight.position.set(-1.8, 2.33, -0.2);
+    lampLight.target.position.set(-0.5, 0.13, 0.5);
+    lampLight.castShadow = true;
+    lampLight.shadow.mapSize.width = 1024;
+    lampLight.shadow.mapSize.height = 1024;
+    lampLight.shadow.bias = -0.001;
+    scene.add(lampLight);
+    scene.add(lampLight.target);
+
+    // --- Steaming Coffee Mug ---
+    const mugGroup = new THREE.Group();
+    mugGroup.name = 'coffee_mug';
+    mugGroup.position.set(-1.9, 0.13, 0.6);
+    deskGroup.add(mugGroup);
+
+    const mugMat = new THREE.MeshStandardMaterial({
+      map: createMugTexture(),
+      roughness: 0.3
+    });
+    const mugMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 0.6, 24), mugMat);
+    mugMesh.position.y = 0.3;
+    mugMesh.castShadow = true;
+    mugGroup.add(mugMesh);
+
+    // Mug handle
+    const handleGeo = new THREE.TorusGeometry(0.16, 0.04, 8, 16, Math.PI);
+    const handleMesh = new THREE.Mesh(handleGeo, mugMat);
+    handleMesh.position.set(-0.28, 0.3, 0);
+    handleMesh.rotation.z = Math.PI / 2;
+    mugGroup.add(handleMesh);
+
+    // Dark liquid inside
+    const coffeeMesh = new THREE.Mesh(
+      new THREE.CircleGeometry(0.25, 24),
+      new THREE.MeshStandardMaterial({ color: 0x1f140e, roughness: 0.2 })
+    );
+    coffeeMesh.position.set(0, 0.56, 0);
+    coffeeMesh.rotation.x = -Math.PI / 2;
+    mugGroup.add(coffeeMesh);
+
+    // Animated Steam Particles
+    const steamCount = 35;
+    const steamGeo = new THREE.BufferGeometry();
+    const steamPositions = new Float32Array(steamCount * 3);
+    const steamVelocities = new Float32Array(steamCount);
+
+    for (let i = 0; i < steamCount; i++) {
+      steamPositions[i * 3] = -1.9 + (Math.random() - 0.5) * 0.15;
+      steamPositions[i * 3 + 1] = 0.75 + Math.random() * 0.8;
+      steamPositions[i * 3 + 2] = 0.6 + (Math.random() - 0.5) * 0.15;
+      steamVelocities[i] = 0.006 + Math.random() * 0.008;
+    }
+    steamGeo.setAttribute('position', new THREE.BufferAttribute(steamPositions, 3));
+
+    const steamMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.35,
+      map: createGlowTexture(),
+      transparent: true,
+      opacity: 0.25,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const steamParticles = new THREE.Points(steamGeo, steamMat);
+    deskGroup.add(steamParticles);
+
+    // --- Sticky Notes ---
+    const note1 = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.45, 0.45),
+      new THREE.MeshBasicMaterial({ map: createStickyNoteTexture('Check line 42! Undefined solver bug', '#fef08a') })
+    );
+    note1.position.set(-2.2, 0.65, -0.98);
+    deskGroup.add(note1);
+
+    const note2 = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.42, 0.42),
+      new THREE.MeshBasicMaterial({ map: createStickyNoteTexture('TODO: Ask the Duck first!', '#f472b6') })
+    );
+    note2.position.set(2.2, 0.65, -0.98);
+    deskGroup.add(note2);
+
+    // --- Book Stack ---
+    const bookGroup = new THREE.Group();
+    bookGroup.position.set(3.0, 0.13, -0.4);
+    deskGroup.add(bookGroup);
+
+    const bookColors = [0x1e3a8a, 0x065f46, 0x991b1b];
+    bookColors.forEach((col, idx) => {
+      const b = new THREE.Mesh(
+        new THREE.BoxGeometry(0.9, 0.14, 1.3),
+        new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 })
+      );
+      b.position.set((Math.random() - 0.5) * 0.08, idx * 0.15 + 0.07, (Math.random() - 0.5) * 0.08);
+      b.rotation.y = (Math.random() - 0.5) * 0.2;
+      b.castShadow = true;
+      bookGroup.add(b);
+    });
+
+    // --- THE RUBBER DUCK (The Hero of the Scene!) ---
+    const duckGroup = new THREE.Group();
+    duckGroup.name = 'rubber_duck';
+    duckGroup.position.set(1.3, 0.13, -0.1);
+    deskGroup.add(duckGroup);
+
+    // Classic Yellow Duck Materials
+    const duckMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffd000,
+      emissive: 0xcc9900,
+      emissiveIntensity: 0.15,
+      roughness: 0.25,
+      metalness: 0.05,
+      clearcoat: 0.6,
+      clearcoatRoughness: 0.2
+    });
+
+    const beakMat = new THREE.MeshStandardMaterial({
+      color: 0xf97316,
+      roughness: 0.3
+    });
+
+    const eyeMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a,
+      roughness: 0.1
+    });
+
+    // Duck Body
+    const duckBody = new THREE.Mesh(new THREE.SphereGeometry(0.48, 24, 24), duckMat);
+    duckBody.scale.set(1.0, 0.85, 1.25);
+    duckBody.position.y = 0.42;
+    duckBody.castShadow = true;
+    duckGroup.add(duckBody);
+
+    // Duck Tail
+    const duckTail = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.35, 16), duckMat);
+    duckTail.position.set(0, 0.58, 0.62);
+    duckTail.rotation.x = 0.9;
+    duckGroup.add(duckTail);
+
+    // Duck Wings
+    const wingGeo = new THREE.SphereGeometry(0.32, 16, 16);
+    const leftWing = new THREE.Mesh(wingGeo, duckMat);
+    leftWing.scale.set(0.3, 0.65, 0.9);
+    leftWing.position.set(-0.44, 0.44, 0.05);
+    leftWing.rotation.z = -0.2;
+    duckGroup.add(leftWing);
+
+    const rightWing = new THREE.Mesh(wingGeo, duckMat);
+    rightWing.scale.set(0.3, 0.65, 0.9);
+    rightWing.position.set(0.44, 0.44, 0.05);
+    rightWing.rotation.z = 0.2;
+    duckGroup.add(rightWing);
+
+    // Duck Head
+    const duckHeadGroup = new THREE.Group();
+    duckHeadGroup.position.set(0, 0.82, -0.32);
+    duckGroup.add(duckHeadGroup);
+
+    const duckHead = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 24), duckMat);
+    duckHead.castShadow = true;
+    duckHeadGroup.add(duckHead);
+
+    // Orange Bill
+    const beakTop = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.28), beakMat);
+    beakTop.position.set(0, -0.06, -0.38);
+    beakTop.rotation.x = -0.08;
+    duckHeadGroup.add(beakTop);
+
+    // Eyes
+    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 12), eyeMat);
+    leftEye.position.set(-0.16, 0.08, -0.27);
+    duckHeadGroup.add(leftEye);
+
+    const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 12), eyeMat);
+    rightEye.position.set(0.16, 0.08, -0.27);
+    duckHeadGroup.add(rightEye);
+
+    // Specular eye reflections
+    const specMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const spec1 = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), specMat);
+    spec1.position.set(-0.14, 0.1, -0.3);
+    duckHeadGroup.add(spec1);
+    const spec2 = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), specMat);
+    spec2.position.set(0.18, 0.1, -0.3);
+    duckHeadGroup.add(spec2);
+
+    // Detective Bow Tie / Nerd Glasses
+    const bowTie = new THREE.Mesh(
+      new THREE.BoxGeometry(0.22, 0.1, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0xdc2626 })
+    );
+    bowTie.position.set(0, -0.22, -0.24);
+    duckHeadGroup.add(bowTie);
+
+    // Subtle Duck Aura Light
+    const duckLight = new THREE.PointLight(0xffea00, 0.8, 3.0);
+    duckLight.position.set(0, 0.6, 0);
+    duckGroup.add(duckLight);
+
+    // --- The Crawling Cyber-Bug (Target to squash!) ---
+    const bugGroup = new THREE.Group();
+    bugGroup.name = 'cyber_bug';
+    bugGroup.position.set(-0.8, 0.16, 0.3);
+    deskGroup.add(bugGroup);
+
+    const bugMat = new THREE.MeshStandardMaterial({
+      color: 0xef4444,
+      emissive: 0xdc2626,
+      emissiveIntensity: 0.6,
+      roughness: 0.2
+    });
+    const bugBody = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), bugMat);
+    bugBody.scale.set(1.0, 0.6, 1.5);
+    bugGroup.add(bugBody);
+
+    const bugLight = new THREE.PointLight(0xff2222, 1.2, 2.0);
+    bugGroup.add(bugLight);
+
+    // --- Interactive Dialogue & Duck Logic ---
+    const duckBox = document.getElementById('duck-box');
+    const duckText = document.getElementById('duck-text');
+    const duckClose = document.getElementById('duck-close');
+    const duckSquashBtn = document.getElementById('duck-squash-btn');
+    const toast = document.getElementById('toast');
+
+    const duckWisdom = [
+      "Quack! Don't panic. What is the stack trace telling you? Explain each line to me step by step.",
+      "Have you checked if `input.unverifiedState` is actually defined before calling `.crash()`? 90% of bugs are unexpected nulls!",
+      "Are you sure that Promise resolved before you accessed the result? Async timing bugs love hiding in plain sight.",
+      "Look at line 42 on your screen! Notice that literal glowing red bug crawling right next to your keyboard?",
+      "Take a deep breath and sip some coffee. Explaining your code out loud is the magic of Rubber Duck Debugging!"
+    ];
+    let wisdomIdx = 0;
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    let duckSquishTime = 0;
+
+    function triggerDuck() {
+      sound.playQuack();
+      duckSquishTime = 1.0; // Trigger squash & stretch physics
+
+      wisdomIdx = (wisdomIdx + 1) % duckWisdom.length;
+      duckText.textContent = duckWisdom[wisdomIdx];
+      duckBox.classList.add('show');
+
+      window.vesta?.milestone("duck-consulted");
+      showToast("🦆 The Duck quacks sage advice!");
+    }
+
+    duckClose.addEventListener('click', () => {
+      duckBox.classList.remove('show');
+    });
+
+    duckSquashBtn.addEventListener('click', () => {
+      // Focus on cyber bug
+      transitionTo(new THREE.Vector3(-0.6, 1.8, 1.6), new THREE.Vector3(-0.8, 0.16, 0.3));
+      showToast("🔍 Click the glowing red cyber-bug on the desk!");
+    });
+
+    function squashBug() {
+      if (bugSquashed) return;
+      bugSquashed = true;
+      bugGroup.visible = false;
+      sound.playFanfare();
+
+      // Screen updates from error to success
+      renderCodeScreen();
+      monitorLight.color.setHex(0x22c55e); // Green glow!
+      kbLight.color.setHex(0x4ade80);
+
+      duckText.textContent = "🎉 QUACKTASTIC! You found and squashed the bug! All tests pass. Time to deploy!";
+      duckBox.classList.add('show');
+      showToast("🏆 Bug squashed! All 42 tests passing!");
+
+      window.vesta?.achievement("bug-squashed", "Master of Rubber Duck Debugging");
+      window.vesta?.milestone("bug-fixed");
+    }
+
+    // Lamp switch toggle
+    let lampOn = true;
+    function toggleLamp() {
+      lampOn = !lampOn;
+      lampLight.intensity = lampOn ? 3.8 : 0;
+      bulb.material.color.setHex(lampOn ? 0xfff3d6 : 0x333333);
+      sound.playClick();
+      showToast(lampOn ? "💡 Desk Lamp Turned On" : "🌙 Desk Lamp Turned Off");
+      window.vesta?.milestone("lamp-toggled");
+    }
+
+    document.getElementById('btn-lamp').addEventListener('click', toggleLamp);
+    document.getElementById('btn-duck').addEventListener('click', triggerDuck);
+
+    // Audio button
+    const btnAudio = document.getElementById('btn-audio');
+    btnAudio.addEventListener('click', () => {
+      const on = sound.toggle();
+      btnAudio.textContent = on ? "🔊 Audio" : "🔈 Audio";
+      btnAudio.classList.toggle('active', on);
+      if (on) showToast("🎧 Room ambience active");
+    });
+
+    // Camera Navigation Presets
+    const camOverview = document.getElementById('cam-overview');
+    const camDuck = document.getElementById('cam-duck');
+    const camMonitor = document.getElementById('cam-monitor');
+
+    let targetCamPos = camera.position.clone();
+    let targetLookAt = controls.target.clone();
+    let isTransitioningCam = false;
+
+    function transitionTo(pos, lookAt, activeBtn = null) {
+      if (activeBtn) {
+        [camOverview, camDuck, camMonitor].forEach(b => b.classList.remove('active'));
+        activeBtn.classList.add('active');
+      }
+      targetCamPos.copy(pos);
+      targetLookAt.copy(lookAt);
+      isTransitioningCam = true;
+    }
+
+    camOverview.addEventListener('click', () => {
+      transitionTo(new THREE.Vector3(0, 4.2, 7.5), new THREE.Vector3(0, 1.2, 0), camOverview);
+    });
+    camDuck.addEventListener('click', () => {
+      transitionTo(new THREE.Vector3(1.4, 1.8, 1.8), new THREE.Vector3(1.3, 0.6, -0.1), camDuck);
+      triggerDuck();
+    });
+    camMonitor.addEventListener('click', () => {
+      transitionTo(new THREE.Vector3(0, 2.0, 2.2), new THREE.Vector3(0, 1.9, -1.0), camMonitor);
+    });
+
+    // --- Raycasting for 3D clicks ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.hud-top') || e.target.closest('.hud-bottom') || e.target.closest('.duck-dialogue')) return;
+
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      const hits = raycaster.intersectObjects(scene.children, true);
+      if (hits.length > 0) {
+        let p = hits[0].object;
+        while (p && p !== scene) {
+          if (p.name === 'rubber_duck') {
+            triggerDuck();
+            return;
+          }
+          if (p.name === 'cyber_bug') {
+            squashBug();
+            return;
+          }
+          if (p.name === 'desk_lamp') {
+            toggleLamp();
+            return;
+          }
+          if (p.name === 'coffee_mug') {
+            sound.playClick();
+            showToast("☕ You take a restorative sip of midnight coffee.");
+            window.vesta?.milestone("coffee-sipped");
+            return;
+          }
+          if (p.name === 'keyboard') {
+            sound.playClick();
+            showToast("⌨️ Clack clack clack! Typing furious thoughts.");
+            return;
+          }
+          if (p.name === 'monitor_screen') {
+            sound.playClick();
+            renderCodeScreen();
+            showToast("🖥️ Line 42 inspected.");
+            return;
+          }
+          p = p.parent;
+        }
+      }
+    });
+
+    // Hint fadeout
+    setTimeout(() => {
+      document.getElementById('hint').classList.add('fade-out');
+    }, 4500);
+
+    // Resize & Visibility
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    let isTabVisible = true;
+    document.addEventListener('visibilitychange', () => {
+      isTabVisible = !document.hidden;
+    });
+
+    // --- Main Animation Loop ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (!isTabVisible) return;
+
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      // Duck Idle Animation (Gentle head tilt & breathing)
+      duckHeadGroup.rotation.y = Math.sin(time * 1.5) * 0.18;
+      duckHeadGroup.rotation.z = Math.cos(time * 1.2) * 0.08;
+
+      // Duck Squash & Stretch bounce when clicked
+      if (duckSquishTime > 0) {
+        duckSquishTime -= delta * 3.5;
+        const progress = Math.max(0, duckSquishTime);
+        const squish = Math.sin(progress * Math.PI) * 0.28;
+        duckGroup.scale.set(1.0 + squish * 0.4, 1.0 - squish, 1.0 + squish * 0.4);
+      } else {
+        duckGroup.scale.set(1, 1, 1);
+      }
+
+      // Crawling Cyber-Bug movement on desk pad
+      if (!bugSquashed) {
+        bugGroup.position.x = -0.8 + Math.sin(time * 0.9) * 0.6;
+        bugGroup.position.z = 0.3 + Math.cos(time * 0.7) * 0.3;
+        bugGroup.rotation.y = time * 0.9 + Math.PI / 2;
+      }
+
+      // Steam particles rising from coffee mug
+      const sPos = steamParticles.geometry.attributes.position.array;
+      for (let i = 0; i < steamCount; i++) {
+        const idx = i * 3;
+        sPos[idx + 1] += steamVelocities[i];
+        sPos[idx] += Math.sin(time * 3.0 + i) * 0.0012;
+
+        if (sPos[idx + 1] > 1.8) {
+          sPos[idx] = -1.9 + (Math.random() - 0.5) * 0.15;
+          sPos[idx + 1] = 0.75;
+          sPos[idx + 2] = 0.6 + (Math.random() - 0.5) * 0.15;
+        }
+      }
+      steamParticles.geometry.attributes.position.needsUpdate = true;
+
+      // Subtle monitor light pulse
+      monitorLight.intensity = (bugSquashed ? 1.6 : 1.3) + Math.sin(time * 2.5) * 0.1;
+
+      // Smooth camera interpolation
+      if (isTransitioningCam) {
+        camera.position.lerp(targetCamPos, 0.06);
+        controls.target.lerp(targetLookAt, 0.06);
+        if (camera.position.distanceTo(targetCamPos) < 0.05 && controls.target.distanceTo(targetLookAt) < 0.05) {
+          isTransitioningCam = false;
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

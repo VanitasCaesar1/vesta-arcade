@@ -222,6 +222,7 @@ form.fb .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1
 .challenges { margin: 40px 0 10px; }
 .hot { margin: 10px 0 0; font-weight: 800; }
 .lib { margin: 10px 0 36px; }
+.follow { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; margin-left: 8px; }
 .shots { display: flex; gap: 10px; overflow-x: auto; margin: 10px 0 0; padding-bottom: 6px; }
 .shots a { flex: 0 0 auto; }
 .shots img { height: 120px; width: auto; display: block; border: 2px solid var(--line); }

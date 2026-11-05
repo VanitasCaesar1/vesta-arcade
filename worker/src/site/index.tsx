@@ -306,6 +306,26 @@ site.get("/badge/:slug", async (c) => {
   return c.body(badgeSvg(row.title.slice(0, 40), row.plays), 200, { "content-type": "image/svg+xml", "cache-control": "public, max-age=600" });
 });
 
+// Follow one game: its patch notes as RSS, so players hear about updates like Steam's "follow".
+site.get("/g/:slug/feed.xml", async (c) => {
+  const game = await loadGame(c);
+  if (!game) return c.notFound();
+  const versions = await listVersions(c.env, game.slug, 30);
+  const base = origin(c);
+  const items = versions
+    .map(
+      (v) => `<item><title>${escapeXml(`${game.title} v${v.n}`)}</title><link>${base}/g/${game.slug}</link><guid isPermaLink="false">${base}/g/${game.slug}#v${v.n}</guid>` +
+        `<pubDate>${new Date((v.live_at ?? v.created_at) * 1000).toUTCString()}</pubDate><description>${escapeXml(v.notes || "Update")}</description></item>`,
+    )
+    .join("");
+  return c.body(
+    `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${escapeXml(`${game.title} updates`)}</title><link>${base}/g/${game.slug}</link>` +
+      `<description>${escapeXml(`Patch notes for ${game.title} on ${arcade(c)}`)}</description>${items}</channel></rss>`,
+    200,
+    { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "public, max-age=300" },
+  );
+});
+
 site.get("/feed.xml", async (c) => {
   const games = await listGames(c.env, { sort: "new", limit: 30 });
   const base = origin(c);
